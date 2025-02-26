@@ -1,0 +1,21 @@
+# Node.js 관련 폴더 및 파일
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# 환경 변수 파일 (보안)
+.env
+
+# 로그 파일
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+debug.log*
+error.log*
+
+# Docker 관련 파일
+docker-compose.override.yml
+.dockerignore
