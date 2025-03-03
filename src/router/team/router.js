@@ -1,1 +1,1 @@
-test
+const router = require("express").Router()

@@ -34,8 +34,8 @@ docker ps
 ```bash
 docker run -d \
   --name footballsquare-backend \
-  -p 3000:3000 \
-  --env-file .env \
+  -p 8000:8000 \
+  --env-file ./src/.env \
   --link footballsquare-db \
   -v $(pwd)/src:/app/src \
   strangekim027/footballsquare-env:latest
@@ -48,10 +48,12 @@ docker ps
 ```bash
 docker exec -it footballsquare-backend node /app/src/index.js
 ```
+---
 
 ## 📌 4️⃣ bash 를 껏다 켰을시 컨테이너 재시작 방법 (DB → 백엔드 순서)
 
 🔹 **PostgreSQL(footballsquare-db)이 백엔드(footballsquare-backend)보다 먼저 실행되어야 함!**
+
 🔹 **이유:** 백엔드가 시작될 때 DB에 연결을 시도하는데, DB가 꺼져 있으면 연결 실패.
 
 ✅ **컨테이너 재시작 방법**
