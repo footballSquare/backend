@@ -20,8 +20,8 @@ console.log("🚀 서버 시작!");
 const matchRouter = require("./router/match/router")
 app.use("/match", matchRouter)
 
-// const teamRouter = require("./router/team/router")
-// app.use("/team", teamRouter)
+const teamRouter = require("./router/team/router")
+app.use("/team", teamRouter)
 
 // ============== 공통 에러 핸들러 ===========
 
