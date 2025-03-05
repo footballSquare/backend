@@ -276,9 +276,11 @@ const joinOpenMatch = async (req,res,next) => {
     try{
         const result = await client.query(checkMatchParticipationSQL, [match_match_idx])
         let sql
-
-        result.rows[0].match_match_participation_type == 0 ? sql = postMatchWaitListSQL : sql = postMatchParticipantSQL
-
+        
+        // 매치 생성자 이거나, 공개 매치일 경우 대기자 목록이 아닌 즉시 참여
+        if (result.rows[0].player_list_idx == player_list_idx || result.rows[0].match_match_participation_type == 1) sql = postMatchParticipantSQL
+        else if(result.rows[0].match_match_participation_type == 0) sql = postMatchWaitListSQL
+         
         await client.query(sql, [
             match_match_idx,
             player_list_idx,
@@ -288,6 +290,78 @@ const joinOpenMatch = async (req,res,next) => {
     } catch(e){
         next(e)
     }
+}
+
+// 매치 참여 해제하기
+const leaveMatch = async (req,res,next) => {
+    const {match_match_idx} = req.params
+    const {player_list_idx} = req.body
+    const {target_player_idx} = req.query
+
+    try {
+        await client.query("BEGIN");
+    
+        // 1. 매치 정보 조회 (생성자 및 팀 정보 확인)
+        const checkMatchSQL = `
+            SELECT player_list_idx AS match_creator_idx, team_list_idx 
+            FROM match.match 
+            WHERE match_match_idx = $1;
+        `;
+        const matchResult = await client.query(checkMatchSQL, [match_match_idx]);
+    
+        if (matchResult.rowCount === 0) {
+            throw customError(404, `해당 매치가(이) 존재하지 않습니다.`);
+        }
+    
+        const match_creator_idx = matchResult.rows[0].match_creator_idx;
+        const match_team_idx = matchResult.rows[0].team_list_idx;
+        let isTeamGame = match_team_idx !== null;
+        let isCaptain = false;
+    
+        // 2. 팀 게임일 경우, 해당 플레이어가 주장인지 확인
+        if (isTeamGame) {
+            const checkCaptainSQL = `
+                SELECT team_role_idx 
+                FROM team.member 
+                WHERE team_list_idx = $1 AND player_list_idx = $2;
+            `;
+            const captainResult = await client.query(checkCaptainSQL, [match_team_idx, player_list_idx]);
+    
+            if (captainResult.rowCount > 0 && captainResult.rows[0].team_role_idx === 0) {
+                isCaptain = true; // 팀 주장일 경우
+            }
+        }
+    
+        // 3. 삭제 가능한 조건 체크
+        const canRemove =
+            player_list_idx === match_creator_idx || // 매치 생성자이거나
+            player_list_idx === target_player_idx || // 자기 자신을 삭제하거나
+            isCaptain; // 팀 주장인 경우
+    
+        if (!canRemove) {
+            throw customError(403, `해당 매치가(이) 존재하지 않습니다.`);
+        }
+    
+        // 4. 참가자 목록에서 해당 선수 삭제
+        const deleteParticipantSQL = `
+            DELETE FROM match.participant
+            WHERE match_match_idx = $1 AND player_list_idx = $2
+            RETURNING player_list_idx;
+        `;
+        const deleteParticipantResult = await client.query(deleteParticipantSQL, [match_match_idx, target_player_idx]);
+    
+        if (deleteParticipantResult.rowCount === 0) {
+            throw new Error("참여 해제 실패: 해당 플레이어는 매치에 참여하고 있지 않음");
+        }
+    
+        await client.query("COMMIT");
+        res.status(200).send({});
+    } catch (e) {
+        await client.query("ROLLBACK");
+        next(e);
+    }
+    
+    
 }
 
 module.exports = {
@@ -302,5 +376,6 @@ module.exports = {
     getMatchParticipantList,
     getMatchWaitList,
     waitApproval,
-    joinOpenMatch
+    joinOpenMatch,
+    leaveMatch
 }

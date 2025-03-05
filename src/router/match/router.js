@@ -12,7 +12,8 @@ const {
     getMatchParticipantList,
     getMatchWaitList,
     waitApproval,
-    joinOpenMatch
+    joinOpenMatch,
+    leaveMatch
 } = require("./service")
 
 // 팀 매치 목록 가져오기
@@ -70,9 +71,13 @@ router.post("/:match_match_idx/approval",
     waitApproval
 )
 
-
 // 공개 매치 참여하기
 router.post("/:match_match_idx/open/join",
     joinOpenMatch
+)
+
+// 매치 참여 해제하기
+router.delete("/:match_match_idx/leave",
+    leaveMatch
 )
 module.exports = router

@@ -164,7 +164,8 @@ ORDER BY match.participant.match_position_idx ASC;
 const checkMatchParticipationSQL =
 `
 SELECT 
-    match.match.match_match_participation_type
+    match.match.match_match_participation_type,
+    match.match.player_list_idx
 FROM match.match
 WHERE match.match.match_match_idx = $1;
 `
