@@ -30,7 +30,6 @@ router.post("/team/:team_list_idx",
     postTeamMatch
 )
 
-// 공방 매치 생성하기
 router.post("/open",
     postOpenMatch
 )
