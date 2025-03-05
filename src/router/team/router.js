@@ -22,6 +22,7 @@ router.get("/:team_list_idx/information",
     getTeam
 )
 
+// 팀 페이지 멤버 목록보기
 router.get("/:team_list_idx/member",
     getMember
 )
