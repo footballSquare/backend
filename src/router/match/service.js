@@ -293,76 +293,68 @@ const joinOpenMatch = async (req,res,next) => {
 }
 
 // 매치 참여 해제하기
-const leaveMatch = async (req,res,next) => {
-    const {match_match_idx} = req.params
-    const {player_list_idx} = req.body
-    const {target_player_idx} = req.query
+const leaveMatch = async (req, res,next) => {
+    const { target_player_idx } = req.query;
+    const { match_match_idx } = req.params;
+    const { player_list_idx } = req.body;
+    const { match_creator_idx, team_captain_idx } = req.matchInfo;
+
 
     try {
-        await client.query("BEGIN");
-    
-        // 1. 매치 정보 조회 (생성자 및 팀 정보 확인)
-        const checkMatchSQL = `
-            SELECT player_list_idx AS match_creator_idx, team_list_idx 
-            FROM match.match 
-            WHERE match_match_idx = $1;
-        `;
-        const matchResult = await client.query(checkMatchSQL, [match_match_idx]);
-    
-        if (matchResult.rowCount === 0) {
-            throw customError(404, `해당 매치가(이) 존재하지 않습니다.`);
-        }
-    
-        const match_creator_idx = matchResult.rows[0].match_creator_idx;
-        const match_team_idx = matchResult.rows[0].team_list_idx;
-        let isTeamGame = match_team_idx !== null;
-        let isCaptain = false;
-    
-        // 2. 팀 게임일 경우, 해당 플레이어가 주장인지 확인
-        if (isTeamGame) {
-            const checkCaptainSQL = `
-                SELECT team_role_idx 
-                FROM team.member 
-                WHERE team_list_idx = $1 AND player_list_idx = $2;
+        // 자기 자신을 삭제하는 경우 → 단순히 참가자 목록에서 삭제
+        if (player_list_idx == target_player_idx) {
+            
+            const deleteParticipantSQL = `
+                DELETE FROM match.participant
+                WHERE match_match_idx = $1 AND player_list_idx = $2
+                RETURNING player_list_idx;
             `;
-            const captainResult = await client.query(checkCaptainSQL, [match_team_idx, player_list_idx]);
-    
-            if (captainResult.rowCount > 0 && captainResult.rows[0].team_role_idx === 0) {
-                isCaptain = true; // 팀 주장일 경우
+            await client.query(deleteParticipantSQL, [match_match_idx, target_player_idx]);
+            return res.status(200).send({});
+        }
+
+        // 2️⃣ 매치 생성자 또는 팀 주장인 경우 → 참가자 목록에서 삭제 후, 대기자 목록으로 이동
+        else if (player_list_idx == match_creator_idx || player_list_idx == team_captain_idx) {
+            
+            await client.query("BEGIN"); // 트랜잭션 시작
+
+            console.log(match_match_idx,target_player_idx)
+            // 2-1️⃣ 참가자 목록에서 삭제
+            const deleteParticipantSQL = `
+                DELETE FROM match.participant
+                WHERE match_match_idx = $1 AND player_list_idx = $2
+                RETURNING match_position_idx;
+            `;
+            const deleteParticipantResult = await client.query(deleteParticipantSQL, [match_match_idx, target_player_idx]);
+
+            if (deleteParticipantResult.rowCount === 0) {
+                await client.query("ROLLBACK");
+                throw customError(403, `매치에 참여하고 있지 않은 선수.`);
             }
+
+            const match_position_idx = deleteParticipantResult.rows[0].match_position_idx;
+
+            // 2-2️⃣ 대기자 목록에 추가
+            const insertWaitlistSQL = `
+                INSERT INTO match.waitlist (
+                    match_match_idx,
+                    player_list_idx,
+                    match_position_idx
+                ) VALUES ($1, $2, $3);
+            `;
+            await client.query(insertWaitlistSQL, [match_match_idx, target_player_idx, match_position_idx]);
+
+            await client.query("COMMIT");
+            return res.status(200).send({});
         }
-    
-        // 3. 삭제 가능한 조건 체크
-        const canRemove =
-            player_list_idx === match_creator_idx || // 매치 생성자이거나
-            player_list_idx === target_player_idx || // 자기 자신을 삭제하거나
-            isCaptain; // 팀 주장인 경우
-    
-        if (!canRemove) {
-            throw customError(403, `해당 매치가(이) 존재하지 않습니다.`);
-        }
-    
-        // 4. 참가자 목록에서 해당 선수 삭제
-        const deleteParticipantSQL = `
-            DELETE FROM match.participant
-            WHERE match_match_idx = $1 AND player_list_idx = $2
-            RETURNING player_list_idx;
-        `;
-        const deleteParticipantResult = await client.query(deleteParticipantSQL, [match_match_idx, target_player_idx]);
-    
-        if (deleteParticipantResult.rowCount === 0) {
-            throw new Error("참여 해제 실패: 해당 플레이어는 매치에 참여하고 있지 않음");
-        }
-    
-        await client.query("COMMIT");
-        res.status(200).send({});
-    } catch (e) {
-        await client.query("ROLLBACK");
+
+        // 3️⃣ 위 조건을 만족하지 않으면 삭제 불가능
+        throw customError(403, `권한 없음.`);
+
+    } catch(e) {
         next(e);
     }
-    
-    
-}
+};
 
 module.exports = {
     getTeamMatchList,

@@ -102,11 +102,47 @@ ORDER BY
 LIMIT 
     10 OFFSET $2;
 `
+// 멤버 가입 신청 거절
+const teamMemberDenySQL = 
+`
+DELETE FROM 
+    team.waitlist
+WHERE 
+    team_list_idx = $1 
+AND 
+    player_list_idx = $2;
+`
+
+const teamApplicationSQL =
+`
+INSERT INTO team.waitlist (
+    team_list_idx,
+    player_list_idx
+) VALUES ($1, $2);
+`
+
+// 팀 가입 신청 인원 목록 보기 
+const teamApplicationListSQL =
+`
+SELECT 
+    player.list.player_list_idx,
+    player.list.player_list_nickname,
+    player.list.player_list_profile_image,
+    team.waitlist.team_waitlist_created_at
+FROM team.waitlist
+JOIN player.list 
+    ON team.waitlist.player_list_idx = player.list.player_list_idx
+WHERE team.waitlist.team_list_idx = $1
+ORDER BY team.waitlist.team_waitlist_created_at DESC;
+`
 
 module.exports = {
     getTeamListSQL,
     postTeamSQL,
     postTeamManagerSQL,
     getTeamSQL,
-    getMemberSQL
+    getMemberSQL,
+    teamMemberDenySQL,
+    teamApplicationSQL,
+    teamApplicationListSQL
 }

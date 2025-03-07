@@ -6,7 +6,10 @@ const {
     postTeamSQL,
     postTeamManagerSQL,
     getTeamSQL,
-    getMemberSQL
+    getMemberSQL,
+    teamMemberDenySQL,
+    teamApplicationSQL,
+    teamApplicationListSQL
 } = require("./sql")
 
 // 팀 목록 가져오기
@@ -91,10 +94,59 @@ const getMember = async (req,res,next) => {
     }
 }
 
+// 팀 멤버 가입 거절
+const teamMemberDeny = async (req,res,next) => {
+    const {team_list_idx,player_list_idx} = req.params
+    const {} = req.body
+
+    try{
+        await client.query(teamMemberDenySQL, [
+            team_list_idx,
+            player_list_idx
+        ])
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
+
+// 팀 가입 신청
+const teamApplication = async (req,res,next) => {
+    const {team_list_idx} = req.params
+    const {player_list_idx} = req.body
+
+    try{
+        await client.query(teamApplicationSQL, [
+            team_list_idx,
+            player_list_idx
+        ])
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
+
+// 팀 가입 신청 목록 보기 
+const teamApplicationList = async (req,res,next) => {
+    const {team_list_idx} = req.params
+
+    try{
+        const result = await client.query(teamApplicationListSQL, [
+            team_list_idx
+        ])
+        res.status(200).send({ access_list : result.rows })
+    } catch(e){
+        next(e)
+    }
+}
+
 
 module.exports = {
     getTeamList,
     postTeam,
     getTeam,
-    getMember
+    getMember,
+    teamMemberDeny,
+    teamApplication,
+    teamApplicationList
 }
