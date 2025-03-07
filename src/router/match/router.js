@@ -1,6 +1,10 @@
 const router = require("express").Router()
 
 const {
+    getMatchAndTeamInfo
+} = require("../../middleware/getMatchInfo")
+
+const {
     getTeamMatchList,
     getOpenMatchList,
     postOpenMatch,
@@ -78,6 +82,7 @@ router.post("/:match_match_idx/open/join",
 
 // 매치 참여 해제하기
 router.delete("/:match_match_idx/leave",
+    getMatchAndTeamInfo,
     leaveMatch
 )
 module.exports = router

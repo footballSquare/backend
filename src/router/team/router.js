@@ -4,7 +4,10 @@ const {
     getTeamList,
     postTeam,
     getTeam,
-    getMember
+    getMember,
+    teamMemberDeny,
+    teamApplication,
+    teamApplicationList
 } = require("./service")
 
 // 팀 목록보기
@@ -27,4 +30,18 @@ router.get("/:team_list_idx/member",
     getMember
 )
 
+// 팀 멤버 가입 거절
+router.delete("/:team_list_idx/member/:player_list_idx/access",
+    teamMemberDeny
+)
+
+// 팀 가입 신청 하기
+router.put("/:team_list_idx/application",
+    teamApplication
+)
+
+// 팀 가입 신청 인원 목록 보기
+router.get("/:team_list_idx/application/list",
+    teamApplicationList
+)
 module.exports = router
