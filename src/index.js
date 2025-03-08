@@ -14,8 +14,8 @@ console.log("🚀 서버 시작!");
 // const championshipRouter = require("./router/championship/router")
 // app.use("/championship", championshipRouter)
 
-// const comunityRouter = require("./router/comunity/router")
-// app.use("/comunity", comunityRouter)
+const communityRouter = require("./router/community/router")
+app.use("/community", communityRouter)
 
 const matchRouter = require("./router/match/router")
 app.use("/match", matchRouter)

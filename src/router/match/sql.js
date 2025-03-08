@@ -16,7 +16,7 @@ FROM match.match
 JOIN player.list ON match.match.player_list_idx = player.list.player_list_idx
 WHERE match.match.team_list_idx = $1
 ORDER BY match.match.match_match_start_time DESC
-LIMIT 10 OFFSET $2;
+LIMIT 10 OFFSET $2 * 10;
 `
 
 // 공개 매치 목록 보기
@@ -49,7 +49,7 @@ ORDER BY
 LIMIT 
     10
 OFFSET 
-    $1;
+    $1 * 10;
 `
 
 // 공방 매치 생성하기
