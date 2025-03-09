@@ -6,11 +6,14 @@ const {
     getTeam,
     getMember,
     teamMemberDeny,
+    changeMemberRole,
     kickMember,
     teamApplication,
     teamApplicationList,
     changeTeamData,
-    teamMemberApproval
+    deleteTeam,
+    teamMemberApproval,
+    teamLeave
     // changeTeamEmblem
 } = require("./service")
 
@@ -44,6 +47,12 @@ router.put("/:team_list_idx",
 //     changeTeamEmblem
 // )
 
+// 팀 해체하기
+router.delete("/:team_list_idx",
+    deleteTeam
+)
+
+
 // 팀 멤버 가입 승인
 router.post("/:team_list_idx/member/:player_list_idx/access",
     teamMemberApproval
@@ -52,6 +61,11 @@ router.post("/:team_list_idx/member/:player_list_idx/access",
 // 팀 멤버 가입 거절
 router.delete("/:team_list_idx/member/:player_list_idx/access",
     teamMemberDeny
+)
+
+// 멤버 역할 변경
+router.put("/:team_list_idx/member/:player_list_idx/role/:team_role_idx",
+    changeMemberRole
 )
 
 // 팀 멤버 추방
@@ -68,6 +82,12 @@ router.put("/:team_list_idx/application",
 router.get("/:team_list_idx/application/list",
     teamApplicationList
 )
+
+// 팀 탈퇴하기
+router.delete("/:team_list_idx/leave",
+    teamLeave
+)
+
 
 
 module.exports = router

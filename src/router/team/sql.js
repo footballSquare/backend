@@ -38,7 +38,7 @@ GROUP BY
     captain_data.player_list_nickname,
     captain_data.player_list_profile_image
 ORDER BY team.list.team_list_created_at DESC
-LIMIT 10 OFFSET $1;
+LIMIT 10 OFFSET $1 * 10;
 `
 
 
@@ -50,12 +50,17 @@ INSERT INTO team.list (
 ) VALUES ($1, $2, $3, $4, $5)
 RETURNING team_list_idx;
 `
+// 팀 해체하기
+const deleteTeamSQL =
+`
+DELETE FROM team.list WHERE team_list_idx = $1;
+`
 
 const postTeamManagerSQL =
 `
 INSERT INTO team.member (
     team_list_idx, player_list_idx, team_role_idx
-) VALUES ($1, $2, 0);
+) VALUES ($1, $2, $3);
 `
 
 const getTeamSQL = 
@@ -110,7 +115,7 @@ INSERT INTO team.member (
     player_list_idx,
     team_role_idx,
     team_member_joined_at
-) VALUES ($1, $2, 2, NOW());
+) VALUES ($1, $2, $3, NOW());
 `;
 
 // 멤버 가입 신청 거절
@@ -122,6 +127,14 @@ WHERE
     team_list_idx = $1 
 AND 
     player_list_idx = $2;
+`
+
+// 팀 멤버 역할 변경
+const changeMemberRoleSQL =
+`
+UPDATE team.member
+SET team_role_idx = $3
+WHERE team_list_idx = $1 AND player_list_idx = $2;
 `
 
 // 팀 멤버 추방 SQL
@@ -173,12 +186,14 @@ module.exports = {
     getTeamListSQL,
     postTeamSQL,
     postTeamManagerSQL,
+    changeTeamDataSQL,
+    deleteTeamSQL,
     getTeamSQL,
     getMemberSQL,
     insertTeamMemberSQL,
     teamMemberDenySQL,
+    changeMemberRoleSQL,
     kickMemberSQL,
     teamApplicationSQL,
-    teamApplicationListSQL,
-    changeTeamDataSQL
+    teamApplicationListSQL
 }
