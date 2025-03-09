@@ -38,7 +38,11 @@ GROUP BY
     captain_data.player_list_nickname,
     captain_data.player_list_profile_image
 ORDER BY team.list.team_list_created_at DESC
+<<<<<<< HEAD
 LIMIT 10 OFFSET $1;
+=======
+LIMIT 10 OFFSET $1 * 10;
+>>>>>>> master
 `
 
 
@@ -51,11 +55,17 @@ INSERT INTO team.list (
 RETURNING team_list_idx;
 `
 
+// 팀 해체하기
+const deleteTeamSQL =
+`
+DELETE FROM team.list WHERE team_list_idx = $1;
+`
+
 const postTeamManagerSQL =
 `
 INSERT INTO team.member (
     team_list_idx, player_list_idx, team_role_idx
-) VALUES ($1, $2, 0);
+) VALUES ($1, $2, $3);
 `
 
 const getTeamSQL = 
@@ -93,15 +103,26 @@ FROM
     team.member
 JOIN 
     player.list ON team.member.player_list_idx = player.list.player_list_idx
-JOIN 
-    team.role ON team.member.team_role_idx = team.role.team_role_idx
 WHERE 
     team.member.team_list_idx = $1
 ORDER BY 
     player.list.player_list_idx ASC
 LIMIT 
-    10 OFFSET $2;
+    10 
+OFFSET 
+    $2 * 10;
 `
+
+// 팀 멤버 추가하기 SQL
+const insertTeamMemberSQL = `
+INSERT INTO team.member (
+    team_list_idx,
+    player_list_idx,
+    team_role_idx,
+    team_member_joined_at
+) VALUES ($1, $2, $3, NOW());
+`;
+
 // 멤버 가입 신청 거절
 const teamMemberDenySQL = 
 `
@@ -111,6 +132,22 @@ WHERE
     team_list_idx = $1 
 AND 
     player_list_idx = $2;
+`
+
+// 팀 멤버 역할 변경
+const changeMemberRoleSQL =
+`
+UPDATE team.member
+SET team_role_idx = $3
+WHERE team_list_idx = $1 AND player_list_idx = $2;
+`
+
+// 팀 멤버 추방 SQL
+const kickMemberSQL = 
+`
+DELETE FROM team.member
+WHERE team_list_idx = $1
+AND player_list_idx = $2;
 `
 
 const teamApplicationSQL =
@@ -136,13 +173,32 @@ WHERE team.waitlist.team_list_idx = $1
 ORDER BY team.waitlist.team_waitlist_created_at DESC;
 `
 
+// 팀 정보 변경
+const changeTeamDataSQL =
+`
+UPDATE team.list
+SET 
+    team_list_name = $2,
+    team_list_short_name = $3,
+    team_list_color = $4,
+    team_list_announcement = $5,
+    common_status_idx = $6,
+    team_list_updated_at = NOW()
+WHERE team_list_idx = $1;
+`
+
 module.exports = {
     getTeamListSQL,
     postTeamSQL,
     postTeamManagerSQL,
+    changeTeamDataSQL,
+    deleteTeamSQL,
     getTeamSQL,
     getMemberSQL,
+    insertTeamMemberSQL,
     teamMemberDenySQL,
+    changeMemberRoleSQL,
+    kickMemberSQL,
     teamApplicationSQL,
     teamApplicationListSQL
 }
