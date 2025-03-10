@@ -54,6 +54,70 @@ ORDER BY
 LIMIT 10 OFFSET $2 * 10;
 `
 
+// 커뮤니티 진행 대회 목록 가져오기
+const getCommunityChampionshipSQL = 
+`
+SELECT 
+    championship_list_idx,
+    championship_type_idx,
+    championship_list_name,
+    championship_list_description,
+    match_type_idx,
+    championship_list_throphy_img,
+    championship_list_start_date,
+    championship_list_end_date,
+    championship_list_color,
+    common_status_idx
+FROM championship.list
+WHERE community_list_idx = $1
+ORDER BY championship_list_start_date DESC
+LIMIT 10 OFFSET $2 * 10;
+`
+
+// 대회 생성
+const postChampioshipSQL =
+`
+INSERT INTO championship.list (
+    community_list_idx, 
+    championship_type_idx, 
+    championship_list_name, 
+    championship_list_description, 
+    match_type_idx, 
+    championship_list_throphy_img, 
+    championship_list_color,
+    championship_list_start_date, 
+    championship_list_end_date, 
+    common_status_idx
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING championship_list_idx;
+`
+
+// 대회 참가 팀 추가
+const postChampioshipParticipantTeamSQL = 
+`
+INSERT INTO championship.participation_team (
+    championship_list_idx,
+    team_list_idx,
+    team_list_name
+)
+SELECT 
+    $1, 
+    t.team_list_idx, 
+    t.team_list_name
+FROM unnest($2::int[]) AS team_idx(team_list_idx)
+JOIN team.list t ON team_idx.team_list_idx = t.team_list_idx;
+`
+
+// 대회 수상 추가
+const postChampioshipAwardSQL =
+`
+INSERT INTO championship.award (
+    championship_list_idx, championship_award_name
+)
+SELECT 
+    $1, unnest($2::text[]);
+`
+
 // 운영진 가입 승인
 const communityStaffAccessSQL =
 `
@@ -169,6 +233,10 @@ module.exports = {
     getCommunitySQL,
     getCommunityStaffSQL,
     getCommunityTeamSQL,
+    getCommunityChampionshipSQL,
+    postChampioshipSQL,
+    postChampioshipParticipantTeamSQL,
+    postChampioshipAwardSQL,
     communityStaffAccessSQL,
     communityStaffAccessDenySQL,
     kickCommunityStaffSQL,

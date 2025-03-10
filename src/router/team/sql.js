@@ -38,11 +38,7 @@ GROUP BY
     captain_data.player_list_nickname,
     captain_data.player_list_profile_image
 ORDER BY team.list.team_list_created_at DESC
-<<<<<<< HEAD
-LIMIT 10 OFFSET $1;
-=======
 LIMIT 10 OFFSET $1 * 10;
->>>>>>> master
 `
 
 

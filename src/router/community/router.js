@@ -4,6 +4,8 @@ const {
     getCommunity,
     getCommunityStaff,
     getCommunityTeam,
+    getCommunityChampionship,
+    postChampioship,
     communityStaffAccess,
     communityStaffAccessDeny,
     kickCommunityStaff,
@@ -29,6 +31,16 @@ router.get("/:community_list_idx/staff",
 // 커뮤니티 소속 팀 목록 가져오기
 router.get("/:community_list_idx/participation_team",
     getCommunityTeam
+)
+
+// 커뮤니티 소속 진행 대회 목록 보기
+router.get("/:community_list_idx/championship",
+    getCommunityChampionship
+)
+
+// 대회 만들기
+router.post("/:community_list_idx/championship",
+    postChampioship
 )
 
 

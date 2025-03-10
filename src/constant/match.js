@@ -9,4 +9,23 @@ const MATCH_ATTRIBUTE = {
     CHAMPIONSHIP: 2 // 대회
 };
 
-module.exports = { MATCH_PARTICIPATION_TYPE, MATCH_ATTRIBUTE };
+const MATCH_TYPE = {
+    FULL: 0,    // 11:11
+    RUSH: 1     // 4:4 
+}
+
+const MATCH_FORMATION = {
+    433: 0,
+    442: 1,
+    4231: 2,
+    343: 3,
+    325: 4
+}
+
+const MATCH_DURATION = {
+    HALF_HOUR: "30 minutes",
+    ONE_HOUR: "1 hours",
+    TWO_HOUR: "2 hours"
+}
+
+module.exports = { MATCH_PARTICIPATION_TYPE, MATCH_ATTRIBUTE,MATCH_TYPE,MATCH_FORMATION,MATCH_DURATION };

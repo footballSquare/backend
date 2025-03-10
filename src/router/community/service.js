@@ -1,12 +1,21 @@
 const client = require("../../database/postgreSQL")
 const customError = require("../../util/customError")
 
-const { COMMUNITY_ROLE } = require("../../constant/constantIndex")
+const { COMMUNITY_ROLE,
+    MATCH_TYPE,
+    CHAMPIONSHIP_TYPE, 
+    CHAMPIONSHIP_STATUS 
+} = require("../../constant/constantIndex")
+
 
 const {
     getCommunitySQL,
     getCommunityStaffSQL,
     getCommunityTeamSQL,
+    getCommunityChampionshipSQL,
+    postChampioshipSQL,
+    postChampioshipParticipantTeamSQL,
+    postChampioshipAwardSQL,
     communityStaffAccessSQL,
     communityStaffAccessDenySQL,
     kickCommunityStaffSQL,
@@ -59,6 +68,77 @@ const getCommunityTeam = async (req,res,next) => {
         ])
         res.status(200).send({ participation_team : result.rows })
     } catch(e){
+        next(e)
+    }
+}
+
+// 커뮤니티 진행 대회 목록 보기
+const getCommunityChampionship = async (req,res,next) => {
+    const {community_list_idx} = req.params
+    const {page} = req.query
+
+    try{
+        const result = await client.query(getCommunityChampionshipSQL, [
+            community_list_idx,
+            page
+        ])
+        res.status(200).send({ championship : result.rows })
+    } catch(e){
+        next(e)
+    }
+}
+
+
+// 대회 만들기
+const postChampioship = async (req,res,next) => {
+    const {community_list_idx} = req.params
+    const {
+        championship_type_idx,
+        championship_list_name,
+        championship_list_description,
+        championship_list_throphy_img,
+        championship_list_color,
+        championship_list_start_date,
+        championship_list_end_date,
+        participation_team_idxs,
+        championship_award_name
+    } = req.body
+
+    try{
+        await client.query("BEGIN");
+
+        const championshipResult = await client.query(postChampioshipSQL, [
+            community_list_idx,
+            championship_type_idx,
+            championship_list_name,
+            championship_list_description,
+            MATCH_TYPE.FULL,
+            championship_list_throphy_img,
+            championship_list_color,
+            championship_list_start_date,
+            championship_list_end_date,
+            CHAMPIONSHIP_STATUS.ONGOING
+        ])
+
+        const championship_list_idx = championshipResult.rows[0].championship_list_idx;
+        
+        // 참가 팀 추가
+        await client.query(postChampioshipParticipantTeamSQL, [
+            championship_list_idx,
+            participation_team_idxs,
+        ])
+
+        // 개인 수상 목록 추가
+        await client.query(postChampioshipAwardSQL, [
+            championship_list_idx,
+            championship_award_name,
+        ])
+
+        await client.query("COMMIT");
+
+        res.status(200).send({})
+    } catch(e){
+        await client.query("ROLLBACK");
         next(e)
     }
 }
@@ -236,10 +316,13 @@ const communityTeamKick = async (req,res,next) => {
         next(e)
     }
 }
+
 module.exports = {
     getCommunity,
     getCommunityStaff,
     getCommunityTeam,
+    getCommunityChampionship,
+    postChampioship,
     communityStaffAccess,
     communityStaffAccessDeny,
     kickCommunityStaff,
