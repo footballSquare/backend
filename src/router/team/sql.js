@@ -183,11 +183,28 @@ SET
 WHERE team_list_idx = $1;
 `
 
+// 팀명 중복 확인
+const checkTeamNameSQL = 
+`
+SELECT team_list_idx 
+FROM team.list 
+WHERE team_list_name = $1;
+`
+
+const checkTeamShortNameSQL = 
+`
+SELECT team_list_idx 
+FROM team.list 
+WHERE team_list_short_name = $1;
+`
+
 module.exports = {
     getTeamListSQL,
     postTeamSQL,
     postTeamManagerSQL,
     changeTeamDataSQL,
+    checkTeamNameSQL,
+    checkTeamShortNameSQL,
     deleteTeamSQL,
     getTeamSQL,
     getMemberSQL,

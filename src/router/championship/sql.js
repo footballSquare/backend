@@ -46,9 +46,50 @@ INSERT INTO championship.championship_match (
 ) VALUES ($1, $2, $3, $4, $5)
 `
 
+// 대회 정보 가져오기
+const getChampionShipDataSQL =
+`
+SELECT 
+    c.championship_list_idx,
+    c.championship_list_name,
+    c.championship_list_description,
+    c.match_type_idx,
+    c.championship_list_throphy_img,
+    c.championship_list_start_date,
+    c.championship_list_end_date,
+    c.championship_list_color,
+    c.common_status_idx,
+    w.team_list_idx AS winner_team_idx,
+    w.championship_winner_team_name AS winner_team_name,
+    t.team_list_emblem AS winner_team_emblem,
+    t.team_list_color AS winner_team_color
+FROM championship.list AS c
+LEFT JOIN championship.winner AS w 
+    ON c.championship_list_idx = w.championship_list_idx
+LEFT JOIN team.list AS t
+    ON w.team_list_idx = t.team_list_idx
+WHERE c.championship_list_idx = $1;
+`
+
+// 대회 참여 팀 가져오기
+const getChampionShipParticipationTeamSQL =
+`
+SELECT 
+    championship.participation_team.team_list_idx,
+    championship.participation_team.team_list_name,
+    team.list.team_list_short_name,
+    team.list.team_list_color,
+    team.list.team_list_emblem
+FROM championship.participation_team
+JOIN team.list ON championship.participation_team.team_list_idx = team.list.team_list_idx
+WHERE championship.participation_team.championship_list_idx = $1;
+`
+
 module.exports = {
     getMatchTypeSQL,
     findTeamCaptainSQL,
     postTeamMatchSQL,
-    postChampionShipMatchSQL
+    postChampionShipMatchSQL,
+    getChampionShipDataSQL,
+    getChampionShipParticipationTeamSQL
 }

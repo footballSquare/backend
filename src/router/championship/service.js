@@ -17,7 +17,9 @@ const {
     getMatchTypeSQL,
     findTeamCaptainSQL,
     postTeamMatchSQL,
-    postChampionShipMatchSQL
+    postChampionShipMatchSQL,
+    getChampionShipDataSQL,
+    getChampionShipParticipationTeamSQL
 } = require("./sql")
 
 // 대회 매치 생성하기
@@ -98,9 +100,37 @@ const postChampionShipMatch = async (req,res,next) => {
     }
 }
 
+// 대회 참여 팀 가져오기
+const getChampionShipData = async (req,res,next) => {
+    const {championship_list_idx} = req.params
 
+    try{
+        const result = await client.query(getChampionShipDataSQL, [
+            championship_list_idx
+        ])
+        res.status(200).send({ championship_data : result.rows })
+    } catch(e){
+        next(e)
+    }
+}
+
+// 대회 참여 팀 가져오기
+const getChampionShipParticipationTeam = async (req,res,next) => {
+    const {championship_list_idx} = req.params
+
+    try{
+        const result = await client.query(getChampionShipParticipationTeamSQL, [
+            championship_list_idx
+        ])
+        res.status(200).send({ participation_team : result.rows })
+    } catch(e){
+        next(e)
+    }
+}
 
 
 module.exports = {
-    postChampionShipMatch
+    postChampionShipMatch,
+    getChampionShipData,
+    getChampionShipParticipationTeam
 }

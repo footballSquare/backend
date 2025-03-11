@@ -7,6 +7,8 @@ const {
     getTeamListSQL,
     postTeamSQL,
     changeTeamDataSQL,
+    checkTeamNameSQL,
+    checkTeamShortNameSQL,
     deleteTeamSQL,
     postTeamManagerSQL,
     getTeamSQL,
@@ -98,7 +100,7 @@ const changeTeamData = async (req,res,next) => {
     } = req.body
 
     try{
-        result = await client.query(changeTeamDataSQL, [
+        await client.query(changeTeamDataSQL, [
             team_list_idx,
             team_list_name,
             team_list_short_name,
@@ -106,6 +108,46 @@ const changeTeamData = async (req,res,next) => {
             team_list_announcement,
             common_status_idx
         ])
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
+
+// 팀명 중복 확인하기
+const checkTeamName = async (req,res,next) => {
+    const {
+        team_list_name
+    } = req.body
+
+    try{
+        const result = await client.query(checkTeamNameSQL, [
+            team_list_name
+        ])
+
+        if (result.rowCount > 0) {
+            throw customError(409, `중복 팀명`);
+        }
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
+
+// 팀 약칭 중복 확인하기
+const checkTeamShortName = async (req,res,next) => {
+    const {
+        team_list_short_name
+    } = req.body
+
+    try{
+        const result = await client.query(checkTeamShortNameSQL, [
+            team_list_short_name
+        ])
+
+        if (result.rowCount > 0) {
+            throw customError(409, `중복 팀 약칭`);
+        }
         res.status(200).send({})
     } catch(e){
         next(e)
@@ -288,6 +330,8 @@ module.exports = {
     teamApplication,
     teamApplicationList,
     changeTeamData,
+    checkTeamName,
+    checkTeamShortName,
     teamLeave
     // changeTeamEmblem
 }

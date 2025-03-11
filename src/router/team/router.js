@@ -11,6 +11,8 @@ const {
     teamApplication,
     teamApplicationList,
     changeTeamData,
+    checkTeamName,
+    checkTeamShortName,
     deleteTeam,
     teamMemberApproval,
     teamLeave
@@ -40,6 +42,16 @@ router.get("/:team_list_idx/member",
 // 팀 정보 수정하기
 router.put("/:team_list_idx",
     changeTeamData
+)
+
+// 팀명 중복 확인하기
+router.get("/check_name",
+    checkTeamName
+)
+
+// 팀 약칭 중복 확인하기
+router.get("/check_short_name",
+    checkTeamShortName
 )
 
 // 팀 엠블렘 수정하기
