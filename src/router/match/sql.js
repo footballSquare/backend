@@ -264,6 +264,35 @@ INSERT INTO match.waitlist (
 ) VALUES ($1, $2, $3);
 `
 
+const postTeamStatsSQL =
+`
+WITH team_data AS (
+    SELECT team_list_name FROM team.list WHERE team_list_idx = $2
+)
+INSERT INTO match.team_stats (
+    match_match_idx,
+    team_list_idx,
+    team_list_name,
+    match_team_stats_our_score,
+    match_team_stats_other_score,
+    match_team_stats_possession,
+    match_team_stats_total_shot,
+    match_team_stats_expected_goal,
+    match_team_stats_total_pass,
+    match_team_stats_total_tackle,
+    match_team_stats_success_tackle,
+    match_team_stats_saved,
+    match_team_stats_cornerkick,
+    match_team_stats_freekick,
+    match_team_stats_penaltykick,
+    match_team_stats_evidence_img
+) VALUES (
+    $1, 
+    $2, 
+    (SELECT team_list_name FROM team_data), 
+    $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+);
+`;
 
 module.exports = {
     getTeamMatchListSQL,
@@ -281,5 +310,6 @@ module.exports = {
     getMatchWaitListSQL,
     deleteFromWaitListSQL,
     insertIntoParticipantSQL,
-    postMatchWaitListSQL
+    postMatchWaitListSQL,
+    postTeamStatsSQL
 }

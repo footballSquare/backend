@@ -17,7 +17,8 @@ const {
     getMatchWaitList,
     waitApproval,
     joinOpenMatch,
-    leaveMatch
+    leaveMatch,
+    postTeamStats
 } = require("./service")
 
 // 팀 매치 목록 가져오기
@@ -85,4 +86,10 @@ router.delete("/:match_match_idx/leave",
     getMatchAndTeamInfo,
     leaveMatch
 )
+
+// 매치 팀 스탯 작성하기
+router.post("/:match_match_idx/team_stats",
+    postTeamStats
+)
+
 module.exports = router

@@ -17,7 +17,8 @@ const {
     getMatchWaitListSQL,
     deleteFromWaitListSQL,
     insertIntoParticipantSQL,
-    postMatchWaitListSQL
+    postMatchWaitListSQL,
+    postTeamStatsSQL
 } = require("./sql")
 
 // 팀 매치 목록 보기
@@ -356,6 +357,53 @@ const leaveMatch = async (req, res,next) => {
     }
 };
 
+// 팀 스탯 입력하기 
+const postTeamStats = async (req,res,next) => {
+    const {match_match_idx} = req.params
+    const {
+        team_list_idx,
+        match_team_stats_our_score,
+        match_team_stats_other_score,
+        match_team_stats_possesion,
+        match_team_stats_total_shot,
+        match_team_stats_expected_goal,
+        match_team_stats_total_pass,
+        match_team_stats_total_tackle,
+        match_team_stats_success_tackle,
+        match_team_stats_saved,
+        match_team_stats_cornerkick,
+        match_team_stats_freekick,
+        match_team_stats_penaltykick,
+        match_team_stats_evidence_img
+    } = req.body
+
+    console.log(match_team_stats_saved)
+    try{
+        await client.query(postTeamStatsSQL, [
+            match_match_idx,
+            team_list_idx,
+            match_team_stats_our_score,
+            match_team_stats_other_score,
+            match_team_stats_possesion,
+            match_team_stats_total_shot,
+            match_team_stats_expected_goal,
+            match_team_stats_total_pass,
+            match_team_stats_total_tackle,
+            match_team_stats_success_tackle,
+            match_team_stats_saved,
+            match_team_stats_cornerkick,
+            match_team_stats_freekick,
+            match_team_stats_penaltykick,
+            match_team_stats_evidence_img
+        ])
+
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
+
+
 module.exports = {
     getTeamMatchList,
     getOpenMatchList,
@@ -369,5 +417,6 @@ module.exports = {
     getMatchWaitList,
     waitApproval,
     joinOpenMatch,
-    leaveMatch
+    leaveMatch,
+    postTeamStats
 }
