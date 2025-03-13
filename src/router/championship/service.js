@@ -22,7 +22,8 @@ const {
     getChampionShipParticipationTeamSQL,
     fetchChampionshipMatchesSQL,
     fetchTeamInfoSQL,
-    fetchMatchStatsSQL
+    fetchMatchStatsSQL,
+    fetchChampionShipMatchSQL
 } = require("./sql")
 
 // 대회 매치 생성하기
@@ -222,10 +223,82 @@ const getChampionShipMatchList = async (req,res,next) => {
     }
 }
 
+// 대회 매치 정보 가져오기
+const fetchChampionShipMatch = async (req,res,next) => {
+    const {championship_match_idx} = req.params
+
+    try{
+        const result = await client.query(fetchChampionShipMatchSQL, [
+            championship_match_idx
+        ])
+        const championshipData = result.rows[0];
+
+        const formattedResponse = {
+            championship_match_idx: championshipData.championship_match_idx,
+            championship_list_idx: championshipData.championship_list_idx,
+            match_info: {
+                match_match_start_time: championshipData.match_match_start_time,
+                match_match_duration: championshipData.match_match_duration
+            },
+            first_team: {
+                team_list_idx: championshipData.first_team_idx,
+                stats: {
+                    match_team_stats_our_score: championshipData.first_team_our_score,
+                    match_team_stats_other_score: championshipData.first_team_other_score,
+                    match_team_stats_possession: championshipData.first_team_possession,
+                    match_team_stats_total_shot: championshipData.first_team_total_shot,
+                    match_team_stats_expected_goal: championshipData.first_team_expected_goal,
+                    match_team_stats_total_pass: championshipData.first_team_total_pass,
+                    match_team_stats_total_tackle: championshipData.first_team_total_tackle,
+                    match_team_stats_success_tackle: championshipData.first_team_success_tackle,
+                    match_team_stats_saved: championshipData.first_team_saved,
+                    match_team_stats_cornerkick: championshipData.first_team_cornerkick,
+                    match_team_stats_freekick: championshipData.first_team_freekick,
+                    match_team_stats_penaltykick: championshipData.first_team_penaltykick
+                },
+                player_stats: []
+            },
+            second_team: {
+                team_list_idx: championshipData.second_team_idx,
+                stats: {
+                    match_team_stats_our_score: championshipData.second_team_our_score,
+                    match_team_stats_other_score: championshipData.second_team_other_score,
+                    match_team_stats_possession: championshipData.second_team_possession,
+                    match_team_stats_total_shot: championshipData.second_team_total_shot,
+                    match_team_stats_expected_goal: championshipData.second_team_expected_goal,
+                    match_team_stats_total_pass: championshipData.second_team_total_pass,
+                    match_team_stats_total_tackle: championshipData.second_team_total_tackle,
+                    match_team_stats_success_tackle: championshipData.second_team_success_tackle,
+                    match_team_stats_saved: championshipData.second_team_saved,
+                    match_team_stats_cornerkick: championshipData.second_team_cornerkick,
+                    match_team_stats_freekick: championshipData.second_team_freekick,
+                    match_team_stats_penaltykick: championshipData.second_team_penaltykick
+                },
+                player_stats: []
+            }
+        };
+        
+        // 선수 데이터를 추가
+        championshipData.player_stats.forEach(player => {
+        
+            if (player.match_match_idx === championshipData.championship_match_first_idx) {
+                formattedResponse.first_team.player_stats.push(player);
+            } 
+            else if (player.match_match_idx === championshipData.championship_match_second_idx) {
+                formattedResponse.second_team.player_stats.push(player);
+            } 
+        });
+        
+        res.status(200).send({ championship_match: formattedResponse });
+    } catch(e){
+        next(e)
+    }
+}
 
 module.exports = {
     postChampionShipMatch,
     getChampionShipData,
     getChampionShipParticipationTeam,
-    getChampionShipMatchList
+    getChampionShipMatchList,
+    fetchChampionShipMatch
 }

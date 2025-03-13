@@ -18,7 +18,8 @@ const {
     changeMemberRoleSQL,
     kickMemberSQL,
     teamApplicationSQL,
-    teamApplicationListSQL
+    teamApplicationListSQL,
+    changeTeamEmblemSQL
 } = require("./sql")
 
 // 팀 목록 가져오기
@@ -155,8 +156,20 @@ const checkTeamShortName = async (req,res,next) => {
 }
 
 // 팀 엠블렘 변경하기
-// const changeTeamEmblem = async (req,res,next) => {
-// }
+const changeTeamEmblem = async (req,res,next) => {
+    const img_url = req.fileUrl
+    const {team_list_idx} = req.params
+
+    try{
+        await client.query(changeTeamEmblemSQL, [
+            team_list_idx,
+            img_url
+        ])
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
 
 // 팀 해체하기
 const deleteTeam = async (req,res,next) => {
@@ -332,6 +345,6 @@ module.exports = {
     changeTeamData,
     checkTeamName,
     checkTeamShortName,
-    teamLeave
-    // changeTeamEmblem
+    teamLeave,
+    changeTeamEmblem
 }

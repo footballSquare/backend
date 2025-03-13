@@ -191,12 +191,22 @@ FROM team.list
 WHERE team_list_name = $1;
 `
 
+// 팀 약칭 중복 확인
 const checkTeamShortNameSQL = 
 `
 SELECT team_list_idx 
 FROM team.list 
 WHERE team_list_short_name = $1;
 `
+
+// 팀 엠블렘 변경 sql
+const changeTeamEmblemSQL =
+`
+UPDATE team.list
+SET team_list_emblem = $2
+WHERE team_list_idx = $1;
+`
+
 
 module.exports = {
     getTeamListSQL,
@@ -213,5 +223,6 @@ module.exports = {
     changeMemberRoleSQL,
     kickMemberSQL,
     teamApplicationSQL,
-    teamApplicationListSQL
+    teamApplicationListSQL,
+    changeTeamEmblemSQL
 }

@@ -17,8 +17,10 @@ const {
     getMatchWaitList,
     waitApproval,
     joinOpenMatch,
+    joinTeamMatch,
     leaveMatch,
-    postTeamStats
+    postTeamStats,
+    postPlayerStats
 } = require("./service")
 
 // 팀 매치 목록 가져오기
@@ -81,6 +83,11 @@ router.post("/:match_match_idx/open/join",
     joinOpenMatch
 )
 
+// 팀 매치 참여하기
+router.post("/:match_match_idx/team/join",
+    joinTeamMatch
+)
+
 // 매치 참여 해제하기
 router.delete("/:match_match_idx/leave",
     getMatchAndTeamInfo,
@@ -91,5 +98,12 @@ router.delete("/:match_match_idx/leave",
 router.post("/:match_match_idx/team_stats",
     postTeamStats
 )
+
+
+// 개인 스탯 작성하기
+router.post("/:match_match_idx/player_stats",
+    postPlayerStats
+)
+
 
 module.exports = router

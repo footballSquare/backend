@@ -1,5 +1,8 @@
 const router = require("express").Router()
 
+const {uploadFileToS3} =
+require("../../middleware/useS3")
+
 const {
     getTeamList,
     postTeam,
@@ -15,8 +18,8 @@ const {
     checkTeamShortName,
     deleteTeam,
     teamMemberApproval,
-    teamLeave
-    // changeTeamEmblem
+    teamLeave,
+    changeTeamEmblem
 } = require("./service")
 
 // 팀 목록보기
@@ -55,9 +58,10 @@ router.get("/check_short_name",
 )
 
 // 팀 엠블렘 수정하기
-// router.put("/:team_list_idx/emblem",
-//     changeTeamEmblem
-// )
+router.put("/:team_list_idx/emblem",
+    uploadFileToS3,
+    changeTeamEmblem
+)
 
 // 팀 해체하기
 router.delete("/:team_list_idx",

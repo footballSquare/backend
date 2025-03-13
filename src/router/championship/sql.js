@@ -126,6 +126,128 @@ FROM match.team_stats
 WHERE match_match_idx = ANY($1);
 `;
 
+// 매치 세부 정보 가져오기
+const fetchChampionShipMatchSQL =
+`
+WITH match_info AS (
+    SELECT 
+        cm.championship_match_idx,
+        cm.championship_list_idx,
+        cm.match_match_start_time,
+        cm.match_match_duration,
+        cm.championship_match_first_idx, 
+        cm.championship_match_second_idx 
+    FROM championship.championship_match cm
+    WHERE cm.championship_match_idx = $1
+),
+team_stats AS (
+    SELECT 
+        ts.match_match_idx,
+        ts.team_list_idx,
+        ts.match_team_stats_our_score,
+        ts.match_team_stats_other_score,
+        ts.match_team_stats_possession,
+        ts.match_team_stats_total_shot,
+        ts.match_team_stats_expected_goal,  
+        ts.match_team_stats_total_pass,
+        ts.match_team_stats_total_tackle,
+        ts.match_team_stats_success_tackle,
+        ts.match_team_stats_saved,
+        ts.match_team_stats_cornerkick,
+        ts.match_team_stats_freekick,
+        ts.match_team_stats_penaltykick
+    FROM match.team_stats ts
+    WHERE ts.match_match_idx IN (
+        SELECT championship_match_first_idx FROM match_info 
+        UNION 
+        SELECT championship_match_second_idx FROM match_info
+    )
+),
+player_stats AS (
+    SELECT 
+        ps.match_match_idx,
+        ps.player_list_idx,
+        ps.player_list_nickname,
+        ps.match_player_stats_goal,
+        ps.match_player_stats_assist,
+        ps.match_player_stats_successrate_pass,
+        ps.match_player_stats_successrate_dribble,
+        ps.match_player_stats_successrate_tackle,
+        ps.match_player_stats_possession,
+        ps.match_player_stats_standing_tackle,
+        ps.match_player_stats_sliding_tackle,
+        ps.match_player_stats_cutting,
+        ps.match_player_stats_saved,
+        ps.match_player_stats_successrate_saved,
+        ps.match_player_stats_evidence_img
+    FROM match.player_stats ps
+    WHERE ps.match_match_idx IN (
+        SELECT championship_match_first_idx FROM match_info 
+        UNION 
+        SELECT championship_match_second_idx FROM match_info
+    )
+)
+SELECT 
+    mi.championship_match_idx,
+    mi.championship_list_idx,
+    mi.match_match_start_time,
+    mi.match_match_duration,
+    mi.championship_match_first_idx, 
+    mi.championship_match_second_idx, 
+
+    -- 첫 번째 팀 정보
+    ts1.team_list_idx AS first_team_idx,
+    ts1.match_team_stats_our_score AS first_team_our_score,
+    ts1.match_team_stats_other_score AS first_team_other_score,
+    ts1.match_team_stats_possession AS first_team_possession,
+    ts1.match_team_stats_total_shot AS first_team_total_shot,
+    ts1.match_team_stats_expected_goal AS first_team_expected_goal,
+    ts1.match_team_stats_total_pass AS first_team_total_pass,
+    ts1.match_team_stats_total_tackle AS first_team_total_tackle,
+    ts1.match_team_stats_success_tackle AS first_team_success_tackle,
+    ts1.match_team_stats_saved AS first_team_saved,
+    ts1.match_team_stats_cornerkick AS first_team_cornerkick,
+    ts1.match_team_stats_freekick AS first_team_freekick,
+    ts1.match_team_stats_penaltykick AS first_team_penaltykick,
+
+    -- 두 번째 팀 정보
+    ts2.team_list_idx AS second_team_idx,
+    ts2.match_team_stats_our_score AS second_team_our_score,
+    ts2.match_team_stats_other_score AS second_team_other_score,
+    ts2.match_team_stats_possession AS second_team_possession,
+    ts2.match_team_stats_total_shot AS second_team_total_shot,
+    ts2.match_team_stats_expected_goal AS second_team_expected_goal,
+    ts2.match_team_stats_total_pass AS second_team_total_pass,
+    ts2.match_team_stats_total_tackle AS second_team_total_tackle,
+    ts2.match_team_stats_success_tackle AS second_team_success_tackle,
+    ts2.match_team_stats_saved AS second_team_saved,
+    ts2.match_team_stats_cornerkick AS second_team_cornerkick,
+    ts2.match_team_stats_freekick AS second_team_freekick,
+    ts2.match_team_stats_penaltykick AS second_team_penaltykick,
+
+    -- 개인 스탯을 JSON 배열로 반환 (player_stats가 없을 경우 빈 배열 반환)
+    COALESCE(json_agg(ps.*) FILTER (WHERE ps.match_match_idx IS NOT NULL), '[]') AS player_stats
+FROM match_info mi
+LEFT JOIN team_stats ts1 ON mi.championship_match_first_idx = ts1.match_match_idx
+LEFT JOIN team_stats ts2 ON mi.championship_match_second_idx = ts2.match_match_idx
+LEFT JOIN player_stats ps ON ps.match_match_idx IN (mi.championship_match_first_idx, mi.championship_match_second_idx)
+GROUP BY 
+    mi.championship_match_idx, 
+    mi.championship_list_idx, 
+    mi.match_match_start_time, 
+    mi.match_match_duration, 
+    mi.championship_match_first_idx,
+    mi.championship_match_second_idx,
+    ts1.team_list_idx, ts2.team_list_idx, 
+    ts1.match_team_stats_our_score, ts1.match_team_stats_other_score, ts1.match_team_stats_possession, 
+    ts1.match_team_stats_total_shot, ts1.match_team_stats_expected_goal, ts1.match_team_stats_total_pass, 
+    ts1.match_team_stats_total_tackle, ts1.match_team_stats_success_tackle, ts1.match_team_stats_saved, 
+    ts1.match_team_stats_cornerkick, ts1.match_team_stats_freekick, ts1.match_team_stats_penaltykick,
+    ts2.match_team_stats_our_score, ts2.match_team_stats_other_score, ts2.match_team_stats_possession, 
+    ts2.match_team_stats_total_shot, ts2.match_team_stats_expected_goal, ts2.match_team_stats_total_pass, 
+    ts2.match_team_stats_total_tackle, ts2.match_team_stats_success_tackle, ts2.match_team_stats_saved, 
+    ts2.match_team_stats_cornerkick, ts2.match_team_stats_freekick, ts2.match_team_stats_penaltykick;
+`
 
 module.exports = {
     getMatchTypeSQL,
@@ -136,5 +258,6 @@ module.exports = {
     getChampionShipParticipationTeamSQL,
     fetchChampionshipMatchesSQL,
     fetchTeamInfoSQL,
-    fetchMatchStatsSQL
+    fetchMatchStatsSQL,
+    fetchChampionShipMatchSQL
 }

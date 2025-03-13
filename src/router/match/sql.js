@@ -75,7 +75,8 @@ SET
     match_match_participation_type = $4,
     match_match_attribute = $5,
     match_match_start_time = $6,
-    match_match_duration = $7
+    match_match_duration = $7,
+    match_formation_idx = $8
 WHERE match_match_idx = $1
 AND team_list_idx = $2
 AND player_list_idx = $3;
@@ -123,6 +124,13 @@ DELETE FROM
     match.match 
 WHERE match_match_idx = $1;
 `
+
+// 매치 참여자 삭제
+const deleteParticipantSQL = 
+`
+DELETE FROM match.participant
+WHERE match_match_idx = $1 AND player_list_idx = $2;
+`;
 
 // 매치 세부 정보 가져오기
 const getMatchDetailDataSQL =
@@ -264,6 +272,7 @@ INSERT INTO match.waitlist (
 ) VALUES ($1, $2, $3);
 `
 
+// 팀 스탯 입력
 const postTeamStatsSQL =
 `
 WITH team_data AS (
@@ -294,6 +303,49 @@ INSERT INTO match.team_stats (
 );
 `;
 
+// 매치 참여자 삭제
+const deletedMatchParticipantSQL = 
+`
+DELETE FROM match.participant
+WHERE match_match_idx = $1;
+`
+
+// 매치 대기자 목록 삭제 
+const deletedMatchWaitListSQL = 
+`
+DELETE FROM match.waitlist
+WHERE match_match_idx = $1;
+`
+
+// 개인 스탯 입력하기
+const postPlayerStatsSQL =
+`
+WITH player_data AS (
+    SELECT player_list_nickname 
+    FROM player.list 
+    WHERE player_list_idx = $2
+)
+INSERT INTO match.player_stats (
+    match_match_idx,
+    player_list_idx,
+    player_list_nickname,
+    match_player_stats_goal,
+    match_player_stats_assist,
+    match_player_stats_successrate_pass,
+    match_player_stats_successrate_dribble,
+    match_player_stats_successrate_tackle,
+    match_player_stats_possession,
+    match_player_stats_standing_tackle,
+    match_player_stats_sliding_tackle,
+    match_player_stats_cutting,
+    match_player_stats_saved,
+    match_player_stats_successrate_saved,
+    match_player_stats_evidence_img
+) VALUES (
+    $1, $2, (SELECT player_list_nickname FROM player_data), 
+    $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+)
+`
 module.exports = {
     getTeamMatchListSQL,
     getOpenMatchDataSQL,
@@ -311,5 +363,9 @@ module.exports = {
     deleteFromWaitListSQL,
     insertIntoParticipantSQL,
     postMatchWaitListSQL,
-    postTeamStatsSQL
+    postTeamStatsSQL,
+    deleteParticipantSQL,
+    deletedMatchParticipantSQL,
+    deletedMatchWaitListSQL,
+    postPlayerStatsSQL
 }

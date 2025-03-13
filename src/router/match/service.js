@@ -18,7 +18,11 @@ const {
     deleteFromWaitListSQL,
     insertIntoParticipantSQL,
     postMatchWaitListSQL,
-    postTeamStatsSQL
+    postTeamStatsSQL,
+    deleteParticipantSQL,
+    deletedMatchParticipantSQL,
+    deletedMatchWaitListSQL,
+    postPlayerStatsSQL
 } = require("./sql")
 
 // 팀 매치 목록 보기
@@ -85,10 +89,22 @@ const putTeamMatch = async (req,res,next) => {
         match_match_participation_type,
         match_match_attribute,
         match_match_start_time,
-        match_match_duration
+        match_match_duration,
+        match_formation_idx
     } = req.body
 
     try{
+        await client.query("BEGIN");
+        // 매치 대기자 목록 삭제
+        await client.query(deletedMatchParticipantSQL, [
+            match_match_idx
+        ])
+
+        // 매치 참여자 삭제
+        await client.query(deletedMatchWaitListSQL, [
+            match_match_idx
+        ]) 
+
         await client.query(putTeamMatchSQL, [
             match_match_idx,
             team_list_idx,
@@ -96,10 +112,13 @@ const putTeamMatch = async (req,res,next) => {
             match_match_participation_type,
             match_match_attribute,
             match_match_start_time,
-            match_match_duration
+            match_match_duration,
+            match_formation_idx
         ])
+        await client.query("COMMIT");
         res.status(200).send({})
     } catch(e){
+        await client.query("ROLLBACK");
         next(e)
     }
 }
@@ -170,9 +189,27 @@ const deleteMatch = async (req,res,next) => {
     const {match_match_idx} = req.params
 
     try{
-        await client.query(deleteMatchSQL, [match_match_idx])
+        await client.query("BEGIN");
+        // 매치 대기자 목록 삭제
+        await client.query(deletedMatchParticipantSQL, [
+            match_match_idx
+        ])
+
+        // 매치 참여자 삭제
+        await client.query(deletedMatchWaitListSQL, [
+            match_match_idx
+        ]) 
+
+        // 매치 삭제
+        await client.query(deleteMatchSQL, [
+            match_match_idx
+        ])
+
+        await client.query("COMMIT");
+
         res.status(200).send({})
     } catch(e){
+        await client.query("ROLLBACK");
         next(e)
     }
 }
@@ -293,6 +330,30 @@ const joinOpenMatch = async (req,res,next) => {
     }
 }
 
+// 팀 매치 참여하기
+const joinTeamMatch = async (req,res,next) => {
+    const {match_match_idx} = req.params
+    const {match_position_idx,player_list_idx} = req.body
+
+    try{
+        const result = await client.query(checkMatchParticipationSQL, [match_match_idx])
+        let sql
+        
+        // 매치 생성자 이거나, 공개 매치일 경우 대기자 목록이 아닌 즉시 참여
+        if (result.rows[0].player_list_idx == player_list_idx || result.rows[0].match_match_participation_type == 1) sql = postMatchParticipantSQL
+        else if(result.rows[0].match_match_participation_type == 0) sql = postMatchWaitListSQL
+         
+        await client.query(sql, [
+            match_match_idx,
+            player_list_idx,
+            match_position_idx
+        ])
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
+
 // 매치 참여 해제하기
 const leaveMatch = async (req, res,next) => {
     const { target_player_idx } = req.query;
@@ -304,12 +365,6 @@ const leaveMatch = async (req, res,next) => {
     try {
         // 자기 자신을 삭제하는 경우 → 단순히 참가자 목록에서 삭제
         if (player_list_idx == target_player_idx) {
-            
-            const deleteParticipantSQL = `
-                DELETE FROM match.participant
-                WHERE match_match_idx = $1 AND player_list_idx = $2
-                RETURNING player_list_idx;
-            `;
             await client.query(deleteParticipantSQL, [match_match_idx, target_player_idx]);
             return res.status(200).send({});
         }
@@ -319,14 +374,13 @@ const leaveMatch = async (req, res,next) => {
             
             await client.query("BEGIN"); // 트랜잭션 시작
 
-            console.log(match_match_idx,target_player_idx)
             // 2-1️⃣ 참가자 목록에서 삭제
-            const deleteParticipantSQL = `
+            const deleteParticipantReturnPositionSQL = `
                 DELETE FROM match.participant
                 WHERE match_match_idx = $1 AND player_list_idx = $2
                 RETURNING match_position_idx;
             `;
-            const deleteParticipantResult = await client.query(deleteParticipantSQL, [match_match_idx, target_player_idx]);
+            const deleteParticipantResult = await client.query(deleteParticipantReturnPositionSQL, [match_match_idx, target_player_idx]);
 
             if (deleteParticipantResult.rowCount === 0) {
                 await client.query("ROLLBACK");
@@ -403,6 +457,48 @@ const postTeamStats = async (req,res,next) => {
     }
 }
 
+// 개인 스탯 입력하기
+const postPlayerStats = async (req,res,next) => {
+    const {match_match_idx} = req.params
+    const {
+        player_list_idx,
+        match_player_stats_goal,
+        match_player_stats_assist,
+        match_player_stats_successrate_pass,
+        match_player_stats_successrate_dribble,
+        match_player_stats_successrate_tackle,
+        match_player_stats_possession,
+        match_player_stats_standing_tackle,
+        match_player_stats_sliding_tackle,
+        match_player_stats_cutting,
+        match_player_stats_saved,
+        match_player_stats_successrate_saved,
+        match_player_stats_evidence_img
+    } = req.body
+
+    try{
+        await client.query(postPlayerStatsSQL, [
+            match_match_idx,
+            player_list_idx,
+            match_player_stats_goal,
+            match_player_stats_assist,
+            match_player_stats_successrate_pass,
+            match_player_stats_successrate_dribble,
+            match_player_stats_successrate_tackle,
+            match_player_stats_possession,
+            match_player_stats_standing_tackle,
+            match_player_stats_sliding_tackle,
+            match_player_stats_cutting,
+            match_player_stats_saved,
+            match_player_stats_successrate_saved,
+            match_player_stats_evidence_img
+        ])
+
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
 
 module.exports = {
     getTeamMatchList,
@@ -417,6 +513,8 @@ module.exports = {
     getMatchWaitList,
     waitApproval,
     joinOpenMatch,
+    joinTeamMatch,
     leaveMatch,
-    postTeamStats
+    postTeamStats,
+    postPlayerStats
 }

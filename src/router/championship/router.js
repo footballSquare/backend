@@ -4,7 +4,8 @@ const {
     postChampionShipMatch,
     getChampionShipParticipationTeam,
     getChampionShipData,
-    getChampionShipMatchList
+    getChampionShipMatchList,
+    fetchChampionShipMatch
 } = require("./service")
 
 // 대회 매치 생성하기
@@ -25,6 +26,11 @@ router.get("/:championship_list_idx/participation_team",
 // 대회 매치 목록 가져오기
 router.get("/:championship_list_idx/championship_match",
     getChampionShipMatchList
+)
+
+// 대회 매치 세부 정보 가져오기
+router.get("/championship_match/:championship_match_idx/detail",
+    fetchChampionShipMatch
 )
 
 module.exports = router
