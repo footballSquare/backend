@@ -4,6 +4,10 @@ const {uploadFileToS3} =
 require("../../middleware/useS3")
 
 const {
+
+} = require("../../middleware/checkInput")
+
+const {
     getTeamList,
     postTeam,
     getTeam,
@@ -19,7 +23,8 @@ const {
     deleteTeam,
     teamMemberApproval,
     teamLeave,
-    changeTeamEmblem
+    changeTeamEmblem,
+    changeTeamBanner
 } = require("./service")
 
 // 팀 목록보기
@@ -59,8 +64,14 @@ router.get("/check_short_name",
 
 // 팀 엠블렘 수정하기
 router.put("/:team_list_idx/emblem",
-    uploadFileToS3,
+    uploadFileToS3("team"),
     changeTeamEmblem
+)
+
+// 팀 배너 수정하기
+router.put("/:team_list_idx/banner",
+    uploadFileToS3("team"),
+    changeTeamBanner
 )
 
 // 팀 해체하기

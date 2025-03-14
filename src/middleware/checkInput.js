@@ -1,1 +1,5 @@
-const regColor = require("../constant/regx")
+
+
+
+module.exports = {
+};

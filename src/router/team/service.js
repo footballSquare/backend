@@ -3,6 +3,8 @@ const customError = require("../../util/customError")
 
 const { TEAM_ROLE } =require("../../constant/constantIndex")
 
+const {deleteFileFromS3} = require("../../database/s3Config/s3Deleter")
+
 const {
     getTeamListSQL,
     postTeamSQL,
@@ -157,19 +159,64 @@ const checkTeamShortName = async (req,res,next) => {
 
 // 팀 엠블렘 변경하기
 const changeTeamEmblem = async (req,res,next) => {
-    const img_url = req.fileUrl
-    const {team_list_idx} = req.params
+    const { team_list_idx } = req.params;
+    const new_img_url = req.file.location; // 업로드된 S3 파일 URL
 
-    try{
-        await client.query(changeTeamEmblemSQL, [
-            team_list_idx,
-            img_url
-        ])
-        res.status(200).send({})
-    } catch(e){
-        next(e)
+    try {
+        // 1️⃣ 기존 팀 엠블렘 URL 가져오기
+        const { rows } = await client.query(
+            `SELECT team_list_emblem FROM team.list WHERE team_list_idx = $1`,
+            [team_list_idx]
+        );
+        const old_img_url = rows[0]?.team_list_emblem;
+
+        // 2️⃣ 기존 엠블렘이 존재하면 삭제
+        if (old_img_url) {
+            await deleteFileFromS3(old_img_url);
+        }
+
+        // 3️⃣ 새로운 엠블렘 URL을 DB에 업데이트
+        await client.query(
+            changeTeamEmblemSQL,
+            [team_list_idx, new_img_url]
+        );
+
+        res.status(200).send({});
+    } catch (e) {
+        next(e);
     }
-}
+};
+
+
+// 팀 배너 변경하기 
+const changeTeamBanner = async (req, res, next) => {
+    const { team_list_idx } = req.params;
+    const new_banner_url = req.file.location; // 업로드된 S3 파일 URL
+
+    try {
+        // 1️⃣ 기존 팀 배너 URL 가져오기
+        const { rows } = await client.query(
+            `SELECT team_list_banner FROM team.list WHERE team_list_idx = $1`,
+            [team_list_idx]
+        );
+        const old_banner_url = rows[0]?.team_list_banner;
+
+        // 2️⃣ 기존 배너가 존재하면 S3에서 삭제
+        if (old_banner_url) {
+            await deleteFileFromS3(old_banner_url);
+        }
+
+        // 3️⃣ 새로운 배너 URL을 DB에 업데이트
+        await client.query(
+            `UPDATE team.list SET team_list_banner = $2 WHERE team_list_idx = $1`,
+            [team_list_idx, new_banner_url]
+        );
+
+        res.status(200).send({});
+    } catch (e) {
+        next(e);
+    }
+};
 
 // 팀 해체하기
 const deleteTeam = async (req,res,next) => {
@@ -346,5 +393,6 @@ module.exports = {
     checkTeamName,
     checkTeamShortName,
     teamLeave,
-    changeTeamEmblem
+    changeTeamEmblem,
+    changeTeamBanner
 }

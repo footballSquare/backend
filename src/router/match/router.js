@@ -4,6 +4,9 @@ const {
     getMatchAndTeamInfo
 } = require("../../middleware/getMatchInfo")
 
+const {uploadFileToS3} =
+require("../../middleware/useS3")
+
 const {
     getTeamMatchList,
     getOpenMatchList,
@@ -96,12 +99,14 @@ router.delete("/:match_match_idx/leave",
 
 // 매치 팀 스탯 작성하기
 router.post("/:match_match_idx/team_stats",
+    uploadFileToS3("evidance"),
     postTeamStats
 )
 
 
 // 개인 스탯 작성하기
 router.post("/:match_match_idx/player_stats",
+    uploadFileToS3("evidance"),
     postPlayerStats
 )
 

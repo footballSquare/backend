@@ -18,6 +18,7 @@ const {
     findTeamCaptainSQL,
     postTeamMatchSQL,
     postChampionShipMatchSQL,
+    fetchEvidanceImgSQL,
     getChampionShipDataSQL,
     getChampionShipParticipationTeamSQL,
     fetchChampionshipMatchesSQL,
@@ -100,6 +101,20 @@ const postChampionShipMatch = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        next(e)
+    }
+}
+
+// 대회 매치 증빙 자료 가져오기
+const fetchEvidanceImg = async (req,res,next) => {
+    const {championship_match_idx} = req.params
+
+    try{
+        const result = await client.query(fetchEvidanceImgSQL, [
+            championship_match_idx
+        ])
+        res.status(200).send({ evidance_img : result.rows })
+    } catch(e){
         next(e)
     }
 }
@@ -295,10 +310,13 @@ const fetchChampionShipMatch = async (req,res,next) => {
     }
 }
 
+
+
 module.exports = {
     postChampionShipMatch,
     getChampionShipData,
     getChampionShipParticipationTeam,
     getChampionShipMatchList,
-    fetchChampionShipMatch
+    fetchChampionShipMatch,
+    fetchEvidanceImg
 }

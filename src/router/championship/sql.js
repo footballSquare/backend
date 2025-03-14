@@ -46,6 +46,60 @@ INSERT INTO championship.championship_match (
 ) VALUES ($1, $2, $3, $4, $5)
 `
 
+// 대회 매치 증빙 자료 조회
+const fetchEvidanceImgSQL=
+`
+WITH match_info AS (
+    -- 대회 매치 인덱스로 팀 매치 인덱스 가져오기
+    SELECT 
+        cm.championship_match_idx,
+        cm.championship_match_first_idx AS first_match_idx,
+        cm.championship_match_second_idx AS second_match_idx
+    FROM championship.championship_match cm
+    WHERE cm.championship_match_idx = $1
+),
+team_stats AS (
+    -- 각 매치의 팀 스탯 증빙 자료 가져오기
+    SELECT 
+        ts.match_match_idx,
+        ts.team_list_idx,
+        ts.match_team_stats_evidence_img
+    FROM match.team_stats ts
+    WHERE ts.match_match_idx IN (SELECT first_match_idx FROM match_info UNION SELECT second_match_idx FROM match_info)
+),
+player_stats AS (
+    -- 각 매치의 참여자들의 개인 증빙 자료 가져오기
+    SELECT 
+        ps.match_match_idx,
+        ps.player_list_idx,
+        ps.player_list_nickname,
+        ps.match_player_stats_evidence_img
+    FROM match.player_stats ps
+    WHERE ps.match_match_idx IN (SELECT first_match_idx FROM match_info UNION SELECT second_match_idx FROM match_info)
+)
+SELECT 
+    mi.championship_match_idx,
+    mi.first_match_idx,
+    mi.second_match_idx,
+
+    -- 첫 번째 팀 증빙 자료
+    json_agg(DISTINCT ts1) FILTER (WHERE ts1.match_match_idx IS NOT NULL) AS first_team_evidence,
+    
+    -- 두 번째 팀 증빙 자료
+    json_agg(DISTINCT ts2) FILTER (WHERE ts2.match_match_idx IS NOT NULL) AS second_team_evidence,
+
+    -- 참여 선수들의 증빙 자료 (JSON 배열)
+    json_agg(DISTINCT ps) FILTER (WHERE ps.match_match_idx IS NOT NULL) AS player_evidence
+FROM match_info mi
+LEFT JOIN team_stats ts1 ON mi.first_match_idx = ts1.match_match_idx
+LEFT JOIN team_stats ts2 ON mi.second_match_idx = ts2.match_match_idx
+LEFT JOIN player_stats ps ON ps.match_match_idx IN (mi.first_match_idx, mi.second_match_idx)
+GROUP BY 
+    mi.championship_match_idx, 
+    mi.first_match_idx, 
+    mi.second_match_idx;
+`
+
 // 대회 정보 가져오기
 const getChampionShipDataSQL =
 `
@@ -254,6 +308,7 @@ module.exports = {
     findTeamCaptainSQL,
     postTeamMatchSQL,
     postChampionShipMatchSQL,
+    fetchEvidanceImgSQL,
     getChampionShipDataSQL,
     getChampionShipParticipationTeamSQL,
     fetchChampionshipMatchesSQL,

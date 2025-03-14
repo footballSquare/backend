@@ -427,11 +427,10 @@ const postTeamStats = async (req,res,next) => {
         match_team_stats_saved,
         match_team_stats_cornerkick,
         match_team_stats_freekick,
-        match_team_stats_penaltykick,
-        match_team_stats_evidence_img
+        match_team_stats_penaltykick
     } = req.body
 
-    console.log(match_team_stats_saved)
+    const match_team_stats_evidence_img = req.file.location
     try{
         await client.query(postTeamStatsSQL, [
             match_match_idx,
@@ -472,9 +471,11 @@ const postPlayerStats = async (req,res,next) => {
         match_player_stats_sliding_tackle,
         match_player_stats_cutting,
         match_player_stats_saved,
-        match_player_stats_successrate_saved,
-        match_player_stats_evidence_img
+        match_player_stats_successrate_saved
     } = req.body
+
+    console.log(player_list_idx)
+    const match_player_stats_evidence_img = req.file.location
 
     try{
         await client.query(postPlayerStatsSQL, [

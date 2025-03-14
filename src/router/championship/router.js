@@ -5,12 +5,18 @@ const {
     getChampionShipParticipationTeam,
     getChampionShipData,
     getChampionShipMatchList,
-    fetchChampionShipMatch
+    fetchChampionShipMatch,
+    fetchEvidanceImg
 } = require("./service")
 
 // 대회 매치 생성하기
 router.post("/:championship_list_idx/championship_match",
     postChampionShipMatch
+)
+
+// 대회 매치 증빙자료 가져오기
+router.get("/championship_match/:championship_match_idx/evidance_img",
+    fetchEvidanceImg
 )
 
 // 대회 정보 가져오기
