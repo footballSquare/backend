@@ -1,11 +1,30 @@
 const router = require("express").Router()
 
 const {
+    regColor,
+    regMatchDuration,
+    regMatchDatetime,
+    regTeamName,
+    regTeamShortName,
+    regTeamAnnouncement,
+    regChampionshipName,
+    regChampionshipDescription,
+    regChampionshipPeriod
+} = require("../../constant/regx")
+
+const {
+    checkRegInput,
+    checkIdx,
+    checkPage
+} = require("../../middleware/checkInput")
+
+const {
     getMatchAndTeamInfo
 } = require("../../middleware/getMatchInfo")
 
-const {uploadFileToS3} =
-require("../../middleware/useS3")
+const {
+    uploadFileToS3
+} = require("../../middleware/useS3")
 
 const {
     getTeamMatchList,
@@ -23,26 +42,35 @@ const {
     joinTeamMatch,
     leaveMatch,
     postTeamStats,
-    postPlayerStats
+    putTeamStats,
+    postPlayerStats,
+    putPlayerStats
 } = require("./service")
 
 // 팀 매치 목록 가져오기
 router.get("/team/:team_list_idx",
+    checkIdx("team_list_idx"),
+    checkPage(),
     getTeamMatchList
 )
 
 // 공개 매치 목록 가져오기
 router.get("/open",
+    checkPage(),
     getOpenMatchList
 )
 
 // 팀 매치 생성하기
 router.post("/team/:team_list_idx",
+    checkRegInput(regMatchDatetime,"match_match_start_time"),
+    checkRegInput(regMatchDuration,"match_match_duration"),
     postTeamMatch
 )
 
 // 공방 매치 생성하기
 router.post("/open",
+    checkRegInput(regMatchDatetime,"match_match_start_time"),
+    checkRegInput(regMatchDuration,"match_match_duration"),
     postOpenMatch
 )
 
@@ -103,12 +131,23 @@ router.post("/:match_match_idx/team_stats",
     postTeamStats
 )
 
+// 매치 팀 스탯 수정하기
+router.put("/:match_match_idx/team_stats",
+    putTeamStats
+)
+
 
 // 개인 스탯 작성하기
 router.post("/:match_match_idx/player_stats",
     uploadFileToS3("evidance"),
     postPlayerStats
 )
+
+// 개인 스탯 수정하기
+router.put("/:match_match_idx/player_stats",
+    putPlayerStats
+)
+
 
 
 module.exports = router

@@ -1,7 +1,8 @@
 const client = require("../../database/postgreSQL")
 const customError = require("../../util/customError")
 
-const { COMMUNITY_ROLE,
+const { 
+    COMMUNITY_ROLE,
     MATCH_TYPE,
     MATCH_PARTICIPATION_TYPE,
     MATCH_FORMATION,
@@ -9,7 +10,8 @@ const { COMMUNITY_ROLE,
     MATCH_DURATION,
     CHAMPIONSHIP_TYPE, 
     CHAMPIONSHIP_STATUS,
-    TEAM_ROLE
+    TEAM_ROLE,
+    COMMON_STATUS
 } = require("../../constant/constantIndex")
 
 
@@ -17,6 +19,10 @@ const {
     getMatchTypeSQL,
     findTeamCaptainSQL,
     postTeamMatchSQL,
+    getChampionshipMatchIdx,
+    deleteEachMatchSQL,
+    deleteChampionshipMatchSQL,
+    matchDoneSQL,
     postChampionShipMatchSQL,
     fetchEvidanceImgSQL,
     getChampionShipDataSQL,
@@ -104,6 +110,74 @@ const postChampionShipMatch = async (req,res,next) => {
         next(e)
     }
 }
+
+// 대회 매치 삭제하기
+const deleteChampionShipMatch = async (req,res,next) => {
+    const {championship_match_idx} = req.params
+    const {
+
+    } = req.body
+
+    try{
+        await client.query("BEGIN");
+        console.log("들어옴")
+
+        // 각 팀의 매치 인덱스 가져오기
+        const result = await client.query(getChampionshipMatchIdx, [championship_match_idx]);
+
+        const { championship_match_first_idx, championship_match_second_idx } = result.rows[0];
+
+        // 각 팀의 매치 삭제
+        await client.query(deleteEachMatchSQL, [
+            championship_match_first_idx,
+            championship_match_second_idx
+        ]);
+
+        // 대회 매치 삭제
+        await client.query(deleteChampionshipMatchSQL, [
+            championship_match_idx
+        ]);
+
+        await client.query("COMMIT");
+
+        res.status(200).send({})
+    } catch(e){
+        await client.query("ROLLBACK");
+        next(e)
+    }
+}
+
+// 대회 매치 마감하기
+const championShipMatchDone = async (req,res,next) => {
+    const {championship_match_idx} = req.params
+    const {
+
+    } = req.body
+
+    try{
+        await client.query("BEGIN");
+        console.log(championship_match_idx)
+        // 각 팀의 매치 인덱스 가져오기
+        const result = await client.query(getChampionshipMatchIdx, [championship_match_idx]);
+
+        const { championship_match_first_idx, championship_match_second_idx } = result.rows[0];
+
+        // 각 팀의 매치 마감하기
+        await client.query(matchDoneSQL, [
+            championship_match_first_idx,
+            championship_match_second_idx,
+            COMMON_STATUS.MATCH_STATS_CLOSED
+        ]);
+
+        await client.query("COMMIT");
+
+        res.status(200).send({})
+    } catch(e){
+        await client.query("ROLLBACK");
+        next(e)
+    }
+}
+
 
 // 대회 매치 증빙 자료 가져오기
 const fetchEvidanceImg = async (req,res,next) => {
@@ -269,7 +343,9 @@ const fetchChampionShipMatch = async (req,res,next) => {
                     match_team_stats_saved: championshipData.first_team_saved,
                     match_team_stats_cornerkick: championshipData.first_team_cornerkick,
                     match_team_stats_freekick: championshipData.first_team_freekick,
-                    match_team_stats_penaltykick: championshipData.first_team_penaltykick
+                    match_team_stats_penaltykick: championshipData.first_team_penaltykick,
+                    mom_player_idx: championshipData.first_team_mom_idx,
+                    mom_player_nickname: championshipData.first_team_mom_nickname
                 },
                 player_stats: []
             },
@@ -287,21 +363,21 @@ const fetchChampionShipMatch = async (req,res,next) => {
                     match_team_stats_saved: championshipData.second_team_saved,
                     match_team_stats_cornerkick: championshipData.second_team_cornerkick,
                     match_team_stats_freekick: championshipData.second_team_freekick,
-                    match_team_stats_penaltykick: championshipData.second_team_penaltykick
+                    match_team_stats_penaltykick: championshipData.second_team_penaltykick,
+                    mom_player_idx: championshipData.second_team_mom_idx,
+                    mom_player_nickname: championshipData.second_team_mom_nickname
                 },
                 player_stats: []
             }
         };
         
-        // 선수 데이터를 추가
+        // 선수 데이터 추가
         championshipData.player_stats.forEach(player => {
-        
             if (player.match_match_idx === championshipData.championship_match_first_idx) {
                 formattedResponse.first_team.player_stats.push(player);
-            } 
-            else if (player.match_match_idx === championshipData.championship_match_second_idx) {
+            } else if (player.match_match_idx === championshipData.championship_match_second_idx) {
                 formattedResponse.second_team.player_stats.push(player);
-            } 
+            }
         });
         
         res.status(200).send({ championship_match: formattedResponse });
@@ -314,6 +390,8 @@ const fetchChampionShipMatch = async (req,res,next) => {
 
 module.exports = {
     postChampionShipMatch,
+    deleteChampionShipMatch,
+    championShipMatchDone,
     getChampionShipData,
     getChampionShipParticipationTeam,
     getChampionShipMatchList,

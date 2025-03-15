@@ -19,10 +19,14 @@ const {
     insertIntoParticipantSQL,
     postMatchWaitListSQL,
     postTeamStatsSQL,
+    postMomSQL,
+    putTeamStatsSQL,
+    putMomSQL,
     deleteParticipantSQL,
     deletedMatchParticipantSQL,
     deletedMatchWaitListSQL,
-    postPlayerStatsSQL
+    postPlayerStatsSQL,
+    putPlayerStatsSQL
 } = require("./sql")
 
 // 팀 매치 목록 보기
@@ -427,12 +431,14 @@ const postTeamStats = async (req,res,next) => {
         match_team_stats_saved,
         match_team_stats_cornerkick,
         match_team_stats_freekick,
-        match_team_stats_penaltykick
+        match_team_stats_penaltykick,
+        mom
     } = req.body
 
     const match_team_stats_evidence_img = req.file.location
     try{
-        await client.query(postTeamStatsSQL, [
+        await client.query("BEGIN");
+        const result = await client.query(postTeamStatsSQL, [
             match_match_idx,
             team_list_idx,
             match_team_stats_our_score,
@@ -449,9 +455,74 @@ const postTeamStats = async (req,res,next) => {
             match_team_stats_penaltykick,
             match_team_stats_evidence_img
         ])
+        const match_team_stats_idx = result.rows[0].match_team_stats_idx
+
+        await client.query(postMomSQL,[
+            match_match_idx,
+            match_team_stats_idx,
+            mom
+        ])
+
+        await client.query("COMMIT");
 
         res.status(200).send({})
     } catch(e){
+        await client.query("ROLLBACK");
+        next(e)
+    }
+}
+
+// 팀 스탯 수정하기
+const putTeamStats = async (req,res,next) => {
+    const {match_match_idx} = req.params
+    const {
+        team_list_idx,
+        match_team_stats_our_score,
+        match_team_stats_other_score,
+        match_team_stats_possesion,
+        match_team_stats_total_shot,
+        match_team_stats_expected_goal,
+        match_team_stats_total_pass,
+        match_team_stats_total_tackle,
+        match_team_stats_success_tackle,
+        match_team_stats_saved,
+        match_team_stats_cornerkick,
+        match_team_stats_freekick,
+        match_team_stats_penaltykick,
+        mom
+    } = req.body
+
+    try{
+        await client.query("BEGIN");
+        const result = await client.query(putTeamStatsSQL, [
+            match_match_idx,
+            team_list_idx,
+            match_team_stats_our_score,
+            match_team_stats_other_score,
+            match_team_stats_possesion,
+            match_team_stats_total_shot,
+            match_team_stats_expected_goal,
+            match_team_stats_total_pass,
+            match_team_stats_total_tackle,
+            match_team_stats_success_tackle,
+            match_team_stats_saved,
+            match_team_stats_cornerkick,
+            match_team_stats_freekick,
+            match_team_stats_penaltykick
+        ])
+        const match_team_stats_idx = result.rows[0].match_team_stats_idx
+
+        await client.query(putMomSQL,[
+            match_match_idx,
+            match_team_stats_idx,
+            mom
+        ])
+
+        await client.query("COMMIT");
+
+        res.status(200).send({})
+    } catch(e){
+        await client.query("ROLLBACK");
         next(e)
     }
 }
@@ -501,6 +572,47 @@ const postPlayerStats = async (req,res,next) => {
     }
 }
 
+// 개인 스탯 수정하기
+const putPlayerStats = async (req,res,next) => {
+    const {match_match_idx} = req.params
+    const {
+        player_list_idx,
+        match_player_stats_goal,
+        match_player_stats_assist,
+        match_player_stats_successrate_pass,
+        match_player_stats_successrate_dribble,
+        match_player_stats_successrate_tackle,
+        match_player_stats_possession,
+        match_player_stats_standing_tackle,
+        match_player_stats_sliding_tackle,
+        match_player_stats_cutting,
+        match_player_stats_saved,
+        match_player_stats_successrate_saved
+    } = req.body
+
+    try{
+        await client.query(putPlayerStatsSQL, [
+            match_match_idx,
+            player_list_idx,
+            match_player_stats_goal,
+            match_player_stats_assist,
+            match_player_stats_successrate_pass,
+            match_player_stats_successrate_dribble,
+            match_player_stats_successrate_tackle,
+            match_player_stats_possession,
+            match_player_stats_standing_tackle,
+            match_player_stats_sliding_tackle,
+            match_player_stats_cutting,
+            match_player_stats_saved,
+            match_player_stats_successrate_saved
+        ])
+
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
+
 module.exports = {
     getTeamMatchList,
     getOpenMatchList,
@@ -517,5 +629,7 @@ module.exports = {
     joinTeamMatch,
     leaveMatch,
     postTeamStats,
-    postPlayerStats
+    putTeamStats,
+    postPlayerStats,
+    putPlayerStats
 }

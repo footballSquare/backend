@@ -300,8 +300,58 @@ INSERT INTO match.team_stats (
     $2, 
     (SELECT team_list_name FROM team_data), 
     $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
-);
+)
+RETURNING match_team_stats_idx;
 `;
+
+// mom 선정 SQL
+const postMomSQL =
+`
+INSERT INTO match.mom (
+    match_team_stats_idx,
+    match_match_idx,
+    player_list_idx,
+    player_list_nickname
+)
+SELECT 
+    $2,
+    $1,
+    $3,
+(SELECT player_list_nickname FROM player.list WHERE player_list_idx = $3);
+`
+
+// 팀 스탯 수정 SQL
+const putTeamStatsSQL = 
+`
+UPDATE match.team_stats
+SET 
+    match_team_stats_our_score = $3,
+    match_team_stats_other_score = $4,
+    match_team_stats_possession = $5,
+    match_team_stats_total_shot = $6,
+    match_team_stats_expected_goal = $7,
+    match_team_stats_total_pass = $8,
+    match_team_stats_total_tackle = $9,
+    match_team_stats_success_tackle = $10,
+    match_team_stats_saved = $11,
+    match_team_stats_cornerkick = $12,
+    match_team_stats_freekick = $13,
+    match_team_stats_penaltykick = $14
+WHERE match_match_idx = $1
+AND team_list_idx = $2
+RETURNING match_team_stats_idx; 
+`
+
+// MOM 수정 
+const putMomSQL =
+`
+UPDATE match.mom
+SET 
+    match_team_stats_idx = $2,
+    player_list_idx = (SELECT player_list_idx FROM player.list WHERE player_list_idx = $3),
+    player_list_nickname = (SELECT player_list_nickname FROM player.list WHERE player_list_idx = $3)
+WHERE match_match_idx = $1;
+`
 
 // 매치 참여자 삭제
 const deletedMatchParticipantSQL = 
@@ -346,6 +396,27 @@ INSERT INTO match.player_stats (
     $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 )
 `
+
+// 개인 스탯 수정하기
+const putPlayerStatsSQL = 
+`
+UPDATE match.player_stats
+SET 
+    match_player_stats_goal = $3,
+    match_player_stats_assist = $4,
+    match_player_stats_successrate_pass = $5,
+    match_player_stats_successrate_dribble = $6,
+    match_player_stats_successrate_tackle = $7,
+    match_player_stats_possession = $8,
+    match_player_stats_standing_tackle = $9,
+    match_player_stats_sliding_tackle = $10,
+    match_player_stats_cutting = $11,
+    match_player_stats_saved = $12,
+    match_player_stats_successrate_saved = $13
+WHERE match_match_idx = $1 
+AND player_list_idx = $2;
+`
+
 module.exports = {
     getTeamMatchListSQL,
     getOpenMatchDataSQL,
@@ -364,8 +435,12 @@ module.exports = {
     insertIntoParticipantSQL,
     postMatchWaitListSQL,
     postTeamStatsSQL,
+    postMomSQL,
+    putTeamStatsSQL,
+    putMomSQL,
     deleteParticipantSQL,
     deletedMatchParticipantSQL,
     deletedMatchWaitListSQL,
-    postPlayerStatsSQL
+    postPlayerStatsSQL,
+    putPlayerStatsSQL
 }

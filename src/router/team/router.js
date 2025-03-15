@@ -1,11 +1,25 @@
 const router = require("express").Router()
 
-const {uploadFileToS3} =
-require("../../middleware/useS3")
+const {
+    regColor,
+    regMatchDuration,
+    regMatchDatetime,
+    regTeamName,
+    regTeamShortName,
+    regTeamAnnouncement,
+    regChampionshipName,
+    regChampionshipDescription,
+    regChampionshipAwardName,
+    regChampionshipPeriod
+} = require("../../constant/regx")
 
 const {
-
+    checkRegInput,
 } = require("../../middleware/checkInput")
+
+const {
+    uploadFileToS3
+} =require("../../middleware/useS3")
 
 const {
     getTeamList,
@@ -34,6 +48,10 @@ router.get("/list",
 
 // 팀 생성하기
 router.post("/",
+    checkRegInput(regTeamName,"team_list_name"),
+    checkRegInput(regTeamShortName,"team_list_short_name"),
+    checkRegInput(regColor,"team_list_color"),
+    checkRegInput(regTeamAnnouncement,"team_list_announcement"),
     postTeam
 )
 

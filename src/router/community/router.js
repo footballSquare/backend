@@ -1,6 +1,23 @@
 const router = require("express").Router()
 
 const {
+    regColor,
+    regMatchDuration,
+    regMatchDatetime,
+    regTeamName,
+    regTeamShortName,
+    regTeamAnnouncement,
+    regChampionshipName,
+    regChampionshipDescription,
+    regChampionshipAwardName,
+    regChampionshipPeriod
+} = require("../../constant/regx")
+
+const {
+    checkRegInput,
+} = require("../../middleware/checkInput")
+
+const {
     getCommunity,
     getCommunityStaff,
     getCommunityTeam,
@@ -40,6 +57,12 @@ router.get("/:community_list_idx/championship",
 
 // 대회 만들기
 router.post("/:community_list_idx/championship",
+    checkRegInput(regChampionshipName,"championship_list_name"),
+    checkRegInput(regChampionshipDescription,"championship_list_description"),
+    checkRegInput(regColor,"championship_list_color"),
+    checkRegInput(regChampionshipPeriod,"championship_list_start_date"),
+    checkRegInput(regChampionshipPeriod,"championship_list_end_date"),
+    checkRegInput(regChampionshipAwardName,"championship_award_name"),
     postChampioship
 )
 
