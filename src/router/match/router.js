@@ -13,13 +13,24 @@ const {
 } = require("../../constant/regx")
 
 const {
+    checkIsTeam,
+    checkIsMatch,
+    checkIsCommunity,
+    checkIsChampionship,
+    checkIsChampionshipMatch,
+    checkIsFormation,
+    checkIsPlayer
+} = require("../../middleware/checkData")
+
+const {
     checkRegInput,
     checkIdx,
     checkPage,
     checkMatchFormation,
     checkMatchParticipationType,
     checkMatchType,
-    checkMatchAttribute
+    checkMatchAttribute,
+    checkPosition
 } = require("../../middleware/checkInput")
 
 const {
@@ -55,6 +66,7 @@ const {
 router.get("/team/:team_list_idx",
     checkIdx("team_list_idx"),
     checkPage(),
+    checkIsTeam,
     getTeamMatchList
 )
 
@@ -73,6 +85,8 @@ router.post("/team/:team_list_idx",
     checkMatchAttribute(),
     checkRegInput(regMatchDatetime,"match_match_start_time"),
     checkRegInput(regMatchDuration,"match_match_duration"),
+    checkIsTeam,
+    checkIsPlayer,
     postTeamMatch
 )
 
@@ -83,60 +97,75 @@ router.post("/open",
     checkMatchType(),
     checkRegInput(regMatchDatetime,"match_match_start_time"),
     checkRegInput(regMatchDuration,"match_match_duration"),
+    checkIsPlayer,
     postOpenMatch
 )
 
 // 팀 매치 수정하기
 router.put("/team/:team_list_idx",
     checkIdx("team_list_idx"),
+    checkIsMatch,
+    checkIsTeam,
+    checkIsPlayer,
     putTeamMatch
 )
 
 // 매치 마감하기
 router.put("/:match_match_idx",
     checkIdx("match_match_idx"),
+    checkIsMatch,
+    checkIsPlayer,
     closedMatch
 )
 
 // 매치 삭제하기
 router.delete("/:match_match_idx",
     checkIdx("match_match_idx"),
+    checkIsMatch,
     deleteMatch
 )
 
 // 매치 세부 정보 가져오기
 router.get("/:match_match_idx",
     checkIdx("match_match_idx"),
+    checkIsMatch,
     getMatchDetailData
 )
 
 // 매치 참여자 목록 가져오기
 router.get("/:match_match_idx/participant",
     checkIdx("match_match_idx"),
+    checkIsMatch,
     getMatchParticipantList
 )
 
 // 매치 참여 대기자 목록 가져오기
 router.get("/:match_match_idx/waitlist",
     checkIdx("match_match_idx"),
+    checkIsMatch,
     getMatchWaitList
 )
 
 // 매치 참여 승인 하기
 router.post("/:match_match_idx/approval",
     checkIdx("match_match_idx"),
+    checkIsMatch,
     waitApproval
 )
 
 // 공개 매치 참여하기
 router.post("/:match_match_idx/open/join",
     checkIdx("match_match_idx"),
+    checkPosition(),
+    checkIsMatch,
     joinOpenMatch
 )
 
 // 팀 매치 참여하기
 router.post("/:match_match_idx/team/join",
     checkIdx("match_match_idx"),
+    checkPosition(),
+    checkIsMatch,
     joinTeamMatch
 )
 
@@ -144,19 +173,48 @@ router.post("/:match_match_idx/team/join",
 router.delete("/:match_match_idx/leave",
     checkIdx("match_match_idx"),
     getMatchAndTeamInfo,
+    checkIsMatch,
     leaveMatch
 )
 
 // 매치 팀 스탯 작성하기
 router.post("/:match_match_idx/team_stats",
     checkIdx("match_match_idx"),
+    checkIdx("match_team_stats_our_score"),
+    checkIdx("match_team_stats_other_score"),
+    checkIdx("match_team_stats_possesion"),
+    checkIdx("match_team_stats_possesion"),
+    checkIdx("match_team_stats_total_shot"),
+    checkIdx("match_team_stats_expected_goal"),
+    checkIdx("match_team_stats_total_pass"),
+    checkIdx("match_team_stats_total_tackle"),
+    checkIdx("match_team_stats_saved"),
+    checkIdx("match_team_stats_cornerkick"),
+    checkIdx("match_team_stats_freekick"),
+    checkIdx("match_team_stats_penaltykick"),
+    checkIdx("mom"),
     uploadFileToS3("evidance"),
+    checkIsMatch,
     postTeamStats
 )
 
 // 매치 팀 스탯 수정하기
 router.put("/:match_match_idx/team_stats",
     checkIdx("match_match_idx"),
+    checkIdx("match_team_stats_our_score"),
+    checkIdx("match_team_stats_other_score"),
+    checkIdx("match_team_stats_possesion"),
+    checkIdx("match_team_stats_possesion"),
+    checkIdx("match_team_stats_total_shot"),
+    checkIdx("match_team_stats_expected_goal"),
+    checkIdx("match_team_stats_total_pass"),
+    checkIdx("match_team_stats_total_tackle"),
+    checkIdx("match_team_stats_saved"),
+    checkIdx("match_team_stats_cornerkick"),
+    checkIdx("match_team_stats_freekick"),
+    checkIdx("match_team_stats_penaltykick"),
+    checkIdx("mom"),
+    checkIsMatch,
     putTeamStats
 )
 
@@ -164,13 +222,37 @@ router.put("/:match_match_idx/team_stats",
 // 개인 스탯 작성하기
 router.post("/:match_match_idx/player_stats",
     checkIdx("match_match_idx"),
+    checkIdx("match_player_stats_goal"),
+    checkIdx("match_player_stats_assist"),
+    checkIdx("match_player_stats_successrate_pass"),
+    checkIdx("match_player_stats_successrate_dribble"),
+    checkIdx("match_player_stats_successrate_tackle"),
+    checkIdx("match_team_stats_expected_goal"),
+    checkIdx("match_player_stats_standing_tackle"),
+    checkIdx("match_player_stats_sliding_tackle"),
+    checkIdx("match_player_stats_cutting"),
+    checkIdx("match_player_stats_saved"),
+    checkIdx("match_player_stats_successrate_saved"),
     uploadFileToS3("evidance"),
+    checkIsMatch,
     postPlayerStats
 )
 
 // 개인 스탯 수정하기
 router.put("/:match_match_idx/player_stats",
     checkIdx("match_match_idx"),
+    checkIdx("match_player_stats_goal"),
+    checkIdx("match_player_stats_assist"),
+    checkIdx("match_player_stats_successrate_pass"),
+    checkIdx("match_player_stats_successrate_dribble"),
+    checkIdx("match_player_stats_successrate_tackle"),
+    checkIdx("match_team_stats_expected_goal"),
+    checkIdx("match_player_stats_standing_tackle"),
+    checkIdx("match_player_stats_sliding_tackle"),
+    checkIdx("match_player_stats_cutting"),
+    checkIdx("match_player_stats_saved"),
+    checkIdx("match_player_stats_successrate_saved"),
+    checkIsMatch,
     putPlayerStats
 )
 

@@ -23,7 +23,8 @@ const {
   COMMUNINY_IDX,
   COMMON_STATUS,
   CHAMPIONSHIP_TYPE,
-  CHAMPIONSHIP_STATUS
+  CHAMPIONSHIP_STATUS,
+  MATCH_POSITION
 } = require("../constant/constantIndex")
 
 // reg = 정규표현식, check = 들어올 key 값
@@ -171,6 +172,21 @@ const checkChampionshipType = () => {
   };
 };
 
+// 매치 포지션 체크
+const checkPosition = () => {
+  return (req, res, next) => {
+    const value = req.body.match_position_idx ?? req.params.match_position_idx ?? req.query.match_position_idx;
+    try {
+      if (value === undefined || !Object.values(MATCH_POSITION).map(Number).includes(value))
+        throw customError(400, `championship_type_idx 양식 오류`);
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
+
 module.exports = {
   checkRegInput,
   checkIdx,
@@ -179,5 +195,6 @@ module.exports = {
   checkMatchParticipationType,
   checkMatchType,
   checkMatchAttribute,
-  checkChampionshipType
+  checkChampionshipType,
+  checkPosition
 };

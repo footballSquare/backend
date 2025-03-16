@@ -15,6 +15,13 @@ const {
 
 const {
     checkRegInput,
+    checkIdx,
+    checkPage,
+    checkMatchFormation,
+    checkMatchParticipationType,
+    checkMatchType,
+    checkMatchAttribute,
+    checkPosition
 } = require("../../middleware/checkInput")
 
 const {
@@ -75,13 +82,13 @@ router.put("/:team_list_idx",
 
 // 팀명 중복 확인하기
 router.get("/check_name",
-    checkIdx("team_list_idx"),
+    checkRegInput(regTeamName,"team_list_name"),
     checkTeamName
 )
 
 // 팀 약칭 중복 확인하기
 router.get("/check_short_name",
-    checkIdx("team_list_idx"),
+    checkRegInput(regTeamShortName,"team_list_short_name"),
     checkTeamShortName
 )
 
