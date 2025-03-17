@@ -9,8 +9,8 @@ console.log("🚀 서버 시작!");
 
 // =============== 라우터 =============
 
-// const boardRouter = require("./router/board/router")
-// app.use("/board", boardRouter)
+const boardRouter = require("./router/board/router")
+app.use("/board", boardRouter)
 
 const championshipRouter = require("./router/championship/router")
 app.use("/championship", championshipRouter)
