@@ -9,7 +9,10 @@ const {
     regTeamAnnouncement,
     regChampionshipName,
     regChampionshipDescription,
-    regChampionshipPeriod
+    regChampionshipPeriod,
+    regBoardTitle,
+    regBoardContent,
+    regCommentContent
 } = require("../../constant/regx")
 
 const {
@@ -20,8 +23,21 @@ const {
     checkMatchParticipationType,
     checkMatchType,
     checkMatchAttribute,
-    checkChampionshipType
+    checkChampionshipType,
+    checkCategory
 } = require("../../middleware/checkInput")
+
+const {
+    checkIsTeam,
+    checkIsMatch,
+    checkIsCommunity,
+    checkIsChampionship,
+    checkIsChampionshipMatch,
+    checkIsFormation,
+    checkIsPlayer,
+    checkIsBoard,
+    checkIsComment
+} = require("../../middleware/checkData")
 
 const {
     uploadFileToS3
@@ -42,53 +58,78 @@ const {
 
 // 게시글 목록 가져오기
 router.get("/",
+    checkPage(),
+    checkCategory(),
     getBoardList
 )
 
 // 게시글 상세 보기
 router.get("/:board_list_idx",
+    checkIdx("board_list_idx"),
+    checkIsBoard,
     getBoard
 )
 
 // 게시글 작성하기
 router.post("/",
+    checkRegInput(regBoardTitle,"board_list_title"),
+    checkRegInput(regBoardContent,"board_list_content"),
+    checkIsBoard,
     uploadFileToS3("board"),
     postBoard
 )
 
 // 게시글 수정하기
 router.put("/:board_list_idx",
+    checkIdx("board_list_idx"),
+    checkRegInput(regBoardTitle,"board_list_title"),
+    checkRegInput(regBoardContent,"board_list_content"),
+    checkIsBoard,
     uploadFileToS3("board"),
     putBoard
 )
 
 // 게시글 삭제하기
 router.delete("/:board_list_idx",
+    checkIdx("board_list_idx"),
+    checkIsBoard,
     deleteBoard
 )
 
 // 게시글 좋아요
 router.post("/:board_list_idx/like",
+    checkIdx("board_list_idx"),
+    checkIsBoard,
     boardLike
 )
 
 // 게시글 좋아요 삭제
 router.delete("/:board_list_idx/like",
+    checkIdx("board_list_idx"),
+    checkIsBoard,
     boardLikeDelete
 )
 
 // 댓글 작성
 router.post("/:board_list_idx/comment",
+    checkIdx("board_list_idx"),
+    checkIsBoard,
+    checkRegInput(regCommentContent,"board_comment_content"),
     postComment
 )
 
 // 댓글 수정
 router.put("/comment/:board_comment_idx",
+    checkIdx("board_comment_idx"),
+    checkRegInput(regCommentContent,"board_comment_content"),
+    checkIsComment,
     putComment
 )
 
 // 댓글 삭제
 router.delete("/comment/:board_comment_idx",
+    checkIdx("board_comment_idx"),
+    checkIsComment,
     deleteComment
 )
 

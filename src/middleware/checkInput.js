@@ -24,7 +24,8 @@ const {
   COMMON_STATUS,
   CHAMPIONSHIP_TYPE,
   CHAMPIONSHIP_STATUS,
-  MATCH_POSITION
+  MATCH_POSITION,
+  BOARD_CATEGORY
 } = require("../constant/constantIndex")
 
 // reg = 정규표현식, check = 들어올 key 값
@@ -186,6 +187,21 @@ const checkPosition = () => {
   };
 };
 
+// 게시판 카테고리 체크
+const checkCategory = () => {
+  return (req, res, next) => {
+    const value = req.body.category ?? req.params.category ?? req.query.category;
+    try {
+      if (value === undefined || !Object.values(BOARD_CATEGORY).map(Number).includes(value))
+        throw customError(400, `championship_type_idx 양식 오류`);
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
+
 
 module.exports = {
   checkRegInput,
@@ -196,5 +212,6 @@ module.exports = {
   checkMatchType,
   checkMatchAttribute,
   checkChampionshipType,
-  checkPosition
+  checkPosition,
+  checkCategory
 };

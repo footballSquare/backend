@@ -40,6 +40,12 @@ const checkIsFormation = checkExistsInDB("formation.list", "formation_idx");
 // 플레이어 존재 여부 확인
 const checkIsPlayer = checkExistsInDB("player.list", "player_list_idx");
 
+// 게시판 존재 여부 확인
+const checkIsBoard = checkExistsInDB("board.list","board_list_idx")
+
+// 댓글 존재 여부 확인
+const checkIsComment = checkExistsInDB("board.comment","board_comment_idx")
+
 module.exports = {
     checkIsTeam,
     checkIsMatch,
@@ -47,6 +53,8 @@ module.exports = {
     checkIsChampionship,
     checkIsChampionshipMatch,
     checkIsFormation,
-    checkIsPlayer
+    checkIsPlayer,
+    checkIsBoard,
+    checkIsComment
 }
 

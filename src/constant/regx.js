@@ -14,6 +14,14 @@ const regChampionshipAwardName = /^.{1,10}$/; // 최대 50글자까지 가능
 
 const regChampionshipPeriod = /^\d{4}-\d{2}-\d{2}$/;
 
+// 게시판 제목: 최대 50글자 (1~50자 허용)
+const regBoardTitle = /^.{1,50}$/;
+
+// 게시판 내용: TEXT 데이터 타입 (길이 제한 없음, 최소 1자 이상)
+const regBoardContent = /^.{1,1000}$/;
+
+// 댓글 내용: 최대 100글자 (1~100자 허용)
+const regCommentContent = /^.{1,100}$/;
 
 module.exports = {
     regColor,
@@ -25,5 +33,8 @@ module.exports = {
     regChampionshipName,
     regChampionshipDescription,
     regChampionshipAwardName,
-    regChampionshipPeriod
+    regChampionshipPeriod,
+    regBoardTitle,
+    regBoardContent,
+    regCommentContent
 }
