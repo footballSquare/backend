@@ -25,6 +25,22 @@ const {
 } = require("../../middleware/checkInput")
 
 const {
+    checkIsTeam,
+    checkIsMatch,
+    checkIsCommunity,
+    checkIsChampionship,
+    checkIsChampionshipMatch,
+    checkIsFormation,
+    checkIsPlayer,
+    checkIsBoard,
+    checkIsComment
+} = require("../../middleware/checkData")
+
+const {
+    checkTeamMatchCooldown
+} = require("../../middleware/checkCondition")
+
+const {
     uploadFileToS3
 } =require("../../middleware/useS3")
 
@@ -65,18 +81,21 @@ router.post("/",
 // 팀 페이지 상세 정보 보기
 router.get("/:team_list_idx/information",
     checkIdx("team_list_idx"),
+    checkIsTeam,
     getTeam
 )
 
 // 팀 페이지 멤버 목록보기
 router.get("/:team_list_idx/member",
     checkIdx("team_list_idx"),
+    checkIsTeam,
     getMember
 )
 
 // 팀 정보 수정하기
 router.put("/:team_list_idx",
     checkIdx("team_list_idx"),
+    checkIsTeam,
     changeTeamData
 )
 
@@ -95,6 +114,7 @@ router.get("/check_short_name",
 // 팀 엠블렘 수정하기
 router.put("/:team_list_idx/emblem",
     checkIdx("team_list_idx"),
+    checkIsTeam,
     uploadFileToS3("team"),
     changeTeamEmblem
 )
@@ -102,6 +122,7 @@ router.put("/:team_list_idx/emblem",
 // 팀 배너 수정하기
 router.put("/:team_list_idx/banner",
     checkIdx("team_list_idx"),
+    checkIsTeam,
     uploadFileToS3("team"),
     changeTeamBanner
 )
@@ -109,6 +130,8 @@ router.put("/:team_list_idx/banner",
 // 팀 해체하기
 router.delete("/:team_list_idx",
     checkIdx("team_list_idx"),
+    checkIsTeam,
+    checkTeamMatchCooldown,
     deleteTeam
 )
 
@@ -117,6 +140,8 @@ router.delete("/:team_list_idx",
 router.post("/:team_list_idx/member/:player_list_idx/access",
     checkIdx("team_list_idx"),
     checkIdx("player_list_idx"),
+    checkIsTeam,
+    checkIsPlayer,
     teamMemberApproval
 )
 
@@ -124,6 +149,8 @@ router.post("/:team_list_idx/member/:player_list_idx/access",
 router.delete("/:team_list_idx/member/:player_list_idx/access",
     checkIdx("team_list_idx"),
     checkIdx("player_list_idx"),
+    checkIsTeam,
+    checkIsPlayer,
     teamMemberDeny
 )
 
@@ -132,6 +159,8 @@ router.put("/:team_list_idx/member/:player_list_idx/role/:team_role_idx",
     checkIdx("team_list_idx"),
     checkIdx("player_list_idx"),
     checkIdx("team_role_idx"),
+    checkIsTeam,
+    checkIsPlayer,
     changeMemberRole
 )
 
@@ -139,24 +168,29 @@ router.put("/:team_list_idx/member/:player_list_idx/role/:team_role_idx",
 router.delete("/:team_list_idx/member/:player_list_idx/kick",
     checkIdx("team_list_idx"),
     checkIdx("player_list_idx"),
+    checkIsTeam,
+    checkIsPlayer,
     kickMember
 )
 
 // 팀 가입 신청 하기
 router.put("/:team_list_idx/application",
     checkIdx("team_list_idx"),
+    checkIsTeam,
     teamApplication
 )
 
 // 팀 가입 신청 인원 목록 보기
 router.get("/:team_list_idx/application/list",
     checkIdx("team_list_idx"),
+    checkIsTeam,
     teamApplicationList
 )
 
 // 팀 탈퇴하기
 router.delete("/:team_list_idx/leave",
     checkIdx("team_list_idx"),
+    checkIsTeam,
     teamLeave
 )
 

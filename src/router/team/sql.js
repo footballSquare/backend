@@ -163,7 +163,7 @@ SELECT
     player.list.player_list_profile_image,
     team.waitlist.team_waitlist_created_at
 FROM team.waitlist
-JOIN player.list 
+JOIN player.list
     ON team.waitlist.player_list_idx = player.list.player_list_idx
 WHERE team.waitlist.team_list_idx = $1
 ORDER BY team.waitlist.team_waitlist_created_at DESC;
