@@ -43,6 +43,10 @@ const {
     getMatchAndTeamInfo
 } = require("../../middleware/getMatchInfo")
 
+const {
+    checkMatchEnded,
+    checkMatchNotStarted
+} = require("../../middleware/checkCondition")
 
 const {
     getTeamMatchList,
@@ -110,6 +114,7 @@ router.put("/team/:team_list_idx",
     checkIsMatch,
     checkIsTeam,
     checkIsPlayer,
+    checkMatchNotStarted(),
     putTeamMatch
 )
 
@@ -117,7 +122,7 @@ router.put("/team/:team_list_idx",
 router.put("/:match_match_idx",
     checkIdx("match_match_idx"),
     checkIsMatch,
-    checkIsPlayer,
+    checkMatchEnded(),
     closedMatch
 )
 
@@ -125,6 +130,7 @@ router.put("/:match_match_idx",
 router.delete("/:match_match_idx",
     checkIdx("match_match_idx"),
     checkIsMatch,
+    checkMatchNotStarted(),
     deleteMatch
 )
 
@@ -182,7 +188,7 @@ router.delete("/:match_match_idx/leave",
 
 // 매치 팀 스탯 작성하기
 router.post("/:match_match_idx/team_stats",
-    s3Uploader("evidance"),
+    multerMiddleware,
     checkIdx("match_match_idx"),
     checkIdx("match_team_stats_our_score"),
     checkIdx("match_team_stats_other_score"),

@@ -48,6 +48,12 @@ docker ps
 ```bash
 docker exec -it footballsquare-backend node /app/src/index.js
 ```
+
+### ✅ PostgreSQL 직접 실행 명령어
+```bash
+docker exec -it footballsquare-db psql -U admin -d footballSquare
+```
+
 ---
 
 ## 📌 4️⃣ bash 를 껏다 켰을시 컨테이너 재시작 방법 (DB → 백엔드 순서)

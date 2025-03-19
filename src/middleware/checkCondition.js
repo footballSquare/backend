@@ -56,8 +56,86 @@ const checkTeamMemberCount = () => {
     };
 };
 
+// 소속팀 여부 체크
+const checkPlayerNotInTeam = () => {
+    return async (req, res, next) => {
+        const player_list_idx = req.body.player_list_idx ?? req.params.player_list_idx ?? req.query.player_list_idx;
+
+        const sql = `SELECT team_list_idx FROM team.member WHERE player_list_idx = $1`;
+
+        try {
+            const result = await client.query(sql, [player_list_idx]);
+
+            if (result.rows.length > 0) {
+                throw customError(403, `해당 선수는 이미 팀에 가입되어 있습니다.`);
+            }
+
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
+// 매치 종료 시각 체크
+const checkMatchEnded = () => {
+    return async (req, res, next) => {
+        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+        console.log(match_match_idx)
+        const sql = `
+            SELECT (match_match_start_time + match_match_duration) AS match_end_time
+            FROM match.match 
+            WHERE match_match_idx = $1
+        `;
+
+        try {
+            const result = await client.query(sql, [match_match_idx]);
+
+            const matchEndTime = new Date(result.rows[0].match_end_time);
+            const now = new Date();
+
+            if (matchEndTime > now) {
+                throw customError(403, `매치가 아직 종료되지 않았습니다.`);
+            }
+
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
+// 매치 시작 시간 체크
+const checkMatchNotStarted = () => {
+    return async (req, res, next) => {
+        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+        
+        const sql = `
+            SELECT match_match_start_time 
+            FROM match.match 
+            WHERE match_match_idx = $1
+        `;
+
+        try {
+            const result = await client.query(sql, [match_match_idx]);
+            const matchStartTime = new Date(result.rows[0].match_match_start_time);
+            const now = new Date();
+
+            if (now >= matchStartTime) {
+                throw customError(403, `매치가 이미 시작되었습니다.`);
+            }
+
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
 
 module.exports = {
     checkTeamMatchCooldown,
-    checkTeamMemberCount
+    checkTeamMemberCount,
+    checkPlayerNotInTeam,
+    checkMatchEnded,
+    checkMatchNotStarted
 }

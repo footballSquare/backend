@@ -44,7 +44,8 @@ const {
 
 const {
     checkTeamMatchCooldown,
-    checkTeamMemberCount
+    checkTeamMemberCount,
+    checkPlayerNotInTeam
 } = require("../../middleware/checkCondition")
 
 const {
@@ -156,6 +157,7 @@ router.post("/:team_list_idx/member/:player_list_idx/access",
     checkIdx("player_list_idx"),
     checkIsTeam,
     checkIsPlayer,
+    checkPlayerNotInTeam(),
     teamMemberApproval
 )
 

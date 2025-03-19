@@ -142,10 +142,6 @@ const closedMatch = async (req,res,next) => {
             player_list_idx
         ])
 
-        if (closedMatchResult.rowCount === 0) {
-            throw customError(404, `해당 매치가(이) 존재하지 않습니다.`);
-        }
-
         await client.query(deleteWaitlistSQL, [match_match_idx]);
         await client.query("COMMIT");
 
