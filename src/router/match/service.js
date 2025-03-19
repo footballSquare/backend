@@ -545,8 +545,8 @@ const postPlayerStats = async (req,res,next) => {
         match_player_stats_successrate_saved
     } = req.body
 
-    console.log(player_list_idx)
-    const match_player_stats_evidence_img = req.file.location
+    console.log(req.fileUrl)
+    const match_player_stats_evidence_img = req.fileUrl
 
     try{
         await client.query(postPlayerStatsSQL, [

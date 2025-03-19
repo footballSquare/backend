@@ -13,6 +13,12 @@ const {
     regChampionshipPeriod
 } = require("../../constant/regx")
 
+const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
+
+const {
+    s3Uploader
+} = require("../../middleware/s3UpLoader")
+
 const {
     checkRegInput,
     checkIdx,
@@ -39,10 +45,6 @@ const {
 const {
     checkTeamMatchCooldown
 } = require("../../middleware/checkCondition")
-
-const {
-    uploadFileToS3
-} =require("../../middleware/useS3")
 
 const {
     getTeamList,
@@ -113,17 +115,19 @@ router.get("/check_short_name",
 
 // 팀 엠블렘 수정하기
 router.put("/:team_list_idx/emblem",
+    multerMiddleware,
     checkIdx("team_list_idx"),
     checkIsTeam,
-    uploadFileToS3("team"),
+    s3Uploader("team"),
     changeTeamEmblem
 )
 
 // 팀 배너 수정하기
 router.put("/:team_list_idx/banner",
+    multerMiddleware,
     checkIdx("team_list_idx"),
     checkIsTeam,
-    uploadFileToS3("team"),
+    s3Uploader("team"),
     changeTeamBanner
 )
 

@@ -343,6 +343,59 @@ GROUP BY
     mom2.player_list_idx, mom2.player_list_nickname;
 `
 
+// 대회 개인 스탯 가져오기
+const getChampionShipPlayerStatsSQL = 
+`
+WITH championship_matches AS (
+    -- 대회에 속한 대회 매치 조회
+    SELECT cm.championship_match_idx, cm.championship_list_idx, 
+           cm.championship_match_first_idx, cm.championship_match_second_idx
+    FROM championship.championship_match cm
+    WHERE cm.championship_list_idx = $1
+),
+all_matches AS (
+    -- 대회 매치에 속한 개별 매치 조회
+    SELECT championship_match_idx, championship_list_idx, match_match_idx
+    FROM championship_matches,
+    LATERAL UNNEST(ARRAY[championship_match_first_idx, championship_match_second_idx]) AS match_match_idx
+),
+match_participant AS (
+    -- 개별 매치에 참여한 선수 조회
+    SELECT mp.match_match_idx, mp.player_list_idx
+    FROM match.participant mp
+    WHERE mp.match_match_idx IN (SELECT match_match_idx FROM all_matches)
+),
+player_stats AS (
+    -- 선수의 개인 스탯 조회 (참가자만 가져옴)
+    SELECT ps.*
+    FROM match.player_stats ps
+    WHERE ps.match_match_idx IN (SELECT match_match_idx FROM all_matches)
+)
+SELECT 
+    cm.championship_match_idx,
+    cm.championship_list_idx,
+    am.match_match_idx,
+    ps.player_list_idx,
+    ps.match_player_stats_idx,
+    ps.player_list_nickname,
+    ps.match_player_stats_goal,
+    ps.match_player_stats_assist,
+    ps.match_player_stats_successrate_pass,
+    ps.match_player_stats_successrate_dribble,
+    ps.match_player_stats_successrate_tackle,
+    ps.match_player_stats_possession,
+    ps.match_player_stats_evidence_img,
+    ps.match_player_stats_standing_tackle,
+    ps.match_player_stats_sliding_tackle,
+    ps.match_player_stats_cutting,
+    ps.match_player_stats_saved,
+    ps.match_player_stats_successrate_saved
+FROM championship_matches cm
+JOIN all_matches am ON am.championship_match_idx = cm.championship_match_idx
+JOIN player_stats ps ON ps.match_match_idx = am.match_match_idx
+ORDER BY cm.championship_match_idx, am.match_match_idx;
+`
+
 module.exports = {
     getMatchTypeSQL,
     findTeamCaptainSQL,
@@ -358,5 +411,6 @@ module.exports = {
     fetchChampionshipMatchesSQL,
     fetchTeamInfoSQL,
     fetchMatchStatsSQL,
-    fetchChampionShipMatchSQL
+    fetchChampionShipMatchSQL,
+    getChampionShipPlayerStatsSQL
 }

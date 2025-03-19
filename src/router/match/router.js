@@ -1,5 +1,11 @@
 const router = require("express").Router()
 
+const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
+
+const {
+    s3Uploader
+} = require("../../middleware/s3UpLoader")
+
 const {
     regColor,
     regMatchDuration,
@@ -37,9 +43,6 @@ const {
     getMatchAndTeamInfo
 } = require("../../middleware/getMatchInfo")
 
-const {
-    uploadFileToS3
-} = require("../../middleware/useS3")
 
 const {
     getTeamMatchList,
@@ -179,6 +182,7 @@ router.delete("/:match_match_idx/leave",
 
 // 매치 팀 스탯 작성하기
 router.post("/:match_match_idx/team_stats",
+    s3Uploader("evidance"),
     checkIdx("match_match_idx"),
     checkIdx("match_team_stats_our_score"),
     checkIdx("match_team_stats_other_score"),
@@ -193,7 +197,7 @@ router.post("/:match_match_idx/team_stats",
     checkIdx("match_team_stats_freekick"),
     checkIdx("match_team_stats_penaltykick"),
     checkIdx("mom"),
-    uploadFileToS3("evidance"),
+    s3Uploader("evidance"),
     checkIsMatch,
     postTeamStats
 )
@@ -218,23 +222,22 @@ router.put("/:match_match_idx/team_stats",
     putTeamStats
 )
 
-
 // 개인 스탯 작성하기
 router.post("/:match_match_idx/player_stats",
+    multerMiddleware,
     checkIdx("match_match_idx"),
     checkIdx("match_player_stats_goal"),
     checkIdx("match_player_stats_assist"),
     checkIdx("match_player_stats_successrate_pass"),
     checkIdx("match_player_stats_successrate_dribble"),
     checkIdx("match_player_stats_successrate_tackle"),
-    checkIdx("match_team_stats_expected_goal"),
     checkIdx("match_player_stats_standing_tackle"),
     checkIdx("match_player_stats_sliding_tackle"),
     checkIdx("match_player_stats_cutting"),
     checkIdx("match_player_stats_saved"),
     checkIdx("match_player_stats_successrate_saved"),
-    uploadFileToS3("evidance"),
     checkIsMatch,
+    s3Uploader("evidance"),
     postPlayerStats
 )
 
@@ -246,7 +249,6 @@ router.put("/:match_match_idx/player_stats",
     checkIdx("match_player_stats_successrate_pass"),
     checkIdx("match_player_stats_successrate_dribble"),
     checkIdx("match_player_stats_successrate_tackle"),
-    checkIdx("match_team_stats_expected_goal"),
     checkIdx("match_player_stats_standing_tackle"),
     checkIdx("match_player_stats_sliding_tackle"),
     checkIdx("match_player_stats_cutting"),

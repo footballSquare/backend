@@ -160,7 +160,7 @@ const checkTeamShortName = async (req,res,next) => {
 // 팀 엠블렘 변경하기
 const changeTeamEmblem = async (req,res,next) => {
     const { team_list_idx } = req.params;
-    const new_img_url = req.file.location; // 업로드된 S3 파일 URL
+    const new_img_url = req.fileUrl; // 업로드된 S3 파일 URL
 
     try {
         // 1️⃣ 기존 팀 엠블렘 URL 가져오기
@@ -168,7 +168,9 @@ const changeTeamEmblem = async (req,res,next) => {
             `SELECT team_list_emblem FROM team.list WHERE team_list_idx = $1`,
             [team_list_idx]
         );
-        const old_img_url = rows[0]?.team_list_emblem;
+        
+        const old_img_url = rows[0].team_list_emblem;
+        console.log(old_img_url)
 
         // 2️⃣ 기존 엠블렘이 존재하면 삭제
         if (old_img_url) {
@@ -191,7 +193,7 @@ const changeTeamEmblem = async (req,res,next) => {
 // 팀 배너 변경하기 
 const changeTeamBanner = async (req, res, next) => {
     const { team_list_idx } = req.params;
-    const new_banner_url = req.file.location; // 업로드된 S3 파일 URL
+    const new_banner_url = req.fileUrl; // 업로드된 S3 파일 URL
 
     try {
         // 1️⃣ 기존 팀 배너 URL 가져오기
@@ -199,8 +201,7 @@ const changeTeamBanner = async (req, res, next) => {
             `SELECT team_list_banner FROM team.list WHERE team_list_idx = $1`,
             [team_list_idx]
         );
-        const old_banner_url = rows[0]?.team_list_banner;
-
+        const old_banner_url = rows[0].team_list_banner;
         // 2️⃣ 기존 배너가 존재하면 S3에서 삭제
         if (old_banner_url) {
             await deleteFileFromS3(old_banner_url);

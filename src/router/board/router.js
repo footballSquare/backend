@@ -1,5 +1,12 @@
 const router = require("express").Router()
 
+const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
+
+const {
+    s3Uploader,
+    s3UploaderOptional
+} = require("../../middleware/s3UpLoader")
+
 const {
     regColor,
     regMatchDuration,
@@ -40,10 +47,6 @@ const {
 } = require("../../middleware/checkData")
 
 const {
-    uploadFileToS3
-} =require("../../middleware/useS3")
-
-const {
     getBoardList,
     getBoard,
     postBoard,
@@ -72,20 +75,22 @@ router.get("/:board_list_idx",
 
 // 게시글 작성하기
 router.post("/",
+    multerMiddleware,
+    checkCategory(),
     checkRegInput(regBoardTitle,"board_list_title"),
     checkRegInput(regBoardContent,"board_list_content"),
-    checkIsBoard,
-    uploadFileToS3("board"),
+    s3UploaderOptional("board"),
     postBoard
 )
 
 // 게시글 수정하기
 router.put("/:board_list_idx",
+    multerMiddleware,
     checkIdx("board_list_idx"),
     checkRegInput(regBoardTitle,"board_list_title"),
     checkRegInput(regBoardContent,"board_list_content"),
     checkIsBoard,
-    uploadFileToS3("board"),
+    s3UploaderOptional("board"),
     putBoard
 )
 

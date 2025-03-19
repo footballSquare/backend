@@ -30,7 +30,8 @@ const {
     fetchChampionshipMatchesSQL,
     fetchTeamInfoSQL,
     fetchMatchStatsSQL,
-    fetchChampionShipMatchSQL
+    fetchChampionShipMatchSQL,
+    getChampionShipPlayerStatsSQL
 } = require("./sql")
 
 // 대회 매치 생성하기
@@ -386,6 +387,20 @@ const fetchChampionShipMatch = async (req,res,next) => {
     }
 }
 
+// 대회 개인 스탯 가져오기
+const getChampionShipPlayerStats = async (req,res,next) => {
+    const {championship_list_idx} = req.params
+
+    try{
+        const result = await client.query(getChampionShipPlayerStatsSQL, [
+            championship_list_idx
+        ])
+        res.status(200).send({ result : result.rows })
+    } catch(e){
+        next(e)
+    }
+}
+
 
 
 module.exports = {
@@ -396,5 +411,6 @@ module.exports = {
     getChampionShipParticipationTeam,
     getChampionShipMatchList,
     fetchChampionShipMatch,
-    fetchEvidanceImg
+    fetchEvidanceImg,
+    getChampionShipPlayerStats
 }

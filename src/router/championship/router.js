@@ -31,7 +31,8 @@ const {
     getChampionShipData,
     getChampionShipMatchList,
     fetchChampionShipMatch,
-    fetchEvidanceImg
+    fetchEvidanceImg,
+    getChampionShipPlayerStats
 } = require("./service")
 
 // 대회 매치 생성하기
@@ -83,6 +84,12 @@ router.get("/:championship_list_idx/championship_match",
 router.get("/championship_match/:championship_match_idx/detail",
     checkIdx("championship_match_idx"),
     fetchChampionShipMatch
+)
+
+// 대회 개인 스탯 가져오기
+router.get("/:championship_list_idx/player_stats",
+    checkIdx("championship_list_idx"),
+    getChampionShipPlayerStats
 )
 
 module.exports = router

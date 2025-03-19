@@ -61,7 +61,6 @@ const checkRegInput = (reg, check) => {
 const checkIdx = (input) => {
   return (req, res, next) => {
     const value = req.body[input] ?? req.params[input] ?? req.query[input] ?? req.decoded?.[input];
-
     try {
       if (value === null || value === undefined) {
         throw customError(400, `${input} 양식 오류`);
@@ -190,10 +189,27 @@ const checkPosition = () => {
 // 게시판 카테고리 체크
 const checkCategory = () => {
   return (req, res, next) => {
-    const value = req.body.category ?? req.params.category ?? req.query.category;
+    let value = req.body.category ?? req.params.category ?? req.query.category;
+
     try {
-      if (value === undefined || !Object.values(BOARD_CATEGORY).map(Number).includes(value))
-        throw customError(400, `championship_type_idx 양식 오류`);
+      // ✅ undefined 또는 null 체크
+      if (value == null) {
+        throw customError(400, `category 값이 없습니다.`);
+      }
+
+      // ✅ 숫자로 변환 (숫자가 아닐 경우 NaN 처리됨)
+      value = Number(value);
+
+      // ✅ NaN(숫자로 변환할 수 없는 값)인지 체크
+      if (isNaN(value)) {
+        throw customError(400, `category 값이 올바르지 않습니다.`);
+      }
+
+      // ✅ BOARD_CATEGORY에 존재하는 값인지 확인
+      if (!Object.values(BOARD_CATEGORY).includes(value)) {
+        throw customError(400, `category 값이 올바르지 않습니다.`);
+      }
+
       next();
     } catch (e) {
       next(e);

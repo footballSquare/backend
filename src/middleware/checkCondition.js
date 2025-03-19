@@ -1,6 +1,7 @@
 const customError = require("../util/customError")
 const client = require("../database/postgreSQL")
 
+// 매치 마지막 생성일 2주가 지났는지 확인하는 미들웨어
 const checkTeamMatchCooldown = async (req, res, next) => {
     const { team_list_idx } = req.params;
 

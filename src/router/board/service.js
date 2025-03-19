@@ -83,7 +83,7 @@ const postBoard = async (req,res,next) => {
         board_list_content
     } = req.body
 
-    const new_img_url = req.file.location
+    const new_img_url = req.fileUrl
 
     try{
         await client.query(postBoardSQL, [
@@ -108,7 +108,7 @@ const putBoard = async (req,res,next) => {
         board_list_content
     } = req.body
 
-    const new_img_url = req.file.location
+    const new_img_url = req.fileUrl
 
     try {
         // 1️⃣ 기존 팀 배너 URL 가져오기
@@ -116,10 +116,11 @@ const putBoard = async (req,res,next) => {
             `SELECT board_list_img FROM board.list WHERE board_list_idx = $1`,
             [board_list_idx]
         );
-        const board_list_img = rows[0]?.board_list_img;
+        console.log(rows)
+        const board_list_img = rows[0].board_list_img[0];
 
         // 2️⃣ 기존 배너가 존재하면 S3에서 삭제
-        if (board_list_img) {
+        if (board_list_img && board_list_img !== null && board_list_img !== "null") {
             await deleteFileFromS3(board_list_img);
         }
 
