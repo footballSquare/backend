@@ -130,6 +130,15 @@ AND
     player_list_idx = $2;
 `
 
+// 멤버 가입 승인시, 모든 팀 가입 대기자 목록에서 삭제
+const deleteTeamMemeberSQL = 
+`
+DELETE FROM 
+    team.waitlist
+WHERE 
+    player_list_idx = $1;
+`
+
 // 팀 멤버 역할 변경
 const changeMemberRoleSQL =
 `
@@ -220,6 +229,7 @@ module.exports = {
     getMemberSQL,
     insertTeamMemberSQL,
     teamMemberDenySQL,
+    deleteTeamMemeberSQL,
     changeMemberRoleSQL,
     kickMemberSQL,
     teamApplicationSQL,

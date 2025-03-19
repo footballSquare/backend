@@ -17,6 +17,7 @@ const {
     getMemberSQL,
     insertTeamMemberSQL,
     teamMemberDenySQL,
+    deleteTeamMemeberSQL,
     changeMemberRoleSQL,
     kickMemberSQL,
     teamApplicationSQL,
@@ -266,8 +267,7 @@ const teamMemberApproval = async (req,res,next) => {
         ]);
         
         // 먼저 대기자에서 삭제
-        await client.query(teamMemberDenySQL, [
-            team_list_idx,
+        await client.query(deleteTeamMemeberSQL, [
             player_list_idx
         ]);
 

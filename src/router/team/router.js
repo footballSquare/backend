@@ -43,8 +43,14 @@ const {
 } = require("../../middleware/checkData")
 
 const {
-    checkTeamMatchCooldown
+    checkTeamMatchCooldown,
+    checkTeamMemberCount
 } = require("../../middleware/checkCondition")
+
+const {
+    checkTeamNameDuplicate,
+    checkTeamShortNameDuplicate
+} = require("../../middleware/checkDuplicate")
 
 const {
     getTeamList,
@@ -77,6 +83,8 @@ router.post("/",
     checkRegInput(regTeamShortName,"team_list_short_name"),
     checkRegInput(regColor,"team_list_color"),
     checkRegInput(regTeamAnnouncement,"team_list_announcement"),
+    checkTeamNameDuplicate(),
+    checkTeamShortNameDuplicate(),
     postTeam
 )
 
@@ -118,6 +126,7 @@ router.put("/:team_list_idx/emblem",
     multerMiddleware,
     checkIdx("team_list_idx"),
     checkIsTeam,
+    checkTeamMemberCount(),
     s3Uploader("team"),
     changeTeamEmblem
 )
@@ -127,6 +136,7 @@ router.put("/:team_list_idx/banner",
     multerMiddleware,
     checkIdx("team_list_idx"),
     checkIsTeam,
+    checkTeamMemberCount(),
     s3Uploader("team"),
     changeTeamBanner
 )

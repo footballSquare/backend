@@ -34,6 +34,30 @@ const checkTeamMatchCooldown = async (req, res, next) => {
     }
 };
 
+// 정규팀 여부 체크
+const checkTeamMemberCount = () => {
+    return async (req, res, next) => {
+        const team_list_idx = req.body.team_list_idx ?? req.params.team_list_idx ?? req.query.team_list_idx;
+
+        const sql = `SELECT COUNT(*) FROM team.member WHERE team_list_idx = $1`;
+
+        try {
+            const result = await client.query(sql, [team_list_idx]);
+            const memberCount = parseInt(result.rows[0].count, 10);
+
+            if (memberCount < 10) {
+                throw customError(403, `팀원 수 부족: 최소 10명 필요 (현재 ${memberCount}명)`);
+            }
+
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
+
 module.exports = {
-    checkTeamMatchCooldown
+    checkTeamMatchCooldown,
+    checkTeamMemberCount
 }
