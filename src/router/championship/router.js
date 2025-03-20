@@ -24,6 +24,14 @@ const {
 } = require("../../middleware/checkInput")
 
 const {
+    checkChampionshipMatchStatus
+} = require("../../middleware/checkCondition")
+
+const {
+    checkIsChampionshipMatch
+} = require("../../middleware/checkData")
+
+const {
     postChampionShipMatch,
     deleteChampionShipMatch,
     championShipMatchDone,
@@ -47,18 +55,22 @@ router.post("/:championship_list_idx/championship_match",
 // 대회 매치 삭제하기
 router.delete("/championship_match/:championship_match_idx",
     checkIdx("championship_match_idx"),
+    checkIsChampionshipMatch,
     deleteChampionShipMatch
 )
 
 // 대회 매치 마감하기
 router.put("/championship_match/:championship_match_idx/done",
     checkIdx("championship_match_idx"),
+    checkIsChampionshipMatch,
+    checkChampionshipMatchStatus(),
     championShipMatchDone
 )
 
 // 대회 매치 증빙자료 가져오기
 router.get("/championship_match/:championship_match_idx/evidance_img",
     checkIdx("championship_match_idx"),
+    checkIsChampionshipMatch,
     fetchEvidanceImg
 )
 
@@ -83,6 +95,7 @@ router.get("/:championship_list_idx/championship_match",
 // 대회 매치 세부 정보 가져오기
 router.get("/championship_match/:championship_match_idx/detail",
     checkIdx("championship_match_idx"),
+    checkIsChampionshipMatch,
     fetchChampionShipMatch
 )
 

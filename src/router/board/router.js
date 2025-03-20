@@ -118,8 +118,8 @@ router.delete("/:board_list_idx/like",
 // 댓글 작성
 router.post("/:board_list_idx/comment",
     checkIdx("board_list_idx"),
-    checkIsBoard,
     checkRegInput(regCommentContent,"board_comment_content"),
+    checkIsBoard,
     postComment
 )
 

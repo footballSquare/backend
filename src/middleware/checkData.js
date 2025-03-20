@@ -32,7 +32,7 @@ const checkIsCommunity = checkExistsInDB("community.list", "community_list_idx")
 const checkIsChampionship = checkExistsInDB("championship.list", "championship_list_idx");
 
 // 대회 매치 존재 여부 확인
-const checkIsChampionshipMatch = checkExistsInDB("championship.match", "championship_match_idx");
+const checkIsChampionshipMatch = checkExistsInDB("championship.championship_match", "championship_match_idx");
 
 // 포메이션 존재 여부 확인
 const checkIsFormation = checkExistsInDB("formation.list", "formation_idx");

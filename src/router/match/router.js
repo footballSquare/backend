@@ -36,7 +36,8 @@ const {
     checkMatchParticipationType,
     checkMatchType,
     checkMatchAttribute,
-    checkPosition
+    checkPosition,
+    checkMatchStartTimeValid
 } = require("../../middleware/checkInput")
 
 const {
@@ -45,7 +46,10 @@ const {
 
 const {
     checkMatchEnded,
-    checkMatchNotStarted
+    checkMatchNotStarted,
+    checkMatchNotClosed,
+    checkMatchStatsPostClosed,
+    checkPositionInFormation
 } = require("../../middleware/checkCondition")
 
 const {
@@ -92,6 +96,7 @@ router.post("/team/:team_list_idx",
     checkMatchAttribute(),
     checkRegInput(regMatchDatetime,"match_match_start_time"),
     checkRegInput(regMatchDuration,"match_match_duration"),
+    checkMatchStartTimeValid(),
     checkIsTeam,
     checkIsPlayer,
     postTeamMatch
@@ -104,6 +109,7 @@ router.post("/open",
     checkMatchType(),
     checkRegInput(regMatchDatetime,"match_match_start_time"),
     checkRegInput(regMatchDuration,"match_match_duration"),
+    checkMatchStartTimeValid(),
     checkIsPlayer,
     postOpenMatch
 )
@@ -167,6 +173,8 @@ router.post("/:match_match_idx/open/join",
     checkIdx("match_match_idx"),
     checkPosition(),
     checkIsMatch,
+    checkMatchEnded(),
+    checkPositionInFormation(),
     joinOpenMatch
 )
 
@@ -175,6 +183,8 @@ router.post("/:match_match_idx/team/join",
     checkIdx("match_match_idx"),
     checkPosition(),
     checkIsMatch,
+    checkMatchEnded(),
+    checkPositionInFormation(),
     joinTeamMatch
 )
 
@@ -183,6 +193,7 @@ router.delete("/:match_match_idx/leave",
     checkIdx("match_match_idx"),
     getMatchAndTeamInfo,
     checkIsMatch,
+    checkMatchNotClosed(),
     leaveMatch
 )
 
@@ -203,6 +214,7 @@ router.post("/:match_match_idx/team_stats",
     checkIdx("match_team_stats_freekick"),
     checkIdx("match_team_stats_penaltykick"),
     checkIdx("mom"),
+    checkMatchStatsPostClosed(),
     s3Uploader("evidance"),
     checkIsMatch,
     postTeamStats
@@ -224,6 +236,7 @@ router.put("/:match_match_idx/team_stats",
     checkIdx("match_team_stats_freekick"),
     checkIdx("match_team_stats_penaltykick"),
     checkIdx("mom"),
+    checkMatchStatsPostClosed(),
     checkIsMatch,
     putTeamStats
 )
@@ -243,6 +256,7 @@ router.post("/:match_match_idx/player_stats",
     checkIdx("match_player_stats_saved"),
     checkIdx("match_player_stats_successrate_saved"),
     checkIsMatch,
+    checkMatchStatsPostClosed(),
     s3Uploader("evidance"),
     postPlayerStats
 )
@@ -261,6 +275,7 @@ router.put("/:match_match_idx/player_stats",
     checkIdx("match_player_stats_saved"),
     checkIdx("match_player_stats_successrate_saved"),
     checkIsMatch,
+    checkMatchStatsPostClosed(),
     putPlayerStats
 )
 

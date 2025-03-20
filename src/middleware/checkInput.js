@@ -211,13 +211,32 @@ const checkCategory = () => {
       }
 
       next();
-    } catch (e) {
+    } catch (e) {checkPosition
       next(e);
     }
   };
 };
 
 
+// 현재 시각보다 빠른 시각에 매치를 생성할 수 없다.
+const checkMatchStartTimeValid = () => {
+  return (req, res, next) => {
+      const { match_match_start_time } = req.body;
+
+      try {
+          const inputStartTime = new Date(match_match_start_time);
+          const now = new Date();
+
+          if (inputStartTime < now) {
+              throw customError(400, "매치 시작 시간이 현재 시각보다 과거일 수 없습니다.");
+          }
+
+          next();
+      } catch (e) {
+          next(e);
+      }
+  };
+};
 
 module.exports = {
   checkRegInput,
@@ -229,5 +248,6 @@ module.exports = {
   checkMatchAttribute,
   checkChampionshipType,
   checkPosition,
-  checkCategory
+  checkCategory,
+  checkMatchStartTimeValid
 };
