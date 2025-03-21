@@ -7,6 +7,7 @@ const { COMMUNITY_ROLE,
     CHAMPIONSHIP_STATUS 
 } = require("../../constant/constantIndex")
 
+const {deleteFileFromS3} = require("../../database/s3Config/s3Deleter")
 
 const {
     getCommunitySQL,
@@ -88,6 +89,67 @@ const getCommunityChampionship = async (req,res,next) => {
     }
 }
 
+// 커뮤니티 엠블렘 수정
+const putCommunityEmblem = async (req,res,next) => {
+    const {community_list_idx} = req.params
+    new_img_url = req.fileUrl;
+
+    try{
+        const { rows } = await client.query(
+            `SELECT community_list_emblem FROM community.list WHERE community_list_idx = $1`,
+            [community_list_idx]
+        );
+
+        const old_img_url = rows[0]?.community_list_emblem;
+
+        // 2️⃣ 기존 엠블렘이 존재하면 삭제
+        if (old_img_url) {
+            await deleteFileFromS3(old_img_url);
+        }
+
+        // 3️⃣ 새로운 엠블렘 URL을 DB에 업데이트
+        await client.query(
+            `UPDATE community.list SET community_list_emblem = $2 WHERE community_list_idx = $1`,
+            [community_list_idx, new_img_url]
+        );
+
+        res.status(200).send({});
+    } catch(e){
+        next(e)
+    }
+} 
+
+// 커뮤니티 배너 수정
+const putCommunityBanner = async (req, res, next) => {
+    const { community_list_idx } = req.params;
+    const new_img_url = req.fileUrl;
+
+    try {
+        // 1️⃣ 기존 배너 URL 가져오기
+        const { rows } = await client.query(
+            `SELECT community_list_banner FROM community.list WHERE community_list_idx = $1`,
+            [community_list_idx]
+        );
+
+        const old_img_url = rows[0]?.community_list_banner;
+
+        // 2️⃣ 기존 배너가 존재하면 삭제
+        if (old_img_url) {
+            await deleteFileFromS3(old_img_url);
+        }
+
+        // 3️⃣ 새로운 배너 URL을 DB에 업데이트
+        await client.query(
+            `UPDATE community.list SET community_list_banner = $2 WHERE community_list_idx = $1`,
+            [community_list_idx, new_img_url]
+        );
+
+        res.status(200).send({});
+    } catch (e) {
+        next(e);
+    }
+};
+
 
 // 대회 만들기
 const postChampioship = async (req,res,next) => {
@@ -96,13 +158,14 @@ const postChampioship = async (req,res,next) => {
         championship_type_idx,
         championship_list_name,
         championship_list_description,
-        championship_list_throphy_img,
         championship_list_color,
         championship_list_start_date,
         championship_list_end_date,
         participation_team_idxs,
         championship_award_name
     } = req.body
+
+    const championship_list_throphy_img = req.fileUrl
 
     try{
         await client.query("BEGIN");
@@ -322,6 +385,8 @@ module.exports = {
     getCommunityStaff,
     getCommunityTeam,
     getCommunityChampionship,
+    putCommunityEmblem,
+    putCommunityBanner,
     postChampioship,
     communityStaffAccess,
     communityStaffAccessDeny,

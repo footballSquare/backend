@@ -50,6 +50,8 @@ const {
     getCommunityStaff,
     getCommunityTeam,
     getCommunityChampionship,
+    putCommunityEmblem,
+    putCommunityBanner,
     postChampioship,
     communityStaffAccess,
     communityStaffAccessDeny,
@@ -91,8 +93,23 @@ router.get("/:community_list_idx/championship",
     getCommunityChampionship
 )
 
+// 커뮤니티 엠블렘 수정하기
+router.put("/:community_list_idx/emblem",
+    multerMiddleware,
+    s3Uploader("team"),
+    putCommunityEmblem
+)
+
+// 커뮤니티 배너 수정하기
+router.put("/:community_list_idx/banner",
+    multerMiddleware,
+    s3Uploader("team"),
+    putCommunityBanner
+)
+
 // 대회 만들기
 router.post("/:community_list_idx/championship",
+    multerMiddleware,
     checkIdx("community_list_idx"),
     checkRegInput(regChampionshipName,"championship_list_name"),
     checkRegInput(regChampionshipDescription,"championship_list_description"),
@@ -101,6 +118,7 @@ router.post("/:community_list_idx/championship",
     checkRegInput(regChampionshipPeriod,"championship_list_end_date"),
     checkIdx("participation_team_idxs"),
     checkRegInput(regChampionshipAwardName,"championship_award_name"),
+    s3Uploader("championship"),
     postChampioship
 )
 
