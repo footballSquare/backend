@@ -1,7 +1,8 @@
 const regColor = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
 
 const regMatchDuration = /^(30 minutes|1 hour|1 hour 30 minutes|2 hours)$/;
-const regMatchDatetime = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]\d|2[0-3]):(00|30):00$/;
+const regMatchDatetime =
+  /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]\d|2[0-3]):(00|30):00$/;
 
 const regTeamName = /^[가-힣a-zA-Z]{1,20}$/; // 영어 한글만 가능, 최대 20글자
 
@@ -23,18 +24,28 @@ const regBoardContent = /^.{1,1000}$/;
 // 댓글 내용: 최대 100글자 (1~100자 허용)
 const regCommentContent = /^.{1,100}$/;
 
+// 계정 관련 regex
+const regIdx = /^[0-9]+$/;
+const regId = /^[A-Za-z0-9]{12,20}$/;
+const regPw = /^[A-Za-z0-9]{12,20}$/;
+const regNickname = /^[A-Za-z0-9가-힣]{2,10}$/;
+const regPlatform = /^(pc|xbox|playstation)$/;
+const regState = /^[0-9]+$/;
+const regMessage = /^.{0,50}$/;
+const regDiscordTag = /^.{0,10}$/;
+
 module.exports = {
-    regColor,
-    regMatchDuration,
-    regMatchDatetime,
-    regTeamName,
-    regTeamShortName,
-    regTeamAnnouncement,
-    regChampionshipName,
-    regChampionshipDescription,
-    regChampionshipAwardName,
-    regChampionshipPeriod,
-    regBoardTitle,
-    regBoardContent,
-    regCommentContent
-}
+  regColor,
+  regMatchDuration,
+  regMatchDatetime,
+  regTeamName,
+  regTeamShortName,
+  regTeamAnnouncement,
+  regChampionshipName,
+  regChampionshipDescription,
+  regChampionshipAwardName,
+  regChampionshipPeriod,
+  regBoardTitle,
+  regBoardContent,
+  regCommentContent,
+};
