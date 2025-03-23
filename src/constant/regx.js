@@ -48,4 +48,12 @@ module.exports = {
   regBoardTitle,
   regBoardContent,
   regCommentContent,
+  regIdx,
+  regId,
+  regPw,
+  regNickname,
+  regPlatform,
+  regState,
+  regMessage,
+  regDiscordTag,
 };
