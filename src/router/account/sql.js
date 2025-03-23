@@ -65,6 +65,14 @@ INSERT INTO player.list (
     $1, $2, $3, 'pending'
 )
 `;
+const getUserIdxSQL = `
+SELECT 
+    player_list_idx AS user_idx
+FROM 
+    player.list
+WHERE 
+    player_list_id = $1
+`;
 const signupPlayerInfoSQL = `
 UPDATE player.list
 SET
@@ -72,7 +80,8 @@ SET
     player_list_platform = $2,
     player_list_state = $3,
     player_list_message = $4,
-    player_list_discord_tag = $5
+    player_list_discord_tag = $5,
+    player_list_player_status = 'active'
 WHERE
     player_list_idx = $6
 `;
@@ -146,6 +155,15 @@ SET
 WHERE
     player_list_idx = $9
 `;
+
+const getUserImageSQL = `
+SELECT 
+    player_list_profile_image AS profile_image
+FROM 
+    player.list
+WHERE 
+    player_list_idx = $1
+`;
 const updateProfileImageSQL = `
 UPDATE player.list
 SET
@@ -153,3 +171,22 @@ SET
 WHERE
     player_list_idx = $2
 `;
+
+module.exports = {
+  signinUserInfoSQL,
+  checkTeamRoleSQL,
+  checkCommunityRoleSQL,
+  putRefreshtokenSQL,
+  checkDuplicateIdSQL,
+  checkDuplicateNicknameSQL,
+  signupLoginInfoSQL,
+  getUserIdxSQL,
+  signupPlayerInfoSQL,
+  checkRefreshtokenSQL,
+  softDeleteSQL,
+  getMyInfoSQL,
+  getUserInfoSQL,
+  updateUserInfoSQL,
+  getUserImageSQL,
+  updateProfileImageSQL,
+};

@@ -2,6 +2,19 @@ const router = require("express").Router();
 
 const trycatchWrapper = require("./../../util/trycatchWrapper");
 
+const {
+  regIdx,
+  regId,
+  regPw,
+  regNickname,
+  regPlatform,
+  regState,
+  regMessage,
+  regDiscordTag,
+} = require("./../../constant/regx");
+
+const { checkRegInput } = require("./../../middleware/checkInput");
+
 router.get(
   "/ouath/url/discord",
   trycatchWrapper((req, res, next) => {})
@@ -19,7 +32,9 @@ router.get(
 
 router.post(
   "/check/id",
-  trycatchWrapper((req, res, next) => {})
+  trycatchWrapper((req, res, next) => {
+    checkRegInput(regId, ["id"]);
+  })
 );
 
 router.post(
