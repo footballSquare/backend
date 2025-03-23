@@ -3,8 +3,10 @@ const customError = require("../../util/customError");
 const trycatchWrapper = require("./../../util/trycatchWrapper");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 const {
+  checkUserPasswordSQL,
   signinUserInfoSQL,
   checkTeamRoleSQL,
   checkCommunityRoleSQL,
@@ -34,64 +36,72 @@ const {
   regDiscordTag,
 } = require("./../../constant/regx");
 
-const signinLogin = async (req, res, next) => {
+// 로그인 및 토큰 =================================================================
+const checkPassword = async (req, res, next) => {
   const { id, password } = req.query;
 
-  const signinResult = await client.query(signinUserInfoSQL, [id, password]);
+  const result = await client.query(checkUserPasswordSQL, [id]);
 
-  if (signinResult.rows.length === 0) {
+  if (result.rows.length === 0) {
     throw customError(404, "등록되지 않은 유저입니다.");
   }
 
-  const user = signinResult.rows[0];
-  const userIdx = user.user_idx;
+  const hashedPassword = result.rows[0].player_list_password;
 
-  // 기본 정보에서 player_status, user_idx는 항상 존재
-  const playerStatus = user.player_status;
+  const isMatch = await bcrypt.compare(password, hashedPassword);
+
+  if (!isMatch) {
+    throw customError(401, "비밀번호가 틀렸습니다.");
+  }
+
+  next();
+};
+
+const signinLogin = async (req, res, next) => {
+  const { id } = req.query;
+
+  const result = await client.query(signinUserInfoSQL, [id]);
+
+  const userIdx = result.rows[0].user_idx;
+
+  const playerStatus = result.rows[0].player_status;
   if (playerStatus === "pending") {
-    res.status(200).json({
-      player_status: playerStatus,
-      user_idx: userIdx,
+    res.status(200).send({
+      data: {
+        player_status: playerStatus,
+        user_idx: userIdx,
+      },
     });
     return;
   }
 
-  const profileImage = user.profile_image || null;
-  const teamIdx = user.team_idx || null;
+  const profileImage = result.rows[0].profile_image || null;
+  const teamIdx = result.rows[0].team_idx || null;
 
-  // 팀 역할 조회
-  const teamRoleResult = await client.query(checkTeamRoleSQL, [userIdx]);
-  const teamRoleIdx =
-    teamRoleResult.rows.length > 0
-      ? teamRoleResult.rows[0].team_role_idx
-      : null;
+  const teamRoleIdx = await getTeamRoleIdx(userIdx);
+  const communityRoleIdx = await getCommunityRoleIdx(userIdx);
 
-  // 커뮤니티 역할 조회
-  const communityRoleResult = await client.query(checkCommunityRoleSQL, [
+  const accessToken = setAccessToken(
     userIdx,
-  ]);
-  const communityRoleIdx =
-    communityRoleResult.rows.length > 0
-      ? communityRoleResult.rows[0].community_role_idx
-      : null;
-
-  const accessToken = setAccessToken(userIdx);
-  const refreshToken = setRefreshToken(userIdx);
+    teamIdx,
+    teamRoleIdx,
+    communityRoleIdx
+  );
+  const refreshToken = setRefreshToken();
 
   await putRefreshToken(refreshToken, userIdx);
 
-  // res.cookie("refresh_token", refreshToken, {
-  //   httpOnly: true,
-  //   secure: process.env.NODE_ENV === "production",
-  //   sameSite: "strict",
-  //   maxAge: 3 * 24 * 60 * 60 * 1000,
-  // });
+  res.cookie("refresh_token", refreshToken, {
+    httpOnly: true,
+    secure: false, // true면 https 오는 요청만 받음
+    sameSite: "strict",
+    maxAge: 3 * 24 * 60 * 60 * 1000,
+  });
 
   // 응답 구성
-  res.status(200).json({
+  res.status(200).send({
     player_status: playerStatus,
     access_token: accessToken,
-    refresh_token: refreshToken,
     user_idx: userIdx,
     profile_image: profileImage,
     team_idx: teamIdx,
@@ -100,6 +110,81 @@ const signinLogin = async (req, res, next) => {
   });
 };
 
+const checkRefreshToken = async (req, res, next) => {
+  const refreshToken = req.cookies?.refresh_token;
+
+  if (!refreshToken) {
+    throw customError(401, "refresh token이 없습니다.");
+  }
+
+  const result = await client.query(checkRefreshtokenSQL, [refreshToken]);
+
+  if (result.rows.length === 0) {
+    throw customError(403, "잘못된 refresh token 입니다.");
+  }
+
+  const expiresAt = new Date(result.rows[0].expires_at);
+  const now = new Date();
+
+  if (now >= expiresAt) {
+    throw customError(401, "만료된 refresh token 입니다.");
+  }
+
+  const userIdx = result.rows[0].user_idx;
+  const teamIdx = result.rows[0].team_idx;
+  const teamRoleIdx = await getTeamRoleIdx(userIdx);
+  const communityRoleIdx = await getCommunityRoleIdx(userIdx);
+
+  const accessToken = setAccessToken(
+    userIdx,
+    teamIdx,
+    teamRoleIdx,
+    communityRoleIdx
+  );
+
+  res.status(200).send({
+    access_token: accessToken,
+  });
+};
+
+async function getTeamRoleIdx(userIdx) {
+  const result = await client.query(checkTeamRoleSQL, [userIdx]);
+  return result.rows.length > 0 ? result.rows[0].team_role_idx : null;
+}
+async function getCommunityRoleIdx(userIdx) {
+  const result = await client.query(checkCommunityRoleSQL, [userIdx]);
+  return result.rows.length > 0 ? result.rows[0].community_role_idx : null;
+}
+
+async function putRefreshToken(refreshToken, userIdx) {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 3);
+  const putRefreshtoken = await client.query(putRefreshtokenSQL, [
+    refreshToken,
+    expiresAt,
+    userIdx,
+  ]);
+}
+function setAccessToken(userIdx, teamIdx, teamRoleIdx, communityRoleIdx) {
+  const accessToken = jwt.sign(
+    {
+      my_player_list_idx: userIdx,
+      my_team_list_idx: teamIdx ?? null,
+      my_team_role_idx: teamRoleIdx ?? null,
+      my_community_role_idx: communityRoleIdx ?? null,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: "2h",
+    }
+  );
+  return accessToken;
+}
+function setRefreshToken() {
+  return crypto.randomBytes(64).toString("hex");
+}
+
+// 중복 값 체크(아이디, 닉네임임) ========================================
 const checkDuplicateId = async (req, res, next) => {
   const { id } = req.body;
 
@@ -134,12 +219,16 @@ const checkDuplicateNickname = async (req, res, next) => {
   res.status(200).send({});
 };
 
+// 회원가입 =================================================================
 const signupLoginInfo = async (req, res, next) => {
   const { id, password, nickname } = req.body;
 
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+
   const result = await client.query(signupLoginInfoSQL, [
     id,
-    password,
+    hashedPassword,
     nickname,
   ]);
 
@@ -182,30 +271,9 @@ const signupPlayerInfo = async (req, res, next) => {
   });
 };
 
-const checkRefreshToken = async (req, res, next) => {
-  const { authorization } = req.headers;
-  if (!authorization) {
-    throw customError(401, "refresh token이 없습니다.");
-  }
+// 토큰 =================================================================
 
-  const result = await client.query(checkRefreshtokenSQL, [authorization]);
-  if (result.rows.length == 0)
-    throw customError(403, "잘못된 refresh token 토큰입니다.");
-
-  const expiresAt = new Date(result.rows[0].expires_at); // expires_at 필드 가져오기
-  const now = new Date(); // 현재 시간 가져오기
-
-  if (now >= expiresAt) throw customError(401, "만료된 refresh token 입니다.");
-
-  const userIdx = result.rows[0].idx;
-
-  const accessToken = setAccessToken(userIdx);
-
-  res.status(200).send({
-    accesstoken: accessToken,
-  });
-};
-
+// 회원 삭제(soft delete) =================================================================
 const accountSoftDelete = async (req, res, next) => {
   const { idx } = req.decoded;
 
@@ -216,6 +284,7 @@ const accountSoftDelete = async (req, res, next) => {
   });
 };
 
+// 회원 정보 가져오기 =================================================================
 const getMyInfo = async (req, res, next) => {
   const { idx } = req.decoded;
   const result = await client.query(getMyInfoSQL, [idx]);
@@ -250,6 +319,7 @@ const getUserInfo = async (req, res, next) => {
   });
 };
 
+// 회원 정보 업데이트 =================================================================
 const updateUserInfo = async (req, res, next) => {
   const { idx } = req.decoded;
   let {
@@ -289,7 +359,7 @@ const updateUserInfo = async (req, res, next) => {
   });
 };
 
-// 이미지 관련
+// 이미지 관련 =================================================================
 const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -341,38 +411,7 @@ const updateProfileImage = async (req, res, next) => {
   res.status(200).send({ message: "이미지 수정 성공" });
 };
 
-function setAccessToken(userIdx) {
-  const accessToken = jwt.sign(
-    {
-      idx: userIdx,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: "2h",
-    }
-  );
-  return accessToken;
-}
-
-function setRefreshToken(userIdx) {
-  const refreshToken = crypto.randomBytes(64).toString("hex"); // 128 characters
-  return refreshToken;
-}
-
-async function putRefreshToken(refreshToken, userIdx) {
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 3);
-  const putRefreshtoken = await client.query(putRefreshtokenSQL, [
-    refreshToken,
-    expiresAt,
-    userIdx,
-  ]);
-}
-
-async function deleteRefreshToken(userIdx) {
-  const result = await client.query(putRefreshTokenSQL, [null, null, userIdx]);
-}
-
+// 많이 사용하는 기능은 함수 선언식 사용해서 저장
 function validate(regex, value) {
   //js에서 함수 표현식은 호이스팅 되지 않기 때문에 함수 선언식으로 바꿈
   if (value == null) return null;
@@ -382,7 +421,12 @@ function validate(regex, value) {
   return value;
 }
 
+async function deleteRefreshToken(userIdx) {
+  const result = await client.query(putRefreshTokenSQL, [null, null, userIdx]);
+}
+
 module.exports = {
+  checkPassword: trycatchWrapper(checkPassword),
   signinLogin: trycatchWrapper(signinLogin),
   checkDuplicateId: trycatchWrapper(checkDuplicateId),
   checkDuplicateNickname: trycatchWrapper(checkDuplicateNickname),

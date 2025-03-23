@@ -28,8 +28,8 @@ const {
   updateUserInfo,
   updateProfileImage,
   uploadS3,
+  checkPassword,
 } = require("./service");
-const { softDeleteSQL } = require("./sql");
 
 router.get("/ouath/url/discord");
 
@@ -38,6 +38,7 @@ router.get("/ouath/token/discord");
 router.get(
   "/signin",
   checkRegInputs([regId, regPw], ["id", "password"]),
+  checkPassword,
   signinLogin
 );
 

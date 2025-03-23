@@ -1,3 +1,12 @@
+// 로그인 및 토큰
+const checkUserPasswordSQL = `
+SELECT 
+    player_list_password
+FROM 
+    player.list
+WHERE 
+    player_list_id = $1
+`;
 const signinUserInfoSQL = `
 SELECT 
     player_list_player_status AS player_status,
@@ -8,7 +17,6 @@ FROM
     player.list
 WHERE 
     player_list_id = $1
-    AND player_list_password = $2
 `;
 const checkTeamRoleSQL = `
 SELECT 
@@ -26,6 +34,7 @@ FROM
 WHERE 
     player_list_idx = $1
 `;
+// 위에 3개 하나의 sql문으로 묶는 방법도 고려해보자.
 const putRefreshtokenSQL = `
 UPDATE player.list
 SET
@@ -34,6 +43,17 @@ SET
 WHERE
     player_list_idx = $3
 `;
+const checkRefreshtokenSQL = `
+SELECT 
+    player_list_idx AS user_idx,
+    player_list_team_idx AS team_idx,
+    player_list_refreshtoken_expires_at AS expires_at
+FROM 
+    player.list
+WHERE 
+    player_list_refreshtoken = $1
+`;
+// 중복 값 체크
 const checkDuplicateIdSQL = `
 SELECT EXISTS (
     SELECT 1
@@ -41,13 +61,6 @@ SELECT EXISTS (
     WHERE player_list_id = $1
 ) AS exists_flag
 `;
-// const result = await db.query(`
-//     SELECT EXISTS (
-//       SELECT 1 FROM player.list WHERE player_list_id = $1
-//     ) AS exists_flag
-//   `, [id]);
-
-// const exists = result.rows[0].exists_flag; 가 true or false
 const checkDuplicateNicknameSQL = `
 SELECT EXISTS (
     SELECT 1
@@ -55,6 +68,7 @@ SELECT EXISTS (
     WHERE player_list_nickname = $1
 ) AS exists_flag
 `;
+// 회원가입
 const signupLoginInfoSQL = `
 INSERT INTO player.list (
     player_list_id,
@@ -85,15 +99,7 @@ SET
 WHERE
     player_list_idx = $6
 `;
-const checkRefreshtokenSQL = `
-SELECT 
-    player_list_idx AS idx,
-    player_list_refreshtoken_expires_at AS expires_at
-FROM 
-    player.list
-WHERE 
-    player_list_refreshtoken = $1
-`;
+// 회원 삭제
 const softDeleteSQL = `
 UPDATE player.list
 SET 
@@ -102,6 +108,7 @@ SET
 WHERE 
     player_list_idx = $1
 `;
+// 회원 정보 가져오기
 const getMyInfoSQL = `
 SELECT 
     player_list_idx AS user_idx,
@@ -141,6 +148,7 @@ FROM
 WHERE 
     player_list_idx = $1
 `;
+// 회원 정보 업데이트
 const updateUserInfoSQL = `
 UPDATE player.list
 SET
@@ -155,7 +163,6 @@ SET
 WHERE
     player_list_idx = $9
 `;
-
 const getUserImageSQL = `
 SELECT 
     player_list_profile_image AS profile_image
@@ -173,6 +180,7 @@ WHERE
 `;
 
 module.exports = {
+  checkUserPasswordSQL,
   signinUserInfoSQL,
   checkTeamRoleSQL,
   checkCommunityRoleSQL,

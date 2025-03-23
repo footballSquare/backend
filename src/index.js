@@ -3,6 +3,9 @@ const app = express();
 
 require("dotenv").config();
 
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
 app.use(express.json());
 
 console.log("🚀 서버 시작!");
