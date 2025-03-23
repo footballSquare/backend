@@ -10,7 +10,7 @@ console.log("🚀 서버 시작!");
 // =============== 라우터 =============
 
 const accountRouter = require("./router/account/router");
-app.use("/board", accountRouter);
+app.use("/account", accountRouter);
 
 const boardRouter = require("./router/board/router");
 app.use("/board", boardRouter);

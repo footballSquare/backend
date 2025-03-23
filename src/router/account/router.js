@@ -1,7 +1,5 @@
 const router = require("express").Router();
 
-const trycatchWrapper = require("./../../util/trycatchWrapper");
-
 const {
   regIdx,
   regId,
@@ -13,73 +11,67 @@ const {
   regDiscordTag,
 } = require("./../../constant/regx");
 
-const { checkRegInput } = require("./../../middleware/checkInput");
+const { checkRegInputs } = require("./../../middleware/checkInput");
 
-router.get(
-  "/ouath/url/discord",
-  trycatchWrapper((req, res, next) => {})
-);
+const { checkLogin, optionalLogin } = require("./../../middleware/checkLogin");
 
-router.get(
-  "/ouath/token/discord",
-  trycatchWrapper((req, res, next) => {})
-);
+const {
+  signinLogin,
+  checkDuplicateId,
+  checkDuplicateNickname,
+  signupLoginInfo,
+  signupPlayerInfo,
+  checkRefreshToken,
+  accountSoftDelete,
+  getMyInfo,
+  getUserInfo,
+  updateUserInfo,
+  updateProfileImage,
+  uploadS3,
+} = require("./service");
+const { softDeleteSQL } = require("./sql");
+
+router.get("/ouath/url/discord");
+
+router.get("/ouath/token/discord");
 
 router.get(
   "/signin",
-  trycatchWrapper((req, res, next) => {})
+  checkRegInputs([regId, regPw], ["id", "password"]),
+  signinLogin
 );
 
-router.post(
-  "/check/id",
-  trycatchWrapper((req, res, next) => {
-    checkRegInput(regId, ["id"]);
-  })
-);
+router.post("/check/id", checkRegInputs([regId], ["id"]), checkDuplicateId);
 
 router.post(
   "/check/nickname",
-  trycatchWrapper((req, res, next) => {})
+  checkRegInputs([regNickname], ["nickname"]),
+  checkDuplicateNickname
 );
 
 router.post(
   "/signup/logininfo",
-  trycatchWrapper((req, res, next) => {})
+  checkRegInputs([regId, regPw, regNickname], ["id", "password", "nickname"]),
+  signupLoginInfo
 );
 
-router.post(
-  "/signup/playerinfo",
-  trycatchWrapper((req, res, next) => {})
-);
+router.post("/signup/playerinfo", signupPlayerInfo);
 
-router.get(
-  "/accesstoken",
-  trycatchWrapper((req, res, next) => {})
-);
+router.get("/accesstoken", checkRefreshToken);
 
-router.delete(
-  "/user/delete",
-  trycatchWrapper((req, res, next) => {})
-);
+router.delete("/user/delete", checkLogin, accountSoftDelete);
 
-router.get(
-  "/info/me",
-  trycatchWrapper((req, res, next) => {})
-);
+router.get("/info/me", checkLogin, getMyInfo);
 
-router.get(
-  "/info/:userIdx",
-  trycatchWrapper((req, res, next) => {})
-);
+router.get("/info/:userIdx", getUserInfo);
 
-router.put(
-  "/user/update",
-  trycatchWrapper((req, res, next) => {})
-);
+router.put("/user/update", checkLogin, updateUserInfo);
 
 router.put(
   "/profileimage",
-  trycatchWrapper((req, res, next) => {})
+  checkLogin,
+  uploadS3.single("image"),
+  updateProfileImage
 );
 
 module.exports = router;

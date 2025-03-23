@@ -35,7 +35,7 @@ const {
 } = require("./../../constant/regx");
 
 const signinLogin = async (req, res, next) => {
-  const { id, password } = req.body;
+  const { id, password } = req.query;
 
   const signinResult = await client.query(signinUserInfoSQL, [id, password]);
 
@@ -48,6 +48,14 @@ const signinLogin = async (req, res, next) => {
 
   // 기본 정보에서 player_status, user_idx는 항상 존재
   const playerStatus = user.player_status;
+  if (playerStatus === "pending") {
+    res.status(200).json({
+      player_status: playerStatus,
+      user_idx: userIdx,
+    });
+    return;
+  }
+
   const profileImage = user.profile_image || null;
   const teamIdx = user.team_idx || null;
 
@@ -71,6 +79,13 @@ const signinLogin = async (req, res, next) => {
   const refreshToken = setRefreshToken(userIdx);
 
   await putRefreshToken(refreshToken, userIdx);
+
+  // res.cookie("refresh_token", refreshToken, {
+  //   httpOnly: true,
+  //   secure: process.env.NODE_ENV === "production",
+  //   sameSite: "strict",
+  //   maxAge: 3 * 24 * 60 * 60 * 1000,
+  // });
 
   // 응답 구성
   res.status(200).json({
@@ -367,4 +382,17 @@ function validate(regex, value) {
   return value;
 }
 
-module.exports = {};
+module.exports = {
+  signinLogin: trycatchWrapper(signinLogin),
+  checkDuplicateId: trycatchWrapper(checkDuplicateId),
+  checkDuplicateNickname: trycatchWrapper(checkDuplicateNickname),
+  signupLoginInfo: trycatchWrapper(signupLoginInfo),
+  signupPlayerInfo: trycatchWrapper(signupPlayerInfo),
+  checkRefreshToken: trycatchWrapper(checkRefreshToken),
+  accountSoftDelete: trycatchWrapper(accountSoftDelete),
+  getMyInfo: trycatchWrapper(getMyInfo),
+  getUserInfo: trycatchWrapper(getUserInfo),
+  updateUserInfo: trycatchWrapper(updateUserInfo),
+  updateProfileImage: trycatchWrapper(updateProfileImage),
+  uploadS3,
+};
