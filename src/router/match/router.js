@@ -7,6 +7,13 @@ const {
 } = require("../../middleware/s3UpLoader")
 
 const {
+    checkHasTeam,
+    checkIsTeamMember,
+    checkIsTeamLeader,
+    checkIsTeamSubLeader
+} = require("../../middleware/checkRole")
+
+const {
     regColor,
     regMatchDuration,
     regMatchDatetime,
@@ -17,6 +24,11 @@ const {
     regChampionshipDescription,
     regChampionshipPeriod
 } = require("../../constant/regx")
+
+const { 
+    checkLogin, 
+    optionalLogin 
+} = require("../../middleware/checkLogin")
 
 const {
     checkIsTeam,
@@ -49,7 +61,11 @@ const {
     checkMatchNotStarted,
     checkMatchNotClosed,
     checkMatchStatsPostClosed,
-    checkPositionInFormation
+    checkPositionInFormation,
+    checkIsMatchOwner,
+    checkMatchOverlap,
+    checkIsTherePositionParticipant,
+    checkMatchNotEnded
 } = require("../../middleware/checkCondition")
 
 const {
@@ -97,8 +113,10 @@ router.post("/team/:team_list_idx",
     checkRegInput(regMatchDatetime,"match_match_start_time"),
     checkRegInput(regMatchDuration,"match_match_duration"),
     checkMatchStartTimeValid(),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamSubLeader(),
     checkIsTeam,
-    checkIsPlayer,
     postTeamMatch
 )
 
@@ -110,16 +128,17 @@ router.post("/open",
     checkRegInput(regMatchDatetime,"match_match_start_time"),
     checkRegInput(regMatchDuration,"match_match_duration"),
     checkMatchStartTimeValid(),
-    checkIsPlayer,
     postOpenMatch
 )
 
 // 팀 매치 수정하기
 router.put("/team/:team_list_idx",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamSubLeader(),
     checkIsMatch,
     checkIsTeam,
-    checkIsPlayer,
     checkMatchNotStarted(),
     putTeamMatch
 )
@@ -127,7 +146,9 @@ router.put("/team/:team_list_idx",
 // 매치 마감하기
 router.put("/:match_match_idx",
     checkIdx("match_match_idx"),
+    checkLogin,
     checkIsMatch,
+    checkIsMatchOwner(),
     checkMatchEnded(),
     closedMatch
 )
@@ -136,6 +157,7 @@ router.put("/:match_match_idx",
 router.delete("/:match_match_idx",
     checkIdx("match_match_idx"),
     checkIsMatch,
+    checkIsMatchOwner(),
     checkMatchNotStarted(),
     deleteMatch
 )
@@ -165,25 +187,34 @@ router.get("/:match_match_idx/waitlist",
 router.post("/:match_match_idx/approval",
     checkIdx("match_match_idx"),
     checkIsMatch,
+    checkIsPlayer,
+    checkIsMatchOwner(),
+    checkIsTherePositionParticipant(),
+    checkMatchNotEnded(),
     waitApproval
 )
 
 // 공개 매치 참여하기
 router.post("/:match_match_idx/open/join",
     checkIdx("match_match_idx"),
+    checkLogin,
+    checkMatchOverlap(),
+    checkMatchNotEnded(),
     checkPosition(),
     checkIsMatch,
-    checkMatchEnded(),
     checkPositionInFormation(),
     joinOpenMatch
 )
 
 // 팀 매치 참여하기
-router.post("/:match_match_idx/team/join",
+router.post("/:match_match_idx/team/:team_list_idx/join",
     checkIdx("match_match_idx"),
+    checkLogin,
+    checkMatchOverlap(),
+    checkIsTeamMember(),
     checkPosition(),
+    checkMatchNotEnded(),
     checkIsMatch,
-    checkMatchEnded(),
     checkPositionInFormation(),
     joinTeamMatch
 )
@@ -191,6 +222,7 @@ router.post("/:match_match_idx/team/join",
 // 매치 참여 해제하기
 router.delete("/:match_match_idx/leave",
     checkIdx("match_match_idx"),
+    checkLogin,
     getMatchAndTeamInfo,
     checkIsMatch,
     checkMatchNotClosed(),
@@ -214,6 +246,9 @@ router.post("/:match_match_idx/team_stats",
     checkIdx("match_team_stats_freekick"),
     checkIdx("match_team_stats_penaltykick"),
     checkIdx("mom"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkMatchStatsPostClosed(),
     s3Uploader("evidance"),
     checkIsMatch,
@@ -236,6 +271,9 @@ router.put("/:match_match_idx/team_stats",
     checkIdx("match_team_stats_freekick"),
     checkIdx("match_team_stats_penaltykick"),
     checkIdx("mom"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkMatchStatsPostClosed(),
     checkIsMatch,
     putTeamStats
@@ -255,6 +293,8 @@ router.post("/:match_match_idx/player_stats",
     checkIdx("match_player_stats_cutting"),
     checkIdx("match_player_stats_saved"),
     checkIdx("match_player_stats_successrate_saved"),
+    checkLogin,
+    checkIsTeamMember(),
     checkIsMatch,
     checkMatchStatsPostClosed(),
     s3Uploader("evidance"),
@@ -274,6 +314,8 @@ router.put("/:match_match_idx/player_stats",
     checkIdx("match_player_stats_cutting"),
     checkIdx("match_player_stats_saved"),
     checkIdx("match_player_stats_successrate_saved"),
+    checkLogin,
+    checkIsTeamMember(),
     checkIsMatch,
     checkMatchStatsPostClosed(),
     putPlayerStats

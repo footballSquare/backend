@@ -311,7 +311,289 @@ const checkPositionInFormation = () => {
             next(e);
         }
     };
-  };
+};
+
+// 매치 생성자인지 확인
+const checkIsMatchOwner = () => {
+    return async (req, res, next) => {
+        const my_player_list_idx = req.decoded.my_player_list_idx;
+        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+
+        try {
+            // DB에서 match 정보 조회
+            const result = await client.query(
+                `SELECT match_match_idx FROM match.match 
+                 WHERE match_match_idx = $1 AND player_list_idx = $2`,
+                [match_match_idx, my_player_list_idx]
+            );
+
+            if (result.rowCount === 0) {
+                throw customError(403, '해당 매치를 생성한 사용자가 아닙니다.');
+            }
+
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
+// 같은 시간대에 진행중인 매치에 참여하고 있는지 확인
+const checkMatchOverlap = () => {
+    return async (req, res, next) => {
+        const my_player_list_idx = req.decoded.my_player_list_idx;
+        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+
+        try {
+            // 1. 매치 시작시간과 지속시간 가져오기
+            const matchResult = await client.query(
+                `SELECT match_match_start_time, match_match_duration
+                 FROM match.match
+                 WHERE match_match_idx = $1`,
+                [match_match_idx]
+            );
+
+            if (matchResult.rowCount === 0) {
+                throw customError(404, '해당 매치를 찾을 수 없습니다.');
+            }
+
+            const { match_match_start_time, match_match_duration } = matchResult.rows[0];
+
+            // 2. JS에서 endTime 계산 (PostgresInterval 객체 파싱)
+            const durationMs =
+                (match_match_duration.hours ?? 0) * 60 * 60 * 1000 +
+                (match_match_duration.minutes ?? 0) * 60 * 1000 +
+                (match_match_duration.seconds ?? 0) * 1000;
+
+            const startTime = new Date(match_match_start_time);
+            const endTime = new Date(startTime.getTime() + durationMs);
+
+            console.log(startTime,endTime)
+
+            // PostgreSQL에서 tstzrange 타입으로 비교
+            const overlapResult = await client.query(
+                `SELECT 1 FROM match.participant
+                 WHERE player_list_idx = $1
+                 AND match_time_range && tstzrange($2::timestamptz, $3::timestamptz)`,
+                [my_player_list_idx, startTime.toISOString(), endTime.toISOString()]
+            );
+
+            if (overlapResult.rowCount > 0) {
+                throw customError(403, '이미 해당 시간대에 다른 매치에 참여 중입니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+// 게시글 작성자 인지 확인하는
+const checkIsPostOwner = () => {
+    return async (req, res, next) => {
+        const my_player_list_idx = req.decoded.my_player_list_idx;
+        const board_list_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+
+        try {
+            const result = await client.query(
+                `SELECT board_list_idx FROM board.list 
+                 WHERE board_list_idx = $1 AND player_list_idx = $2`,
+                [board_list_idx, my_player_list_idx]
+            );
+
+            if (result.rowCount === 0) {
+                throw customError(403, '해당 게시글의 작성자가 아닙니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+// 해당 게시글에 좋아요를 눌렀는지 여부
+const checkAlreadyLiked = () => {
+    return async (req, res, next) => {
+        const my_player_list_idx = req.decoded.my_player_list_idx;
+        const board_list_idx = req.body.board_list_idx ?? req.params.board_list_idx ?? req.query.board_list_idx;
+
+        try {
+            const result = await client.query(
+                `SELECT 1 FROM board.like
+                 WHERE player_list_idx = $1 AND board_list_idx = $2`,
+                [my_player_list_idx, board_list_idx]
+            );
+
+            if (result.rowCount > 0) {
+                throw customError(403, '이미 좋아요를 누른 게시글입니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+// 게시글에 좋아요를 안 눌렀으면
+const checkLikeExists = () => {
+    return async (req, res, next) => {
+        const my_player_list_idx = req.decoded.my_player_list_idx;
+        const board_list_idx = req.body.board_list_idx ?? req.params.board_list_idx ?? req.query.board_list_idx;
+
+        try {
+            const result = await client.query(
+                `SELECT 1 FROM board.like
+                 WHERE player_list_idx = $1 AND board_list_idx = $2`,
+                [my_player_list_idx, board_list_idx]
+            );
+
+            if (result.rowCount === 0) {
+                throw customError(403, '아직 좋아요를 누르지 않은 게시글입니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+// 댓글 작성자인지 확인
+const checkIsCommentOwner = () => {
+    return async (req, res, next) => {
+        const my_player_list_idx = req.decoded.my_player_list_idx;
+        const board_comment_idx = req.body.board_comment_idx ?? req.params.board_comment_idx ?? req.query.board_comment_idx;
+
+        try {
+            const result = await client.query(
+                `SELECT 1 FROM board.comment
+                 WHERE board_comment_idx = $1 AND player_list_idx = $2`,
+                [board_comment_idx, my_player_list_idx]
+            );
+
+            if (result.rowCount === 0) {
+                throw customError(403, '본인이 작성한 댓글이 아닙니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+// 팀이 다른 커뮤니티에 소속되어 있는지 확인하는
+const checkTeamNotJoinedCommunity = () => {
+    return async (req, res, next) => {
+        const teamIdx = req.decoded.my_team_list_idx;
+
+        try {
+            const result = await client.query(
+                `SELECT 1 FROM community.team
+                 WHERE team_list_idx = $1`,
+                [teamIdx]
+            );
+
+            if (result.rowCount > 0) {
+                throw customError(403, '해당 팀은 이미 커뮤니티에 소속되어 있습니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+// 두 팀이 대회에 참여한 팀인지 확인
+const checkBothTeamsInChampionship = () => {
+    return async (req, res, next) => {
+        const firstTeamIdx = req.body.first_team_idx ?? req.params.first_team_idx ?? req.query.first_team_idx;
+        const secondTeamIdx = req.body.second_team_idx ?? req.params.second_team_idx ?? req.query.second_team_idx;
+        const championshipIdx = req.body.championship_list_idx ?? req.params.championship_list_idx ?? req.query.championship_list_idx;
+
+        try {
+            const result = await client.query(
+                `SELECT team_list_idx FROM championship.participation_team
+                 WHERE championship_list_idx = $1
+                   AND team_list_idx IN ($2, $3)`,
+                [championshipIdx, firstTeamIdx, secondTeamIdx]
+            );
+
+            const joinedTeamIdxSet = new Set(result.rows.map(r => r.team_list_idx));
+
+            if (!joinedTeamIdxSet.has(Number(firstTeamIdx)) || !joinedTeamIdxSet.has(Number(secondTeamIdx))) {
+                throw customError(403, '두 팀 중 하나 이상이 해당 대회에 참가하지 않았습니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+
+// 해당 포지션에 참여자가 존재하는지
+const checkIsTherePositionParticipant = () => {
+    return async (req, res, next) => {
+        const matchIdx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+        const positionIdx = req.body.match_position_idx ?? req.params.match_position_idx ?? req.query.match_position_idx;
+
+        try {
+            const result = await client.query(
+                `SELECT 1 FROM match.participant
+                 WHERE match_match_idx = $1 AND match_position_idx = $2`,
+                [matchIdx, positionIdx]
+            );
+
+            if (result.rowCount > 0) {
+                throw customError(409, '해당 포지션은 이미 다른 참가자가 있습니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
+// 매치가 이미 종료됬는지 여부 체크
+const checkMatchNotEnded = () => {
+    return async (req, res, next) => {
+        const matchIdx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+
+        try {
+            const result = await client.query(
+                `SELECT match_match_start_time, match_match_duration
+                 FROM match.match
+                 WHERE match_match_idx = $1`,
+                [matchIdx]
+            );
+
+            const { match_match_start_time, match_match_duration } = result.rows[0];
+            const durationMs =
+                (match_match_duration.hours ?? 0) * 60 * 60 * 1000 +
+                (match_match_duration.minutes ?? 0) * 60 * 1000 +
+                (match_match_duration.seconds ?? 0) * 1000;
+
+            const endTime = new Date(new Date(match_match_start_time).getTime() + durationMs);
+            const now = new Date();
+
+            if (now >= endTime) {
+                throw customError(403, '이미 종료된 매치입니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
 
 module.exports = {
     checkTeamMatchCooldown,
@@ -324,5 +606,15 @@ module.exports = {
     checkIsTeamInCommunity,
     checkMatchNotClosed,
     checkMatchStatsPostClosed,
-    checkPositionInFormation
+    checkPositionInFormation,
+    checkIsMatchOwner,
+    checkMatchOverlap,
+    checkIsPostOwner,
+    checkAlreadyLiked,
+    checkLikeExists,
+    checkIsCommentOwner,
+    checkTeamNotJoinedCommunity,
+    checkBothTeamsInChampionship,
+    checkIsTherePositionParticipant,
+    checkMatchNotEnded
 }

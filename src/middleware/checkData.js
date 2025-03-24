@@ -3,7 +3,9 @@ const client = require("../database/postgreSQL")
 
 const checkExistsInDB = (table, column) => {
     return async (req, res, next) => {
-        const value = req.body[column] ?? req.params[column] ?? req.query[column];
+        const value = req.body[column] ?? req.params[column] ?? req.query[column] ?? req.decoded[column]
+
+        console.log(value)
 
         const sql = `SELECT * FROM ${table} WHERE ${column} = $1`;
 

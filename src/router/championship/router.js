@@ -12,6 +12,18 @@ const {
     regChampionshipPeriod
 } = require("../../constant/regx")
 
+const { 
+    checkLogin, 
+    optionalLogin 
+} = require("../../middleware/checkLogin")
+
+const {
+    checkIsCommunityAdminRole,
+    checkHasCommunityRole,
+    checkIsTeamLeader,
+    checkIsCommunityStaffRole
+} = require("../../middleware/checkRole")
+
 const {
     checkRegInput,
     checkIdx,
@@ -24,7 +36,8 @@ const {
 } = require("../../middleware/checkInput")
 
 const {
-    checkChampionshipMatchStatus
+    checkChampionshipMatchStatus,
+    checkBothTeamsInChampionship
 } = require("../../middleware/checkCondition")
 
 const {
@@ -49,12 +62,17 @@ router.post("/:championship_list_idx/championship_match",
     checkIdx("first_team_idx"),
     checkIdx("second_team_idx"),
     checkRegInput(regMatchDatetime,"match_match_start_time"),
+    checkLogin,
+    checkIsCommunityStaffRole(),
+    checkBothTeamsInChampionship(),
     postChampionShipMatch
 )
 
 // 대회 매치 삭제하기
 router.delete("/championship_match/:championship_match_idx",
     checkIdx("championship_match_idx"),
+    checkLogin,
+    checkIsCommunityStaffRole(),
     checkIsChampionshipMatch,
     deleteChampionShipMatch
 )
@@ -62,6 +80,8 @@ router.delete("/championship_match/:championship_match_idx",
 // 대회 매치 마감하기
 router.put("/championship_match/:championship_match_idx/done",
     checkIdx("championship_match_idx"),
+    checkLogin,
+    checkIsCommunityStaffRole(),
     checkIsChampionshipMatch,
     checkChampionshipMatchStatus(),
     championShipMatchDone

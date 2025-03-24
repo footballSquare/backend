@@ -15,6 +15,11 @@ const {
 
 const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
 
+const { 
+    checkLogin, 
+    optionalLogin 
+} = require("../../middleware/checkLogin")
+
 const {
     s3Uploader
 } = require("../../middleware/s3UpLoader")
@@ -29,6 +34,12 @@ const {
     checkMatchAttribute,
     checkPosition
 } = require("../../middleware/checkInput")
+
+const {
+    checkHasTeam,
+    checkIsTeamMember,
+    checkIsTeamLeader
+} = require("../../middleware/checkRole")
 
 const {
     checkIsTeam,
@@ -78,17 +89,6 @@ router.get("/list",
     getTeamList
 )
 
-// 팀 생성하기
-router.post("/",
-    checkRegInput(regTeamName,"team_list_name"),
-    checkRegInput(regTeamShortName,"team_list_short_name"),
-    checkRegInput(regColor,"team_list_color"),
-    checkRegInput(regTeamAnnouncement,"team_list_announcement"),
-    checkTeamNameDuplicate(),
-    checkTeamShortNameDuplicate(),
-    postTeam
-)
-
 // 팀 페이지 상세 정보 보기
 router.get("/:team_list_idx/information",
     checkIdx("team_list_idx"),
@@ -103,9 +103,25 @@ router.get("/:team_list_idx/member",
     getMember
 )
 
+// 팀 생성하기
+router.post("/",
+    checkRegInput(regTeamName,"team_list_name"),
+    checkRegInput(regTeamShortName,"team_list_short_name"),
+    checkRegInput(regColor,"team_list_color"),
+    checkRegInput(regTeamAnnouncement,"team_list_announcement"),
+    checkLogin,
+    checkHasTeam(),
+    checkTeamNameDuplicate(),
+    checkTeamShortNameDuplicate(),
+    postTeam
+)
+
 // 팀 정보 수정하기
 router.put("/:team_list_idx",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     changeTeamData
 )
@@ -126,6 +142,9 @@ router.get("/check_short_name",
 router.put("/:team_list_idx/emblem",
     multerMiddleware,
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     checkTeamMemberCount(),
     s3Uploader("team"),
@@ -136,6 +155,9 @@ router.put("/:team_list_idx/emblem",
 router.put("/:team_list_idx/banner",
     multerMiddleware,
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     checkTeamMemberCount(),
     s3Uploader("team"),
@@ -145,6 +167,9 @@ router.put("/:team_list_idx/banner",
 // 팀 해체하기
 router.delete("/:team_list_idx",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     checkTeamMatchCooldown,
     deleteTeam
@@ -155,6 +180,9 @@ router.delete("/:team_list_idx",
 router.post("/:team_list_idx/member/:player_list_idx/access",
     checkIdx("team_list_idx"),
     checkIdx("player_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     checkIsPlayer,
     checkPlayerNotInTeam(),
@@ -165,6 +193,9 @@ router.post("/:team_list_idx/member/:player_list_idx/access",
 router.delete("/:team_list_idx/member/:player_list_idx/access",
     checkIdx("team_list_idx"),
     checkIdx("player_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     checkIsPlayer,
     teamMemberDeny
@@ -175,6 +206,9 @@ router.put("/:team_list_idx/member/:player_list_idx/role/:team_role_idx",
     checkIdx("team_list_idx"),
     checkIdx("player_list_idx"),
     checkIdx("team_role_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     checkIsPlayer,
     changeMemberRole
@@ -184,6 +218,9 @@ router.put("/:team_list_idx/member/:player_list_idx/role/:team_role_idx",
 router.delete("/:team_list_idx/member/:player_list_idx/kick",
     checkIdx("team_list_idx"),
     checkIdx("player_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     checkIsPlayer,
     kickMember
@@ -192,6 +229,8 @@ router.delete("/:team_list_idx/member/:player_list_idx/kick",
 // 팀 가입 신청 하기
 router.put("/:team_list_idx/application",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkHasTeam(),
     checkIsTeam,
     teamApplication
 )
@@ -199,6 +238,9 @@ router.put("/:team_list_idx/application",
 // 팀 가입 신청 인원 목록 보기
 router.get("/:team_list_idx/application/list",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
+    checkIsTeamLeader(),
     checkIsTeam,
     teamApplicationList
 )
@@ -206,6 +248,8 @@ router.get("/:team_list_idx/application/list",
 // 팀 탈퇴하기
 router.delete("/:team_list_idx/leave",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsTeamMember(),
     checkIsTeam,
     teamLeave
 )

@@ -9,14 +9,16 @@ WHERE
 `;
 const signinUserInfoSQL = `
 SELECT 
-    player_list_player_status AS player_status,
-    player_list_idx AS user_idx,
-    player_list_profile_image AS profile_image,
-    player_list_team_idx AS team_idx
+    p.player_list_player_status AS player_status,
+    p.player_list_idx AS user_idx,
+    p.player_list_profile_image AS profile_image,
+    tm.team_list_idx AS team_idx
 FROM 
-    player.list
+    player.list p
+LEFT JOIN 
+    team.member tm ON p.player_list_idx = tm.player_list_idx
 WHERE 
-    player_list_id = $1
+    p.player_list_id = $1;
 `;
 const checkTeamRoleSQL = `
 SELECT 

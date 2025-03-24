@@ -60,8 +60,11 @@ const postTeam = async (req,res,next) => {
         team_list_color,
         team_list_announcement,
         common_status_idx,
-        player_list_idx
     } = req.body
+
+    const {
+        my_player_list_idx
+    } = req.decoded
 
     try{
         await client.query('BEGIN');
@@ -80,7 +83,7 @@ const postTeam = async (req,res,next) => {
         // 팀장 등록
         await client.query(postTeamManagerSQL,[
             teamListIdx, 
-            player_list_idx,
+            my_player_list_idx,
             TEAM_ROLE.LEADER
         ]);
 
@@ -333,12 +336,14 @@ const kickMember = async (req,res,next) => {
 // 팀 가입 신청
 const teamApplication = async (req,res,next) => {
     const {team_list_idx} = req.params
-    const {player_list_idx} = req.body
+    const { my_player_list_idx } = req.decoded
+
+    console.log(my_player_list_idx)
 
     try{
         await client.query(teamApplicationSQL, [
             team_list_idx,
-            player_list_idx
+            my_player_list_idx
         ])
         res.status(200).send({})
     } catch(e){
@@ -363,7 +368,7 @@ const teamApplicationList = async (req,res,next) => {
 // 팀 탈퇴하기
 const teamLeave = async (req,res,next) => {
     const {team_list_idx} = req.params
-    const {player_list_idx} = req.body
+    const { my_player_list_idx } = req.decoded
 
     try{
         await client.query(kickMemberSQL, [

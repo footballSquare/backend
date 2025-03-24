@@ -7,6 +7,18 @@ const {
     s3UploaderOptional
 } = require("../../middleware/s3UpLoader")
 
+const { 
+    checkLogin, 
+    optionalLogin 
+} = require("../../middleware/checkLogin")
+
+const {
+    checkIsPostOwner,
+    checkAlreadyLiked,
+    checkLikeExists,
+    checkIsCommentOwner
+} = require("../../middleware/checkCondition")
+
 const {
     regColor,
     regMatchDuration,
@@ -69,6 +81,7 @@ router.get("/",
 // 게시글 상세 보기
 router.get("/:board_list_idx",
     checkIdx("board_list_idx"),
+    optionalLogin,
     checkIsBoard,
     getBoard
 )
@@ -79,6 +92,7 @@ router.post("/",
     checkCategory(),
     checkRegInput(regBoardTitle,"board_list_title"),
     checkRegInput(regBoardContent,"board_list_content"),
+    checkLogin,
     s3UploaderOptional("board"),
     postBoard
 )
@@ -89,6 +103,8 @@ router.put("/:board_list_idx",
     checkIdx("board_list_idx"),
     checkRegInput(regBoardTitle,"board_list_title"),
     checkRegInput(regBoardContent,"board_list_content"),
+    checkLogin,
+    checkIsPostOwner(),
     checkIsBoard,
     s3UploaderOptional("board"),
     putBoard
@@ -97,6 +113,8 @@ router.put("/:board_list_idx",
 // 게시글 삭제하기
 router.delete("/:board_list_idx",
     checkIdx("board_list_idx"),
+    checkLogin,
+    checkIsPostOwner(),
     checkIsBoard,
     deleteBoard
 )
@@ -104,6 +122,8 @@ router.delete("/:board_list_idx",
 // 게시글 좋아요
 router.post("/:board_list_idx/like",
     checkIdx("board_list_idx"),
+    checkLogin,
+    checkAlreadyLiked(),
     checkIsBoard,
     boardLike
 )
@@ -111,6 +131,8 @@ router.post("/:board_list_idx/like",
 // 게시글 좋아요 삭제
 router.delete("/:board_list_idx/like",
     checkIdx("board_list_idx"),
+    checkLogin,
+    checkLikeExists(),
     checkIsBoard,
     boardLikeDelete
 )
@@ -119,6 +141,7 @@ router.delete("/:board_list_idx/like",
 router.post("/:board_list_idx/comment",
     checkIdx("board_list_idx"),
     checkRegInput(regCommentContent,"board_comment_content"),
+    checkLogin,
     checkIsBoard,
     postComment
 )
@@ -127,7 +150,9 @@ router.post("/:board_list_idx/comment",
 router.put("/comment/:board_comment_idx",
     checkIdx("board_comment_idx"),
     checkRegInput(regCommentContent,"board_comment_content"),
+    checkLogin,
     checkIsComment,
+    checkIsCommentOwner,
     putComment
 )
 
@@ -135,6 +160,7 @@ router.put("/comment/:board_comment_idx",
 router.delete("/comment/:board_comment_idx",
     checkIdx("board_comment_idx"),
     checkIsComment,
+    checkIsCommentOwner,
     deleteComment
 )
 

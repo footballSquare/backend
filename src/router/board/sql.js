@@ -64,6 +64,12 @@ comment_data AS (
     JOIN player.list pl ON bc.player_list_idx = pl.player_list_idx
     WHERE bc.board_list_idx = $1
     ORDER BY bc.board_comment_created_at ASC
+),
+like_check AS (
+    SELECT EXISTS (
+        SELECT 1 FROM board.like
+        WHERE board_list_idx = $1 AND player_list_idx = $2
+    ) AS is_liked
 )
 SELECT 
     jsonb_build_object(
@@ -76,6 +82,7 @@ SELECT
         'board_list_updated_at', bd.board_list_updated_at,
         'board_list_likecount', bd.board_list_likecount,
         'board_list_view_count', bd.board_list_view_count,
+        'is_liked', lc.is_liked,
         'player', jsonb_build_object(
             'player_list_idx', bd.player_list_idx,
             'player_list_nickname', bd.player_list_nickname,
@@ -95,10 +102,11 @@ SELECT
     ) AS board
 FROM board_data bd
 LEFT JOIN comment_data cd ON bd.board_list_idx = cd.board_list_idx
+CROSS JOIN like_check lc
 GROUP BY bd.board_list_idx, bd.board_category_idx, bd.board_list_title, bd.board_list_content, 
          bd.board_list_img, bd.board_list_created_at, bd.board_list_updated_at, 
          bd.board_list_likecount, bd.board_list_view_count, bd.player_list_idx, 
-         bd.player_list_nickname, bd.player_list_profile_image;
+         bd.player_list_nickname, bd.player_list_profile_image, lc.is_liked;
 `
 
 // 게시글 작성하기

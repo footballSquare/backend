@@ -2,6 +2,11 @@ const router = require("express").Router()
 
 const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
 
+const { 
+    checkLogin, 
+    optionalLogin 
+} = require("../../middleware/checkLogin")
+
 const {
     s3Uploader
 } = require("../../middleware/s3UpLoader")
@@ -20,6 +25,12 @@ const {
 } = require("../../constant/regx")
 
 const {
+    checkIsCommunityAdminRole,
+    checkHasCommunityRole,
+    checkIsTeamLeader
+} = require("../../middleware/checkRole")
+
+const {
     checkIsTeam,
     checkIsMatch,
     checkIsCommunity,
@@ -31,7 +42,8 @@ const {
 
 const {
     checkIsCommunityAdmin,
-    checkIsTeamInCommunity
+    checkIsTeamInCommunity,
+    checkTeamNotJoinedCommunity
 } = require("../../middleware/checkCondition")
 
 const {
@@ -95,6 +107,8 @@ router.get("/:community_list_idx/championship",
 
 // 커뮤니티 엠블렘 수정하기
 router.put("/:community_list_idx/emblem",
+    checkLogin,
+    checkIsCommunityAdminRole(),
     multerMiddleware,
     s3Uploader("team"),
     putCommunityEmblem
@@ -102,6 +116,8 @@ router.put("/:community_list_idx/emblem",
 
 // 커뮤니티 배너 수정하기
 router.put("/:community_list_idx/banner",
+    checkLogin,
+    checkIsCommunityAdminRole(),
     multerMiddleware,
     s3Uploader("team"),
     putCommunityBanner
@@ -109,6 +125,8 @@ router.put("/:community_list_idx/banner",
 
 // 대회 만들기
 router.post("/:community_list_idx/championship",
+    checkLogin,
+    checkIsCommunityAdminRole(),
     multerMiddleware,
     checkIdx("community_list_idx"),
     checkRegInput(regChampionshipName,"championship_list_name"),
@@ -127,6 +145,8 @@ router.post("/:community_list_idx/championship",
 router.post("/:community_list_idx/staff/:player_list_idx/access",
     checkIdx("community_list_idx"),
     checkIdx("player_list_idx"),
+    checkLogin,
+    checkIsCommunityAdminRole(),
     checkIsPlayer,
     checkIsCommunityAdmin(),
     communityStaffAccess
@@ -136,6 +156,8 @@ router.post("/:community_list_idx/staff/:player_list_idx/access",
 router.delete("/:community_list_idx/staff/:player_list_idx/access",
     checkIdx("community_list_idx"),
     checkIdx("player_list_idx"),
+    checkLogin,
+    checkIsCommunityAdminRole(),
     checkIsPlayer,
     communityStaffAccessDeny
 )
@@ -143,6 +165,8 @@ router.delete("/:community_list_idx/staff/:player_list_idx/access",
 // 커뮤니티 운영진 추방
 router.delete("/staff/:player_list_idx/kick",
     checkIdx("player_list_idx"),
+    checkLogin,
+    checkIsCommunityAdminRole(),
     checkIsPlayer,
     kickCommunityStaff
 )
@@ -150,7 +174,9 @@ router.delete("/staff/:player_list_idx/kick",
 // 커뮤니티 운영진 가입 신청
 router.post("/:community_list_idx/staff/application",
     checkIdx("community_list_idx"),
+    checkLogin,
     checkIsCommunity,
+    checkHasCommunityRole(),
     communityStaffApplication
 )
 
@@ -171,6 +197,9 @@ router.get("/:community_list_idx/team/application",
 // 커뮤니티 팀 가입 신청
 router.post("/:community_list_idx/team/application",
     checkIdx("community_list_idx"),
+    checkLogin,
+    checkIsTeamLeader(),
+    checkTeamNotJoinedCommunity(),
     checkIsCommunity,
     communityTeamApplication
 )
@@ -178,6 +207,8 @@ router.post("/:community_list_idx/team/application",
 // 커뮤니티 팀 가입 신청 승인
 router.post("/team/:team_list_idx/access",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsCommunityAdminRole(),
     checkIsTeam,
     checkIsTeamInCommunity(),
     communityTeamAccess
@@ -186,6 +217,8 @@ router.post("/team/:team_list_idx/access",
 // 커뮤니티 팀 가입 신청 거절
 router.delete("/team/:team_list_idx/access",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsCommunityAdminRole(),
     checkIsTeam,
     communityTeamAccessDeny
 )
@@ -193,6 +226,8 @@ router.delete("/team/:team_list_idx/access",
 // 커뮤니티 팀 추방
 router.delete("/team/:team_list_idx/kick",
     checkIdx("team_list_idx"),
+    checkLogin,
+    checkIsCommunityAdminRole(),
     checkIsTeam,
     communityTeamKick
 )

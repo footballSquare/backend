@@ -29,10 +29,10 @@ const optionalLogin = (req, res, next) => {
     try {
       req.decoded = jwt.verify(authorization, process.env.ACCESS_TOKEN_SECRET);
     } catch (e) {
-      req.decoded = null; // 잘못된 토큰일 경우 null로 설정
+      req.decoded = {}; // 잘못된 토큰일 경우 null로 설정
     }
   } else {
-    req.decoded = null; // 토큰이 없는 경우 null로 설정
+    req.decoded = {}; // 토큰이 없는 경우 null로 설정
   }
   next();
 };

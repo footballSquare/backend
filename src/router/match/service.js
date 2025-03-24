@@ -59,9 +59,7 @@ const getOpenMatchList = async (req,res,next) => {
 
 // 공방 매치 생성
 const postOpenMatch = async (req,res,next) => {
-
     const {
-        player_list_idx,
         match_formation_idx,
         match_match_participation_type,
         match_type_idx,
@@ -69,9 +67,13 @@ const postOpenMatch = async (req,res,next) => {
         match_match_duration
     } = req.body
 
+    const {
+        my_player_list_idx
+    } = req.decoded
+
     try{
         await client.query(postOpenMatchSQL, [
-            player_list_idx,
+            my_player_list_idx,
             match_formation_idx,
             match_match_participation_type,
             match_type_idx,
@@ -88,7 +90,6 @@ const postOpenMatch = async (req,res,next) => {
 const putTeamMatch = async (req,res,next) => {
     const {team_list_idx} = req.params
     const {
-        player_list_idx,
         match_match_idx,
         match_match_participation_type,
         match_match_attribute,
@@ -96,6 +97,10 @@ const putTeamMatch = async (req,res,next) => {
         match_match_duration,
         match_formation_idx
     } = req.body
+
+    const {
+        my_player_list_idx
+    } = req.decoded
 
     try{
         await client.query("BEGIN");
@@ -112,7 +117,7 @@ const putTeamMatch = async (req,res,next) => {
         await client.query(putTeamMatchSQL, [
             match_match_idx,
             team_list_idx,
-            player_list_idx,
+            my_player_list_idx,
             match_match_participation_type,
             match_match_attribute,
             match_match_start_time,
@@ -131,15 +136,15 @@ const putTeamMatch = async (req,res,next) => {
 const closedMatch = async (req,res,next) => {
     const {match_match_idx} = req.params
     const {
-        player_list_idx
-    } = req.body
+        my_player_list_idx
+    } = req.decoded
 
     try{
         // 트랜잭션으로 매치를 먼저 마감, 대기자 목록 삭제
         await client.query("BEGIN");
         const closedMatchResult = await client.query(closedMatchSQL, [
             match_match_idx,
-            player_list_idx
+            my_player_list_idx
         ])
 
         await client.query(deleteWaitlistSQL, [match_match_idx]);
@@ -158,7 +163,6 @@ const closedMatch = async (req,res,next) => {
 const postTeamMatch = async (req,res,next) => {
     const {team_list_idx} = req.params
     const {
-        player_list_idx,
         match_formation_idx,
         match_match_participation_type,
         match_type_idx,
@@ -167,10 +171,12 @@ const postTeamMatch = async (req,res,next) => {
         match_match_duration
     } = req.body
 
+    const { my_player_list_idx } = req.decoded
+
     try{
         await client.query(postTeamMatchSQL, [
             team_list_idx,
-            player_list_idx,
+            my_player_list_idx,
             match_formation_idx,
             match_match_participation_type,
             match_type_idx,
@@ -217,6 +223,8 @@ const deleteMatch = async (req,res,next) => {
 // 매치 세부정보 가져오기
 const getMatchDetailData = async (req,res,next) => {
     const {match_match_idx} = req.params
+
+    console.log(match_match_idx)
 
     try{
         const result = await client.query(getMatchDetailDataSQL, [match_match_idx])
@@ -309,7 +317,8 @@ const waitApproval = async (req,res,next) => {
 // 공개 매치 참여하기
 const joinOpenMatch = async (req,res,next) => {
     const {match_match_idx} = req.params
-    const {match_position_idx,player_list_idx} = req.body
+    const {match_position_idx} = req.query
+    const { my_player_list_idx } = req.decoded
 
     try{
         const result = await client.query(checkMatchParticipationSQL, [match_match_idx])
@@ -321,7 +330,7 @@ const joinOpenMatch = async (req,res,next) => {
          
         await client.query(sql, [
             match_match_idx,
-            player_list_idx,
+            my_player_list_idx,
             match_position_idx
         ])
         res.status(200).send({})
@@ -333,19 +342,20 @@ const joinOpenMatch = async (req,res,next) => {
 // 팀 매치 참여하기
 const joinTeamMatch = async (req,res,next) => {
     const {match_match_idx} = req.params
-    const {match_position_idx,player_list_idx} = req.body
+    const {match_position_idx} = req.query
+    const { my_player_list_idx } = req.decoded
 
     try{
         const result = await client.query(checkMatchParticipationSQL, [match_match_idx])
         let sql
         
         // 매치 생성자 이거나, 공개 매치일 경우 대기자 목록이 아닌 즉시 참여
-        if (result.rows[0].player_list_idx == player_list_idx || result.rows[0].match_match_participation_type == 1) sql = postMatchParticipantSQL
+        if (result.rows[0].player_list_idx == my_player_list_idx || result.rows[0].match_match_participation_type == 1) sql = postMatchParticipantSQL
         else if(result.rows[0].match_match_participation_type == 0) sql = postMatchWaitListSQL
          
         await client.query(sql, [
             match_match_idx,
-            player_list_idx,
+            my_player_list_idx,
             match_position_idx
         ])
         res.status(200).send({})
@@ -358,19 +368,18 @@ const joinTeamMatch = async (req,res,next) => {
 const leaveMatch = async (req, res,next) => {
     const { target_player_idx } = req.query;
     const { match_match_idx } = req.params;
-    const { player_list_idx } = req.body;
+    const { my_player_list_idx } = req.decoded
     const { match_creator_idx, team_captain_idx } = req.matchInfo;
-
 
     try {
         // 자기 자신을 삭제하는 경우 → 단순히 참가자 목록에서 삭제
-        if (player_list_idx == target_player_idx) {
+        if (my_player_list_idx == target_player_idx) {
             await client.query(deleteParticipantSQL, [match_match_idx, target_player_idx]);
             return res.status(200).send({});
         }
 
         // 2️⃣ 매치 생성자 또는 팀 주장인 경우 → 참가자 목록에서 삭제 후, 대기자 목록으로 이동
-        else if (player_list_idx == match_creator_idx || player_list_idx == team_captain_idx) {
+        else if (my_player_list_idx == match_creator_idx || my_player_list_idx == team_captain_idx) {
             
             await client.query("BEGIN"); // 트랜잭션 시작
 
@@ -527,7 +536,6 @@ const putTeamStats = async (req,res,next) => {
 const postPlayerStats = async (req,res,next) => {
     const {match_match_idx} = req.params
     const {
-        player_list_idx,
         match_player_stats_goal,
         match_player_stats_assist,
         match_player_stats_successrate_pass,
@@ -541,13 +549,14 @@ const postPlayerStats = async (req,res,next) => {
         match_player_stats_successrate_saved
     } = req.body
 
-    console.log(req.fileUrl)
+    const { my_player_list_idx } = req.decoded
+
     const match_player_stats_evidence_img = req.fileUrl
 
     try{
         await client.query(postPlayerStatsSQL, [
             match_match_idx,
-            player_list_idx,
+            my_player_list_idx,
             match_player_stats_goal,
             match_player_stats_assist,
             match_player_stats_successrate_pass,
@@ -572,7 +581,6 @@ const postPlayerStats = async (req,res,next) => {
 const putPlayerStats = async (req,res,next) => {
     const {match_match_idx} = req.params
     const {
-        player_list_idx,
         match_player_stats_goal,
         match_player_stats_assist,
         match_player_stats_successrate_pass,
@@ -586,10 +594,12 @@ const putPlayerStats = async (req,res,next) => {
         match_player_stats_successrate_saved
     } = req.body
 
+    const { my_player_list_idx } = req.decoded
+
     try{
         await client.query(putPlayerStatsSQL, [
             match_match_idx,
-            player_list_idx,
+            my_player_list_idx,
             match_player_stats_goal,
             match_player_stats_assist,
             match_player_stats_successrate_pass,
