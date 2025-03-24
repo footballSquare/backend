@@ -1,6 +1,5 @@
 require("dotenv").config({ path: "/app/src/.env" });
 const { Pool } = require("pg");
-console.log(process.env.PGSQL_HOST)
 
 const client = new Pool({
   user: process.env.PGSQL_USER,

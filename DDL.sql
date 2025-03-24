@@ -196,35 +196,6 @@ CREATE TABLE match.waitlist (
   CONSTRAINT unique_match_waitlist UNIQUE (match_match_idx, match_position_idx, player_list_idx)
 );
 
--- board
-CREATE TABLE board.category (
-  board_category_idx SERIAL PRIMARY KEY,
-  board_category_name VARCHAR(20) UNIQUE NOT NULL
-);
-
-CREATE TABLE board.list (
-  board_list_idx SERIAL PRIMARY KEY,
-  board_category_idx INT NOT NULL REFERENCES board.category(board_category_idx),
-  board_list_title VARCHAR(50) NOT NULL,
-  board_list_content TEXT,
-  player_list_idx INT NOT NULL REFERENCES player.list(player_list_idx) ON DELETE CASCADE,
-  community_list_idx INT REFERENCES community.list(community_list_idx) ON DELETE CASCADE,
-  board_list_img JSONB,
-  board_list_created_at TIMESTAMP DEFAULT now(),
-  board_list_updated_at TIMESTAMP DEFAULT now(),
-  board_list_likecount INT DEFAULT 0 CHECK (board_list_likecount >= 0) NOT NULL,
-  board_list_view_count INT DEFAULT 0 CHECK (board_list_view_count >= 0) NOT NULL
-);
-
-CREATE TABLE board.comment (
-  board_comment_idx SERIAL PRIMARY KEY,
-  board_list_idx INT NOT NULL REFERENCES board.list(board_list_idx) ON DELETE CASCADE,
-  player_list_idx INT NOT NULL REFERENCES player.list(player_list_idx) ON DELETE CASCADE,
-  board_comment_content VARCHAR(100) NOT NULL,
-  board_comment_created_at TIMESTAMP DEFAULT now(),
-  board_comment_updated_at TIMESTAMP DEFAULT now()
-);
-
 -- community
 CREATE TABLE community.list (
   community_list_idx SERIAL PRIMARY KEY,
@@ -327,3 +298,34 @@ CREATE TABLE championship.championship_match (
   match_match_start_time TIMESTAMP NOT NULL,
   match_match_duration INTERVAL NOT NULL CHECK (match_match_duration > '0 seconds')
 );
+
+-- board
+CREATE TABLE board.category (
+  board_category_idx SERIAL PRIMARY KEY,
+  board_category_name VARCHAR(20) UNIQUE NOT NULL
+);
+
+CREATE TABLE board.list (
+  board_list_idx SERIAL PRIMARY KEY,
+  board_category_idx INT NOT NULL REFERENCES board.category(board_category_idx),
+  board_list_title VARCHAR(50) NOT NULL,
+  board_list_content TEXT,
+  player_list_idx INT NOT NULL REFERENCES player.list(player_list_idx) ON DELETE CASCADE,
+  community_list_idx INT REFERENCES community.list(community_list_idx) ON DELETE CASCADE,
+  board_list_img JSONB,
+  board_list_created_at TIMESTAMP DEFAULT now(),
+  board_list_updated_at TIMESTAMP DEFAULT now(),
+  board_list_likecount INT DEFAULT 0 CHECK (board_list_likecount >= 0) NOT NULL,
+  board_list_view_count INT DEFAULT 0 CHECK (board_list_view_count >= 0) NOT NULL
+);
+
+CREATE TABLE board.comment (
+  board_comment_idx SERIAL PRIMARY KEY,
+  board_list_idx INT NOT NULL REFERENCES board.list(board_list_idx) ON DELETE CASCADE,
+  player_list_idx INT NOT NULL REFERENCES player.list(player_list_idx) ON DELETE CASCADE,
+  board_comment_content VARCHAR(100) NOT NULL,
+  board_comment_created_at TIMESTAMP DEFAULT now(),
+  board_comment_updated_at TIMESTAMP DEFAULT now()
+);
+
+
