@@ -2,21 +2,26 @@
 const getTeamMatchListSQL = 
 `
 SELECT 
-    match.match.match_match_idx,
-    match.match.player_list_idx,
-    player.list.player_list_nickname,
-    player.list.player_list_profile_image,
-    match.match.match_match_participation_type,
-    match.match.match_type_idx,
-    match.match.match_match_attribute,
-    match.match.common_status_idx,
-    match.match.match_match_start_time,
-    match.match.match_match_duration
-FROM match.match
-JOIN player.list ON match.match.player_list_idx = player.list.player_list_idx
-WHERE match.match.team_list_idx = $1
-ORDER BY match.match.match_match_start_time DESC
+    m.match_match_idx,
+    m.match_type_idx,
+    t.team_list_idx,
+    t.team_list_name,
+    t.team_list_emblem,
+    m.match_match_attribute,
+    m.match_match_participation_type,
+    p.player_list_idx,
+    p.player_list_nickname,
+    p.player_list_profile_image,
+    m.match_match_start_time,
+    m.match_match_duration,
+    m.common_status_idx
+FROM match.match AS m
+JOIN player.list AS p ON m.player_list_idx = p.player_list_idx
+JOIN team.list AS t ON m.team_list_idx = t.team_list_idx
+WHERE m.team_list_idx = $1
+ORDER BY m.match_match_start_time DESC
 LIMIT 10 OFFSET $2 * 10;
+
 `
 
 // 공개 매치 목록 보기
@@ -24,18 +29,19 @@ const getOpenMatchDataSQL =
 `
 SELECT
     m.match_match_idx,
+    m.match_type_idx,
     m.team_list_idx,
     t.team_list_name,
     t.team_list_emblem,
+    m.match_match_attribute,
+    m.match_match_participation_type,
     m.player_list_idx,
     p.player_list_nickname,
     p.player_list_profile_image,
-    m.match_formation_idx,
-    m.match_match_participation_type,
-    m.match_type_idx,
-    m.common_status_idx,
     m.match_match_start_time,
-    m.match_match_duration
+    m.match_match_duration,
+    m.match_formation_idx,
+    m.common_status_idx
 FROM 
     match.match AS m
 JOIN 
@@ -160,7 +166,7 @@ const getMatchParticipantListSQL =
 SELECT 
     match.participant.player_list_idx,
     player.list.player_list_nickname,
-    player.list.player_list_profile_image,
+    player.list.player_list_profile_image AS player_list_url,
     match.participant.match_position_idx
 FROM match.participant
 JOIN player.list ON match.participant.player_list_idx = player.list.player_list_idx

@@ -213,16 +213,17 @@ const checkChampionshipType = () => {
 // 매치 포지션 체크
 const checkPosition = () => {
   return (req, res, next) => {
-    const value =
+    let value =
       req.body.match_position_idx ??
       req.params.match_position_idx ??
       req.query.match_position_idx;
+      value = Number(value);
     try {
       if (
-        value === undefined ||
-        !Object.values(MATCH_POSITION).map(Number).includes(value)
+        value == null || 
+        isNaN(value) || !Object.values(MATCH_POSITION).includes(value)
       )
-        throw customError(400, `championship_type_idx 양식 오류`);
+        throw customError(400, `포메이션에 존재하지 않는 포지션`);
       next();
     } catch (e) {
       next(e);

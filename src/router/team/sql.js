@@ -18,10 +18,10 @@ SELECT
     team.list.team_list_color,
     team.list.team_list_emblem,
     team.list.team_list_created_at,
-    COUNT(team.member.player_list_idx) AS total_members,
-    captain_data.player_list_idx AS captain_idx,
-    captain_data.player_list_nickname AS captain_name,
-    captain_data.player_list_profile_image AS captain_profile_image
+    COUNT(team.member.player_list_idx) AS whole_member,
+    captain_data.player_list_idx AS player_list_idx,
+    captain_data.player_list_nickname AS player_list_name,
+    captain_data.player_list_profile_image AS player_list_profile_image
 FROM team.list
 LEFT JOIN community.team ON team.list.team_list_idx = community.team.team_list_idx
 LEFT JOIN team.member ON team.list.team_list_idx = team.member.team_list_idx
@@ -94,6 +94,7 @@ SELECT
     player.list.player_list_idx,
     player.list.player_list_nickname,
     player.list.player_list_profile_image,
+    player.list.player_list_platform,
     team.member.team_role_idx
 FROM 
     team.member
@@ -170,6 +171,7 @@ SELECT
     player.list.player_list_idx,
     player.list.player_list_nickname,
     player.list.player_list_profile_image,
+    player.list.player_list_platform,
     team.waitlist.team_waitlist_created_at
 FROM team.waitlist
 JOIN player.list

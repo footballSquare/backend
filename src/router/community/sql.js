@@ -19,7 +19,8 @@ const getCommunityStaffSQL =
 SELECT 
     player.list.player_list_idx,
     player.list.player_list_nickname,
-    player.list.player_list_profile_image,
+    player_list_platform,
+    player.list.player_list_profile_image AS player_list_profile_img,
     community.staff.community_role_idx,
     community.staff.community_staff_joined_at
 FROM 
@@ -162,7 +163,8 @@ const getCommunityStaffApplicationSQL =
 SELECT 
     player.list.player_list_idx,
     player.list.player_list_nickname,
-    player.list.player_list_profile_image
+    player_list_platform,
+    player.list.player_list_profile_image AS player_list_profile_img
 FROM 
     community.waitlist
 JOIN 
