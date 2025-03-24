@@ -10,5 +10,5 @@ RUN npm install --omit=dev
 
 COPY . .
 
-CMD ["tail", "-f", "/dev/null"]
+CMD ["pm2-runtime", "src/index.js", "--name", "football-square"]
 
