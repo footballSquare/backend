@@ -21,7 +21,7 @@ services:
     depends_on:
       - db
     env_file:
-      - .env
+      - ./src/.env
 
 volumes:
   db_data:
