@@ -37,7 +37,7 @@ const getCommunity = async (req,res,next) => {
         const result = await client.query(getCommunitySQL, [
             community_list_idx
         ])
-        res.status(200).send({ community : result.rows })
+        res.status(200).send({ community : result.rows[0] })
     } catch(e){
         next(e)
     }
