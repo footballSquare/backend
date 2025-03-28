@@ -128,6 +128,7 @@ router.post("/open",
     checkRegInput(regMatchDatetime,"match_match_start_time"),
     checkRegInput(regMatchDuration,"match_match_duration"),
     checkMatchStartTimeValid(),
+    checkLogin,
     postOpenMatch
 )
 
