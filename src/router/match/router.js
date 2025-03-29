@@ -66,7 +66,8 @@ const {
     checkIsMatchOwner,
     checkMatchOverlap,
     checkIsTherePositionParticipant,
-    checkMatchNotEnded
+    checkMatchNotEnded,
+    checkAlreadyWaitList
 } = require("../../middleware/checkCondition")
 
 const {
@@ -204,12 +205,14 @@ router.post("/:match_match_idx/approval",
 // 공개 매치 참여하기
 router.post("/:match_match_idx/open/join",
     checkIdx("match_match_idx"),
+    checkIdx("match_position_idx"),
     checkPosition(),
     checkLogin,
     getMatchAndTeamInfo,
     checkMatchOverlap(),
     checkMatchNotEnded(),
     checkPositionInFormation(),
+    checkAlreadyWaitList(),
     joinOpenMatch
 )
 
@@ -225,6 +228,7 @@ router.post("/:match_match_idx/team/:team_list_idx/join",
     checkMatchOverlap(),
     checkMatchNotEnded(),
     checkPositionInFormation(),
+    checkAlreadyWaitList(),
     joinTeamMatch
 )
 

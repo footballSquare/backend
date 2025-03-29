@@ -344,9 +344,9 @@ const joinOpenMatch = async (req,res,next) => {
         let sql
         
         // 매치 생성자 이거나, 공개 매치일 경우 대기자 목록이 아닌 즉시 참여
-        if (result.rows[0].player_list_idx == player_list_idx || result.rows[0].match_match_participation_type == 1) sql = postMatchParticipantSQL
+        if (result.rows[0].player_list_idx == my_player_list_idx || result.rows[0].match_match_participation_type == 1) sql = postMatchParticipantSQL
         else if(result.rows[0].match_match_participation_type == 0) sql = postMatchWaitListSQL
-         
+        console.log("sql",sql)
         await client.query(sql, [
             match_match_idx,
             my_player_list_idx,

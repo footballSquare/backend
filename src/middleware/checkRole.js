@@ -79,8 +79,6 @@ const checkIsTeamMemberAtMatch = () => {
     return async (req, res, next) => {
         const { my_team_list_idx } = req.decoded;
         const value = req.matchInfo.team_list_idx;
-        console.log("my_team_list_idx",my_team_list_idx)
-        console.log("value",value)
 
         try {
             if (my_team_list_idx != value) {

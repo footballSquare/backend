@@ -291,7 +291,6 @@ const checkPositionInFormation = () => {
             const {match_formation_idx} = req.matchInfo
     
             const validPositions = MATCH_FORMATION_POSITIONS[match_formation_idx];
-            console.log("validPositions:", validPositions)
 
             if (!validPositions.includes(match_position_idx)) {
             throw customError(403, "해당 포지션은 선택한 포메이션에 존재하지 않습니다.");
@@ -348,8 +347,6 @@ const checkMatchOverlap = () => {
 
             const startTime = new Date(match_match_start_time);
             const endTime = new Date(startTime.getTime() + durationMs);
-
-            console.log(startTime,endTime)
 
             // PostgreSQL에서 tstzrange 타입으로 비교
             const overlapResult = await client.query(
@@ -571,6 +568,39 @@ const checkMatchNotEnded = () => {
     };
 };
 
+// 이미 대기 등록 한 포지션에 중복 등록 불가능
+const checkAlreadyWaitList = () => {
+    return async (req, res, next) => {
+        const player_list_idx = req.decoded.my_player_list_idx;
+        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+        const match_position_idx = req.body.match_position_idx ?? req.params.match_position_idx ?? req.query.match_position_idx;
+        console.log(player_list_idx, match_match_idx, match_position_idx)
+        try {
+            const result = await client.query(
+            `SELECT *
+            FROM match.waitlist
+            WHERE match_match_idx = $1
+            AND match_position_idx = $2
+            AND player_list_idx = $3`,
+            [
+                match_match_idx,
+                match_position_idx,
+                player_list_idx
+            ]
+            );
+            console.log(result.rows)
+
+            if (result.rowCount > 0) {
+                throw customError(403, '이미 해당 포지션에 대기열 등록이 되어 있습니다.');
+            }
+
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+};
+
 
 module.exports = {
     checkTeamMatchCooldown,
@@ -593,5 +623,6 @@ module.exports = {
     checkTeamNotJoinedCommunity,
     checkBothTeamsInChampionship,
     checkIsTherePositionParticipant,
-    checkMatchNotEnded
+    checkMatchNotEnded,
+    checkAlreadyWaitList
 }

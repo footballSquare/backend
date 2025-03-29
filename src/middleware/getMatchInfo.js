@@ -32,8 +32,6 @@ const getMatchAndTeamInfo = async (req, res, next) => {
         }
 
         req.matchInfo = matchResult.rows[0];
-
-        console.log(req.matchInfo)
         next();
     } catch (e) {
         next(e);
