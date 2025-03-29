@@ -1,12 +1,17 @@
 const client = require("../../database/postgreSQL")
 const customError = require("../../util/customError")
 
+const { COMMUNITY_ROLE,
+    MATCH_ATTRIBUTE
+} = require("../../constant/constantIndex")
+
 const {
     getTeamMatchListSQL,
     getOpenMatchDataSQL,
     postOpenMatchSQL,
     postTeamMatchSQL,
     putTeamMatchSQL,
+    putTeamMatchAtChampionShipSQL,
     closedMatchSQL,
     deleteWaitlistSQL,
     deleteMatchSQL,
@@ -88,9 +93,8 @@ const postOpenMatch = async (req,res,next) => {
 
 // 팀 매치 수정하기
 const putTeamMatch = async (req,res,next) => {
-    const {team_list_idx} = req.params
+    const {team_list_idx,match_match_idx} = req.params
     const {
-        match_match_idx,
         match_match_participation_type,
         match_match_attribute,
         match_match_start_time,
@@ -102,7 +106,13 @@ const putTeamMatch = async (req,res,next) => {
         my_player_list_idx
     } = req.decoded
 
+    const check_match_match_attribute = req.matchInfo.match_match_attribute
     try{
+        if(check_match_match_attribute != MATCH_ATTRIBUTE.CHAMPIONSHIP && match_match_attribute == MATCH_ATTRIBUTE.CHAMPIONSHIP) {
+            throw customError(400, `대회 매치로 매치 상태를 변경할 수 없습니다.`)
+        }
+
+    
         await client.query("BEGIN");
         // 매치 대기자 목록 삭제
         await client.query(deletedMatchParticipantSQL, [
@@ -112,18 +122,28 @@ const putTeamMatch = async (req,res,next) => {
         // 매치 참여자 삭제
         await client.query(deletedMatchWaitListSQL, [
             match_match_idx
-        ]) 
-
-        await client.query(putTeamMatchSQL, [
-            match_match_idx,
-            team_list_idx,
-            my_player_list_idx,
-            match_match_participation_type,
-            match_match_attribute,
-            match_match_start_time,
-            match_match_duration,
-            match_formation_idx
         ])
+
+        
+        if(check_match_match_attribute == MATCH_ATTRIBUTE.CHAMPIONSHIP) {
+            await client.query(putTeamMatchAtChampionShipSQL,[
+                match_match_idx,
+                team_list_idx,
+                my_player_list_idx,
+                match_formation_idx
+            ])
+        } else {
+            await client.query(putTeamMatchSQL, [
+                match_match_idx,
+                team_list_idx,
+                my_player_list_idx,
+                match_match_participation_type,
+                match_match_attribute,
+                match_match_start_time,
+                match_match_duration,
+                match_formation_idx
+            ])
+        }
         await client.query("COMMIT");
         res.status(200).send({})
     } catch(e){
@@ -142,7 +162,7 @@ const closedMatch = async (req,res,next) => {
     try{
         // 트랜잭션으로 매치를 먼저 마감, 대기자 목록 삭제
         await client.query("BEGIN");
-        const closedMatchResult = await client.query(closedMatchSQL, [
+        await client.query(closedMatchSQL, [
             match_match_idx,
             my_player_list_idx
         ])
@@ -166,7 +186,6 @@ const postTeamMatch = async (req,res,next) => {
         match_formation_idx,
         match_match_participation_type,
         match_type_idx,
-        match_match_attribute,
         match_match_start_time,
         match_match_duration
     } = req.body
@@ -180,7 +199,7 @@ const postTeamMatch = async (req,res,next) => {
             match_formation_idx,
             match_match_participation_type,
             match_type_idx,
-            match_match_attribute,
+            MATCH_ATTRIBUTE.PRIVATE,
             match_match_start_time,
             match_match_duration
         ])
@@ -424,7 +443,6 @@ const leaveMatch = async (req, res,next) => {
 const postTeamStats = async (req,res,next) => {
     const {match_match_idx} = req.params
     const {
-        team_list_idx,
         match_team_stats_our_score,
         match_team_stats_other_score,
         match_team_stats_possesion,
@@ -440,12 +458,14 @@ const postTeamStats = async (req,res,next) => {
         mom
     } = req.body
 
-    const match_team_stats_evidence_img = req.file.location
+    const {my_team_list_idx} = req.decoded
+
+    const match_team_stats_evidence_img = req.fileUrl
     try{
         await client.query("BEGIN");
         const result = await client.query(postTeamStatsSQL, [
             match_match_idx,
-            team_list_idx,
+            my_team_list_idx,
             match_team_stats_our_score,
             match_team_stats_other_score,
             match_team_stats_possesion,

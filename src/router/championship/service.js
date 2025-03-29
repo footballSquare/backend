@@ -313,7 +313,7 @@ const getChampionShipMatchList = async (req,res,next) => {
     }
 }
 
-// 대회 매치 정보 가져오기
+// 대회 매치 세부 정보 가져오기
 const fetchChampionShipMatch = async (req,res,next) => {
     const {championship_match_idx} = req.params
 
@@ -321,65 +321,118 @@ const fetchChampionShipMatch = async (req,res,next) => {
         const result = await client.query(fetchChampionShipMatchSQL, [
             championship_match_idx
         ])
-        const championshipData = result.rows[0];
 
-        const formattedResponse = {
-            championship_match_idx: championshipData.championship_match_idx,
-            championship_list_idx: championshipData.championship_list_idx,
-            match_info: {
-                match_match_start_time: championshipData.match_match_start_time,
-                match_match_duration: championshipData.match_match_duration
-            },
-            first_team: {
-                team_list_idx: championshipData.first_team_idx,
+        const formatChampionshipMatchResponse = (championshipData) => {
+            const {
+              championship_match_idx,
+              championship_list_idx,
+              match_match_start_time,
+              match_match_duration,
+              championship_match_first_idx,
+              championship_match_second_idx,
+              first_match_formation_idx,
+              second_match_formation_idx,
+          
+              first_team_idx,
+              first_team_our_score,
+              first_team_other_score,
+              first_team_possession,
+              first_team_total_shot,
+              first_team_expected_goal,
+              first_team_total_pass,
+              first_team_total_tackle,
+              first_team_success_tackle,
+              first_team_saved,
+              first_team_cornerkick,
+              first_team_freekick,
+              first_team_penaltykick,
+              first_team_mom_idx,
+              first_team_mom_nickname,
+          
+              second_team_idx,
+              second_team_our_score,
+              second_team_other_score,
+              second_team_possession,
+              second_team_total_shot,
+              second_team_expected_goal,
+              second_team_total_pass,
+              second_team_total_tackle,
+              second_team_success_tackle,
+              second_team_saved,
+              second_team_cornerkick,
+              second_team_freekick,
+              second_team_penaltykick,
+              second_team_mom_idx,
+              second_team_mom_nickname,
+          
+              player_stats
+            } = championshipData;
+          
+            // 선수 스탯 분리
+            const firstTeamPlayerStats = [];
+            const secondTeamPlayerStats = [];
+          
+            player_stats.forEach((player) => {
+              if (player.match_match_idx === championship_match_first_idx) {
+                firstTeamPlayerStats.push(player);
+              } else if (player.match_match_idx === championship_match_second_idx) {
+                secondTeamPlayerStats.push(player);
+              }
+            });
+          
+            return {
+              championship_match_idx,
+              championship_list_idx,
+              match_info: {
+                match_match_start_time,
+                match_match_duration,
+                first_match_formation_idx,
+                second_match_formation_idx
+              },
+              first_team: {
+                team_list_idx: first_team_idx,
                 stats: {
-                    match_team_stats_our_score: championshipData.first_team_our_score,
-                    match_team_stats_other_score: championshipData.first_team_other_score,
-                    match_team_stats_possession: championshipData.first_team_possession,
-                    match_team_stats_total_shot: championshipData.first_team_total_shot,
-                    match_team_stats_expected_goal: championshipData.first_team_expected_goal,
-                    match_team_stats_total_pass: championshipData.first_team_total_pass,
-                    match_team_stats_total_tackle: championshipData.first_team_total_tackle,
-                    match_team_stats_success_tackle: championshipData.first_team_success_tackle,
-                    match_team_stats_saved: championshipData.first_team_saved,
-                    match_team_stats_cornerkick: championshipData.first_team_cornerkick,
-                    match_team_stats_freekick: championshipData.first_team_freekick,
-                    match_team_stats_penaltykick: championshipData.first_team_penaltykick,
-                    mom_player_idx: championshipData.first_team_mom_idx,
-                    mom_player_nickname: championshipData.first_team_mom_nickname
+                  match_team_stats_our_score: first_team_our_score,
+                  match_team_stats_other_score: first_team_other_score,
+                  match_team_stats_possession: first_team_possession,
+                  match_team_stats_total_shot: first_team_total_shot,
+                  match_team_stats_expected_goal: first_team_expected_goal,
+                  match_team_stats_total_pass: first_team_total_pass,
+                  match_team_stats_total_tackle: first_team_total_tackle,
+                  match_team_stats_success_tackle: first_team_success_tackle,
+                  match_team_stats_saved: first_team_saved,
+                  match_team_stats_cornerkick: first_team_cornerkick,
+                  match_team_stats_freekick: first_team_freekick,
+                  match_team_stats_penaltykick: first_team_penaltykick,
+                  mom_player_idx: first_team_mom_idx,
+                  mom_player_nickname: first_team_mom_nickname
                 },
-                player_stats: []
-            },
-            second_team: {
-                team_list_idx: championshipData.second_team_idx,
+                player_stats: firstTeamPlayerStats
+              },
+              second_team: {
+                team_list_idx: second_team_idx,
                 stats: {
-                    match_team_stats_our_score: championshipData.second_team_our_score,
-                    match_team_stats_other_score: championshipData.second_team_other_score,
-                    match_team_stats_possession: championshipData.second_team_possession,
-                    match_team_stats_total_shot: championshipData.second_team_total_shot,
-                    match_team_stats_expected_goal: championshipData.second_team_expected_goal,
-                    match_team_stats_total_pass: championshipData.second_team_total_pass,
-                    match_team_stats_total_tackle: championshipData.second_team_total_tackle,
-                    match_team_stats_success_tackle: championshipData.second_team_success_tackle,
-                    match_team_stats_saved: championshipData.second_team_saved,
-                    match_team_stats_cornerkick: championshipData.second_team_cornerkick,
-                    match_team_stats_freekick: championshipData.second_team_freekick,
-                    match_team_stats_penaltykick: championshipData.second_team_penaltykick,
-                    mom_player_idx: championshipData.second_team_mom_idx,
-                    mom_player_nickname: championshipData.second_team_mom_nickname
+                  match_team_stats_our_score: second_team_our_score,
+                  match_team_stats_other_score: second_team_other_score,
+                  match_team_stats_possession: second_team_possession,
+                  match_team_stats_total_shot: second_team_total_shot,
+                  match_team_stats_expected_goal: second_team_expected_goal,
+                  match_team_stats_total_pass: second_team_total_pass,
+                  match_team_stats_total_tackle: second_team_total_tackle,
+                  match_team_stats_success_tackle: second_team_success_tackle,
+                  match_team_stats_saved: second_team_saved,
+                  match_team_stats_cornerkick: second_team_cornerkick,
+                  match_team_stats_freekick: second_team_freekick,
+                  match_team_stats_penaltykick: second_team_penaltykick,
+                  mom_player_idx: second_team_mom_idx,
+                  mom_player_nickname: second_team_mom_nickname
                 },
-                player_stats: []
-            }
+                player_stats: secondTeamPlayerStats
+              }
+            };
         };
-        
-        // 선수 데이터 추가
-        championshipData.player_stats.forEach(player => {
-            if (player.match_match_idx === championshipData.championship_match_first_idx) {
-                formattedResponse.first_team.player_stats.push(player);
-            } else if (player.match_match_idx === championshipData.championship_match_second_idx) {
-                formattedResponse.second_team.player_stats.push(player);
-            }
-        });
+
+        const formattedResponse = formatChampionshipMatchResponse(result.rows[0]);
         
         res.status(200).send({ championship_match: formattedResponse });
     } catch(e){

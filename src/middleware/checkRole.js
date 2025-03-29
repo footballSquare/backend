@@ -61,7 +61,26 @@ const checkIsTeamSubLeader = () => {
 const checkIsTeamMember = () => {
     return async (req, res, next) => {
         const { my_team_list_idx } = req.decoded;
-        const value = req.body.team_list_idx ?? req.params.team_list_idx ?? req.query.team_list_idx;
+        const value = req.body.team_list_idx ?? req.params.team_list_idx ?? req.query.team_list_idx ?? req.matchInfo.team_list_idx;;
+
+        try {
+            if (my_team_list_idx != value) {
+                throw customError(403, "해당 팀의 팀원이 아닙니다.");
+            }
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
+// 매치의 정보에서 해당 팀의 팀원인지 체크
+const checkIsTeamMemberAtMatch = () => {
+    return async (req, res, next) => {
+        const { my_team_list_idx } = req.decoded;
+        const value = req.matchInfo.team_list_idx;
+        console.log("my_team_list_idx",my_team_list_idx)
+        console.log("value",value)
 
         try {
             if (my_team_list_idx != value) {
@@ -129,6 +148,7 @@ module.exports = {
     checkIsTeamSubLeader,
     checkHasTeam,
     checkIsTeamMember,
+    checkIsTeamMemberAtMatch,
     checkIsCommunityAdminRole,
     checkHasCommunityRole,
     checkIsCommunityStaffRole

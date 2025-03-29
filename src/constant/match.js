@@ -49,11 +49,20 @@ const MATCH_POSITION = {
     LW: 23
 };
 
-
 const MATCH_DURATION = {
     HALF_HOUR: "30 minutes",
     ONE_HOUR: "1 hours",
     TWO_HOUR: "2 hours"
 }
 
-module.exports = { MATCH_PARTICIPATION_TYPE, MATCH_ATTRIBUTE,MATCH_TYPE,MATCH_FORMATION,MATCH_DURATION,MATCH_POSITION };
+const MATCH_FORMATION_POSITIONS = {
+    0: [0, 1, 2, 3, 4, 5, 11, 13, 15, 19, 21],       // 4-3-3
+    1: [0, 1, 2, 3, 4, 5, 11, 13, 15, 20, 22],       // 4-4-2
+    2: [0, 1, 2, 3, 4, 5, 8, 9, 16, 17, 18],         // 4-2-3-1
+    3: [0, 2, 3, 4, 11, 13, 15, 19, 17, 21, 23],     // 3-4-3
+    4: [0, 2, 3, 4, 8, 9, 16, 17, 18, 20, 22],       // 3-2-5
+    5: [0, 21, 11, 15]                               // RUSH
+  };
+  
+
+module.exports = { MATCH_PARTICIPATION_TYPE, MATCH_ATTRIBUTE,MATCH_TYPE,MATCH_FORMATION,MATCH_DURATION,MATCH_POSITION,MATCH_FORMATION_POSITIONS };

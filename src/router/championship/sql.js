@@ -218,9 +218,13 @@ WITH match_info AS (
         cm.championship_list_idx,
         cm.match_match_start_time,
         cm.match_match_duration,
-        cm.championship_match_first_idx, 
-        cm.championship_match_second_idx 
+        cm.championship_match_first_idx,
+        cm.championship_match_second_idx,
+        m1.match_formation_idx AS first_match_formation_idx,
+        m2.match_formation_idx AS second_match_formation_idx
     FROM championship.championship_match cm
+    JOIN match.match m1 ON cm.championship_match_first_idx = m1.match_match_idx
+    JOIN match.match m2 ON cm.championship_match_second_idx = m2.match_match_idx
     WHERE cm.championship_match_idx = $1
 ),
 team_stats AS (
@@ -247,11 +251,11 @@ team_stats AS (
         SELECT championship_match_second_idx FROM match_info
     )
 ),
-player_stats AS (
+player_info AS (
     SELECT 
-        ps.match_match_idx,
-        ps.player_list_idx,
-        ps.player_list_nickname,
+        p.match_match_idx,
+        p.player_list_idx,
+        pl.player_list_nickname,
         ps.match_player_stats_goal,
         ps.match_player_stats_assist,
         ps.match_player_stats_successrate_pass,
@@ -263,8 +267,12 @@ player_stats AS (
         ps.match_player_stats_cutting,
         ps.match_player_stats_saved,
         ps.match_player_stats_successrate_saved
-    FROM match.player_stats ps
-    WHERE ps.match_match_idx IN (
+    FROM match.participant p
+    JOIN player.list pl ON p.player_list_idx = pl.player_list_idx
+    LEFT JOIN match.player_stats ps 
+      ON p.match_match_idx = ps.match_match_idx 
+     AND p.player_list_idx = ps.player_list_idx
+    WHERE p.match_match_idx IN (
         SELECT championship_match_first_idx FROM match_info 
         UNION 
         SELECT championship_match_second_idx FROM match_info
@@ -276,7 +284,9 @@ SELECT
     mi.match_match_start_time,
     mi.match_match_duration,
     mi.championship_match_first_idx, 
-    mi.championship_match_second_idx, 
+    mi.championship_match_second_idx,
+    mi.first_match_formation_idx,
+    mi.second_match_formation_idx,
 
     -- 첫 번째 팀 정보
     ts1.team_list_idx AS first_team_idx,
@@ -314,14 +324,16 @@ SELECT
     COALESCE(mom2.player_list_idx, NULL) AS second_team_mom_idx,
     COALESCE(mom2.player_list_nickname, NULL) AS second_team_mom_nickname,
 
-    -- 개인 스탯을 JSON 배열로 반환
-    COALESCE(json_agg(ps.*) FILTER (WHERE ps.match_match_idx IS NOT NULL), '[]') AS player_stats
+    -- 선수 정보 (스탯 유무와 관계 없이)
+    COALESCE(json_agg(pi.*) FILTER (WHERE pi.match_match_idx IS NOT NULL), '[]') AS player_stats
+
 FROM match_info mi
 LEFT JOIN team_stats ts1 ON mi.championship_match_first_idx = ts1.match_match_idx
-LEFT JOIN match.mom mom1 ON ts1.match_team_stats_idx = mom1.match_team_stats_idx  -- 🔥 mom 테이블 직접 조인
+LEFT JOIN match.mom mom1 ON ts1.match_team_stats_idx = mom1.match_team_stats_idx
 LEFT JOIN team_stats ts2 ON mi.championship_match_second_idx = ts2.match_match_idx
-LEFT JOIN match.mom mom2 ON ts2.match_team_stats_idx = mom2.match_team_stats_idx  -- 🔥 mom 테이블 직접 조인
-LEFT JOIN player_stats ps ON ps.match_match_idx IN (mi.championship_match_first_idx, mi.championship_match_second_idx)
+LEFT JOIN match.mom mom2 ON ts2.match_team_stats_idx = mom2.match_team_stats_idx
+LEFT JOIN player_info pi ON pi.match_match_idx IN (mi.championship_match_first_idx, mi.championship_match_second_idx)
+
 GROUP BY 
     mi.championship_match_idx, 
     mi.championship_list_idx, 
@@ -329,6 +341,8 @@ GROUP BY
     mi.match_match_duration, 
     mi.championship_match_first_idx,
     mi.championship_match_second_idx,
+    mi.first_match_formation_idx,
+    mi.second_match_formation_idx,
     ts1.match_team_stats_idx, ts2.match_team_stats_idx,
     ts1.team_list_idx, ts2.team_list_idx, 
     ts1.match_team_stats_our_score, ts1.match_team_stats_other_score,

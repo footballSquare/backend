@@ -8,23 +8,32 @@ const getMatchAndTeamInfo = async (req, res, next) => {
     try {
         const matchResult  = await client.query(`
             SELECT 
-                match.match.player_list_idx AS match_creator_idx,
-                match.match.team_list_idx,
-                team_leader.player_list_idx AS team_captain_idx
-            FROM match.match
-            LEFT JOIN team.member AS team_leader 
-                ON match.match.team_list_idx = team_leader.team_list_idx 
-                AND team_leader.team_role_idx = 0
-            WHERE match.match.match_match_idx = $1;
+            m.match_match_idx,
+            m.team_list_idx,
+            m.player_list_idx AS match_creator_idx,
+            m.match_formation_idx,
+            m.match_match_participation_type,
+            m.match_type_idx,
+            m.match_match_attribute,
+            m.common_status_idx,
+            m.match_match_created_at,
+            m.match_match_start_time,
+            m.match_match_duration,
+            tl.player_list_idx AS team_captain_idx
+            FROM match.match AS m
+            LEFT JOIN team.member AS tl
+            ON m.team_list_idx = tl.team_list_idx
+            AND tl.team_role_idx = 0
+            WHERE m.match_match_idx = $1;
         `, [match_match_idx]);
 
         if (matchResult.rowCount === 0) {
             throw customError(404, `존재하지 않는 매치.`);
         }
 
-        const { match_creator_idx, team_list_idx, team_captain_idx } = matchResult.rows[0];
+        req.matchInfo = matchResult.rows[0];
 
-        req.matchInfo = { match_creator_idx, team_list_idx, team_captain_idx };
+        console.log(req.matchInfo)
         next();
     } catch (e) {
         next(e);

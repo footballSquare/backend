@@ -170,7 +170,7 @@ const checkMatchType = () => {
   };
 };
 
-// 매치 공개 여부 체크
+// 매치 속성 체크
 const checkMatchAttribute = () => {
   return (req, res, next) => {
     const value =
@@ -257,7 +257,6 @@ const checkCategory = () => {
 
       next();
     } catch (e) {
-      checkPosition;
       next(e);
     }
   };

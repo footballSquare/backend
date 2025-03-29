@@ -14,7 +14,8 @@ const {
     CHAMPIONSHIP_TYPE,
     CHAMPIONSHIP_STATUS,
     MATCH_POSITION,
-    BOARD_CATEGORY
+    BOARD_CATEGORY,
+    MATCH_FORMATION_POSITIONS
 } = require("../constant/constantIndex")
 
 // 매치 마지막 생성일 2주가 지났는지 확인하는 미들웨어
@@ -96,23 +97,23 @@ const checkPlayerNotInTeam = () => {
 // 매치 종료 시각 체크
 const checkMatchEnded = () => {
     return async (req, res, next) => {
-        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
-        console.log(match_match_idx)
-        const sql = `
-            SELECT (match_match_start_time + match_match_duration) AS match_end_time
-            FROM match.match 
-            WHERE match_match_idx = $1
-        `;
-
         try {
-            const result = await client.query(sql, [match_match_idx]);
+        const {match_match_start_time,match_match_duration} = req.matchInfo
+        const start = new Date(match_match_start_time);
+        const end = new Date(start);
+        
+        if (match_match_duration.hours) {
+            end.setHours(end.getHours() + parseInt(match_match_duration.hours));
+        }
+        if (match_match_duration.minutes) {
+            end.setMinutes(end.getMinutes() + parseInt(match_match_duration.minutes));
+        }
+    
+        const now = new Date();
 
-            const matchEndTime = new Date(result.rows[0].match_end_time);
-            const now = new Date();
-
-            if (matchEndTime > now) {
-                throw customError(403, `매치가 아직 종료되지 않았습니다.`);
-            }
+        if (end > now) {
+        throw customError(403, "매치가 아직 종료되지 않았습니다.");
+        }
 
             next();
         } catch (e) {
@@ -124,17 +125,10 @@ const checkMatchEnded = () => {
 // 매치 시작 시간 체크
 const checkMatchNotStarted = () => {
     return async (req, res, next) => {
-        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
-        
-        const sql = `
-            SELECT match_match_start_time 
-            FROM match.match 
-            WHERE match_match_idx = $1
-        `;
+        const {match_match_start_time} = req.matchInfo
 
         try {
-            const result = await client.query(sql, [match_match_idx]);
-            const matchStartTime = new Date(result.rows[0].match_match_start_time);
+            const matchStartTime = new Date(match_match_start_time);
             const now = new Date();
 
             if (now >= matchStartTime) {
@@ -288,22 +282,19 @@ const checkMatchStatsPostClosed = () => {
 // 참여하려는 포지션 인덱스가 해당 포메이션에 실제로 존재하는지 확인하는
 const checkPositionInFormation = () => {
     return async (req, res, next) => {
-        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
-        const match_position_idx = req.body.match_position_idx ?? req.params.match_position_idx ?? req.query.match_position_idx;
-  
-        const sql = `
-            SELECT mf.match_position_idxs
-            FROM match.formation mf
-            JOIN match.match m ON mf.match_formation_idx = m.match_formation_idx
-            WHERE m.match_match_idx = $1
-        `;
-  
         try {
-            const result = await client.query(sql, [match_match_idx]);
-            const positionArray = result.rows[0].match_position_idxs; 
-  
-            if (!positionArray.includes(parseInt(match_position_idx))) {
-                throw customError(403, "해당 포메이션에 존재하지 않는 포지션입니다.");
+            const match_position_idx = Number(
+                req.body.match_position_idx ??
+                req.params.match_position_idx ??
+                req.query.match_position_idx
+            );
+            const {match_formation_idx} = req.matchInfo
+    
+            const validPositions = MATCH_FORMATION_POSITIONS[match_formation_idx];
+            console.log("validPositions:", validPositions)
+
+            if (!validPositions.includes(match_position_idx)) {
+            throw customError(403, "해당 포지션은 선택한 포메이션에 존재하지 않습니다.");
             }
   
             next();
@@ -317,18 +308,12 @@ const checkPositionInFormation = () => {
 const checkIsMatchOwner = () => {
     return async (req, res, next) => {
         const my_player_list_idx = req.decoded.my_player_list_idx;
-        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+        const {match_creator_idx,team_captain_idx} = req.matchInfo
 
         try {
-            // DB에서 match 정보 조회
-            const result = await client.query(
-                `SELECT match_match_idx FROM match.match 
-                 WHERE match_match_idx = $1 AND player_list_idx = $2`,
-                [match_match_idx, my_player_list_idx]
-            );
-
-            if (result.rowCount === 0) {
-                throw customError(403, '해당 매치를 생성한 사용자가 아닙니다.');
+            if (my_player_list_idx != match_creator_idx &&
+                (!team_captain_idx || my_player_list_idx != team_captain_idx)) {
+                throw customError(403, '해당 매치를 생성한 사용자가 아니거나 주장이 아닙니다.');
             }
 
             next();
@@ -352,10 +337,6 @@ const checkMatchOverlap = () => {
                  WHERE match_match_idx = $1`,
                 [match_match_idx]
             );
-
-            if (matchResult.rowCount === 0) {
-                throw customError(404, '해당 매치를 찾을 수 없습니다.');
-            }
 
             const { match_match_start_time, match_match_duration } = matchResult.rows[0];
 
@@ -564,27 +545,23 @@ const checkIsTherePositionParticipant = () => {
 // 매치가 이미 종료됬는지 여부 체크
 const checkMatchNotEnded = () => {
     return async (req, res, next) => {
-        const matchIdx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
-
         try {
-            const result = await client.query(
-                `SELECT match_match_start_time, match_match_duration
-                 FROM match.match
-                 WHERE match_match_idx = $1`,
-                [matchIdx]
-            );
+            const { match_match_start_time, match_match_duration } = req.matchInfo
+           
+            const start = new Date(match_match_start_time);
+            const end = new Date(start);
 
-            const { match_match_start_time, match_match_duration } = result.rows[0];
-            const durationMs =
-                (match_match_duration.hours ?? 0) * 60 * 60 * 1000 +
-                (match_match_duration.minutes ?? 0) * 60 * 1000 +
-                (match_match_duration.seconds ?? 0) * 1000;
+            if (match_match_duration.hours) {
+                end.setHours(end.getHours() + parseInt(match_match_duration.hours));
+            }
+            if (match_match_duration.minutes) {
+                end.setMinutes(end.getMinutes() + parseInt(match_match_duration.minutes));
+            }
 
-            const endTime = new Date(new Date(match_match_start_time).getTime() + durationMs);
             const now = new Date();
 
-            if (now >= endTime) {
-                throw customError(403, '이미 종료된 매치입니다.');
+            if (now >= end) {
+                throw customError(403, "이미 종료된 매치입니다.");
             }
 
             next();

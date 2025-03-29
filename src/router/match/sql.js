@@ -14,7 +14,8 @@ SELECT
     p.player_list_profile_image,
     m.match_match_start_time,
     m.match_match_duration,
-    m.common_status_idx
+    m.common_status_idx,
+    m.match_formation_idx
 FROM match.match AS m
 JOIN player.list AS p ON m.player_list_idx = p.player_list_idx
 JOIN team.list AS t ON m.team_list_idx = t.team_list_idx
@@ -83,6 +84,17 @@ SET
     match_match_start_time = $6,
     match_match_duration = $7,
     match_formation_idx = $8
+WHERE match_match_idx = $1
+AND team_list_idx = $2
+AND player_list_idx = $3;
+`
+
+// 팀 매치 수정하기
+const putTeamMatchAtChampionShipSQL = 
+`
+UPDATE match.match
+SET 
+    match_formation_idx = $4
 WHERE match_match_idx = $1
 AND team_list_idx = $2
 AND player_list_idx = $3;
@@ -428,6 +440,7 @@ module.exports = {
     getOpenMatchDataSQL,
     postOpenMatchSQL,
     putTeamMatchSQL,
+    putTeamMatchAtChampionShipSQL,
     closedMatchSQL,
     deleteWaitlistSQL,
     postTeamMatchSQL,
