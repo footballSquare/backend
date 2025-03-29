@@ -247,7 +247,7 @@ const getMatchDetailData = async (req,res,next) => {
 
     try{
         const result = await client.query(getMatchDetailDataSQL, [match_match_idx])
-        res.status(200).send({ match : result.rows })
+        res.status(200).send({ match : result.rows[0] })
     } catch(e){
         next(e)
     }
