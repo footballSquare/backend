@@ -8,12 +8,12 @@ INSERT INTO match.position (match_position_idx, match_position_name) VALUES
 
 -- match.formation
 INSERT INTO match.formation (match_formation_idx, match_formation_name, match_type_idx, match_position_idxs) VALUES
-(0, '4-3-3', 0, ARRAY[0, 1, 2, 3, 4, 5, 11, 13, 15, 19, 21]),
-(1, '4-4-2', 0, ARRAY[0, 1, 2, 3, 4, 5, 11, 13, 15, 20, 22]),
-(2, '4-2-3-1', 0, ARRAY[0, 1, 2, 3, 4, 5, 8, 9, 16, 17, 18]),
-(3, '3-4-3', 0, ARRAY[0, 2, 3, 4, 11, 13, 15, 19, 17, 21, 23]),
-(4, '3-2-5', 0, ARRAY[0, 2, 3, 4, 8, 9, 16, 17, 18, 20, 22]),
-(5, 'RUSH', 1, ARRAY[0, 21, 11, 15]);
+(0, '4-3-3', 0, ARRAY[0, 1, 2, 4, 5, 8, 12, 14, 19, 21, 23]),
+(1, '4-4-2', 0, ARRAY[0, 1, 2, 4, 5, 11, 12, 13, 15, 20, 22]),
+(2, '4-2-3-1', 0, ARRAY[0, 1, 2, 4, 5, 7, 9, 16, 17, 18, 21]),
+(3, '3-4-3', 0, ARRAY[0, 2, 3, 4, 11, 12, 14, 15, 19, 21, 23]),
+(4, '3-2-5', 0, ARRAY[0, 2, 3, 4, 7, 9, 16, 18, 19, 21, 23]),
+(5, 'RUSH', 1, ARRAY[3, 21, 11, 15]);
 
 -- match.type
 INSERT INTO match.type (match_type_idx, match_type_name) VALUES
