@@ -41,7 +41,8 @@ const {
 } = require("../../middleware/checkCondition")
 
 const {
-    checkIsChampionshipMatch
+    checkIsChampionshipMatch,
+    checkIsChampionship
 } = require("../../middleware/checkData")
 
 const {
@@ -97,6 +98,7 @@ router.get("/championship_match/:championship_match_idx/evidance_img",
 // 대회 정보 가져오기
 router.get("/:championship_list_idx",
     checkIdx("championship_list_idx"),
+    checkIsChampionship,
     getChampionShipData
 )
 

@@ -194,7 +194,7 @@ const fetchEvidanceImg = async (req,res,next) => {
     }
 }
 
-// 대회 참여 팀 가져오기
+// 대회 세부 정보 가져오기
 const getChampionShipData = async (req,res,next) => {
     const {championship_list_idx} = req.params
 
@@ -202,7 +202,7 @@ const getChampionShipData = async (req,res,next) => {
         const result = await client.query(getChampionShipDataSQL, [
             championship_list_idx
         ])
-        res.status(200).send({ championship_data : result.rows })
+        res.status(200).send({ championship_data : result.rows[0] })
     } catch(e){
         next(e)
     }

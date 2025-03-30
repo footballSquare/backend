@@ -142,6 +142,7 @@ SELECT
     c.championship_list_end_date,
     c.championship_list_color,
     c.common_status_idx,
+    c.championship_type_idx,
     w.team_list_idx AS winner_team_idx,
     w.championship_winner_team_name AS winner_team_name,
     t.team_list_emblem AS winner_team_emblem,
