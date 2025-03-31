@@ -7,7 +7,7 @@ FROM
 WHERE 
     player_list_id = $1
 `;
-const signinUserInfoSQL = `
+const signinSQL = `
 SELECT 
     p.player_list_player_status AS player_status,
     p.player_list_idx AS user_idx,
@@ -83,7 +83,8 @@ INSERT INTO player.list (
 `;
 const getUserIdxSQL = `
 SELECT 
-    player_list_idx AS user_idx
+    player_list_idx AS user_idx,
+    player_list_player_status AS player_status
 FROM 
     player.list
 WHERE 
@@ -116,7 +117,6 @@ SELECT
     player_list_idx AS user_idx,
     player_list_phone AS phone,
     player_list_id AS id,
-    player_list_password AS password,
     player_list_discord_id AS discord_id,
     player_list_name AS name,
     player_list_nickname AS nickname,
@@ -150,6 +150,15 @@ FROM
 WHERE 
     player_list_idx = $1
 `;
+// 비밀번호 체크
+const checkPasswordSQL = `
+SELECT 
+    player_list_password AS player_list_password
+FROM
+    player.list
+WHERE
+    player_list_idx = $1
+`;
 // 회원 정보 업데이트
 const updateUserInfoSQL = `
 UPDATE player.list
@@ -180,10 +189,34 @@ SET
 WHERE
     player_list_idx = $2
 `;
+// discord oauth
+const signinDiscordOauth = `
+SELECT 
+    p.player_list_player_status AS player_status,
+    p.player_list_idx AS user_idx,
+    p.player_list_profile_image AS profile_image,
+    tm.team_list_idx AS team_idx
+FROM 
+    player.list p
+LEFT JOIN 
+    team.member tm ON p.player_list_idx = tm.player_list_idx
+WHERE 
+    p.player_list_discord_id = $1;
+`;
+const signupDiscordOauth = `
+INSERT INTO player.list (
+    player_list_discord_id,
+    player_list_nickname,
+    player_list_discord_tag,
+    player_list_player_status
+) VALUES (
+    $1, $2, $3, 'pending'
+)
+`;
 
 module.exports = {
   checkUserPasswordSQL,
-  signinUserInfoSQL,
+  signinSQL,
   checkTeamRoleSQL,
   checkCommunityRoleSQL,
   putRefreshtokenSQL,
@@ -196,7 +229,10 @@ module.exports = {
   softDeleteSQL,
   getMyInfoSQL,
   getUserInfoSQL,
+  checkPasswordSQL,
   updateUserInfoSQL,
   getUserImageSQL,
   updateProfileImageSQL,
+  signinDiscordOauth,
+  signupDiscordOauth,
 };

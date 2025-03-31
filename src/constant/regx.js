@@ -26,13 +26,13 @@ const regCommentContent = /^.{1,100}$/;
 
 // 계정 관련 regex
 const regIdx = /^[0-9]+$/;
-const regId = /^[A-Za-z0-9]{5,20}$/;
-const regPw = /^.{10,20}$/;
+const regId = /^[A-Za-z0-9]{12,20}$/;
+const regPw = /^.{12,20}$/;
 const regNickname = /^[A-Za-z0-9가-힣]{2,10}$/;
 const regPlatform = /^(pc|xbox|playstation)$/;
 const regState = /^[0-9]+$/;
-const regMessage = /^.{0,50}$/;
-const regDiscordTag = /^.{0,10}$/;
+const regMessage = /^.{1,50}$/;
+const regDiscordTag = /^.{1,40}$/;
 
 module.exports = {
   regColor,

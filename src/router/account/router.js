@@ -16,7 +16,11 @@ const { checkRegInputs } = require("./../../middleware/checkInput");
 const { checkLogin, optionalLogin } = require("./../../middleware/checkLogin");
 
 const {
-  signinLogin,
+  getDiscordSigninPage,
+  checkCode,
+  discordOauthSigninLogic,
+  signinCheck,
+  signinLogic,
   checkDuplicateId,
   checkDuplicateNickname,
   signupLoginInfo,
@@ -25,21 +29,21 @@ const {
   accountSoftDelete,
   getMyInfo,
   getUserInfo,
+  checkPassword,
   updateUserInfo,
   updateProfileImage,
   uploadS3,
-  checkPassword,
 } = require("./service");
 
-router.get("/ouath/url/discord");
+router.get("/oauth/url/discord", getDiscordSigninPage);
 
-router.get("/ouath/token/discord");
+router.get("/oauth/token/discord", checkCode, discordOauthSigninLogic);
 
 router.get(
   "/signin",
   checkRegInputs([regId, regPw], ["id", "password"]),
-  checkPassword,
-  signinLogin
+  signinCheck,
+  signinLogic
 );
 
 router.post("/check/id", checkRegInputs([regId], ["id"]), checkDuplicateId);
@@ -62,9 +66,20 @@ router.get("/accesstoken", checkRefreshToken);
 
 router.delete("/user/delete", checkLogin, accountSoftDelete);
 
-router.get("/info/me", checkLogin, getMyInfo);
+router.get("/myinfo", checkLogin, getMyInfo);
 
-router.get("/info/:userIdx", getUserInfo);
+router.get(
+  "/info/:userIdx",
+  checkRegInputs([regIdx], ["userIdx"]),
+  getUserInfo
+);
+
+router.post(
+  "/check/password",
+  checkLogin,
+  checkRegInputs([regPw], ["password"]),
+  checkPassword
+);
 
 router.put("/user/update", checkLogin, updateUserInfo);
 
