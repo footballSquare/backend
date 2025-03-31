@@ -256,6 +256,7 @@ player_info AS (
     SELECT 
         p.match_match_idx,
         p.player_list_idx,
+        p.match_position_idx,
         pl.player_list_nickname,
         ps.match_player_stats_goal,
         ps.match_player_stats_assist,
