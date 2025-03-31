@@ -213,6 +213,7 @@ router.put("/:match_match_idx/open/join",
     checkMatchNotEnded(),
     checkPositionInFormation(),
     checkAlreadyWaitList(),
+    checkIsTherePositionParticipant(),
     joinOpenMatch
 )
 
@@ -229,6 +230,7 @@ router.put("/:match_match_idx/team/:team_list_idx/join",
     checkMatchNotEnded(),
     checkPositionInFormation(),
     checkAlreadyWaitList(),
+    checkIsTherePositionParticipant(),
     joinTeamMatch
 )
 

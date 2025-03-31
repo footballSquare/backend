@@ -574,7 +574,7 @@ const checkAlreadyWaitList = () => {
         const player_list_idx = req.decoded.my_player_list_idx;
         const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
         const match_position_idx = req.body.match_position_idx ?? req.params.match_position_idx ?? req.query.match_position_idx;
-        console.log(player_list_idx, match_match_idx, match_position_idx)
+
         try {
             const result = await client.query(
             `SELECT *
