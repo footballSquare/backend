@@ -15,6 +15,11 @@ const { checkRegInputs } = require("./../../middleware/checkInput");
 
 const { checkLogin, optionalLogin } = require("./../../middleware/checkLogin");
 
+const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
+const {
+    s3Uploader
+} = require("../../middleware/s3UpLoader")
+
 const {
   getDiscordSigninPage,
   checkCode,
@@ -85,8 +90,9 @@ router.put("/user/update", checkLogin, updateUserInfo);
 
 router.put(
   "/profileimage",
+  multerMiddleware,
   checkLogin,
-  uploadS3.single("image"),
+  s3Uploader("account"),
   updateProfileImage
 );
 

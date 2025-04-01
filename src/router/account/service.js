@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
 
+const {deleteFileFromS3} = require("../../database/s3Config/s3Deleter")
+
 const {
   checkUserPasswordSQL,
   signinSQL,
@@ -585,20 +587,22 @@ const updateUserInfo = async (req, res, next) => {
 // 이미지 관련 =================================================================
 const updateProfileImage = async (req, res, next) => {
   const { my_player_list_idx } = req.decoded;
+  const new_img_url = req.fileUrl; 
 
-  if (!req.file) throw customError(404, "이미지 파일이 존재하지 않습니다.");
-
-  const oldImageResult = await client.query(getUserImageSQL, [
+  console.log("new_img_url",new_img_url)
+  console.log("my_player_list_idx",my_player_list_idx)
+  const { rows } = await client.query(getUserImageSQL, [
     my_player_list_idx,
   ]);
 
-  if (oldImageResult.rows[0].profile_image) {
-    const oldImageUrl = oldImageResult.rows[0].profile_image;
-    await deleteImage(oldImageUrl);
-  }
+  const old_profileImg_url = rows[0].profile_image;
+  
+  if (old_profileImg_url) {
+    await deleteFileFromS3(old_profileImg_url);
+}
 
   const result = await client.query(updateProfileImageSQL, [
-    req.file.location,
+    new_img_url,
     my_player_list_idx,
   ]);
 
