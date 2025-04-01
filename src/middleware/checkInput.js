@@ -326,6 +326,35 @@ const checkRegInputs = (regs, checks) => {
     }
   };
 };
+
+// 매치 길이 체크
+const checkMatchDuration = () => {
+  return (req, res, next) => {
+    try {
+      const duration = req.body.match_match_duration;
+
+      if (!duration || typeof duration !== 'object') {
+        throw customError(404, "duration 형식이 올바르지 않습니다.");
+      }
+
+      const { hours = 0, minutes = 0 } = duration;
+      const totalMinutes = hours * 60 + minutes;
+
+      const validDurations = [30, 60, 90, 120];
+      if (!validDurations.includes(totalMinutes)) {
+        throw customError(
+          404,
+          "유효하지 않은 duration 값입니다. (30, 60, 90, 120분만 허용됨)"
+        );
+      }
+
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
 module.exports = {
   checkRegInput,
   checkRegInputs,
@@ -339,4 +368,5 @@ module.exports = {
   checkPosition,
   checkCategory,
   checkMatchStartTimeValid,
+  checkMatchDuration
 };

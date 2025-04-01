@@ -34,6 +34,17 @@ const {
     putPlayerStatsSQL
 } = require("./sql")
 
+
+// match_duration 변환 함수
+function convertToIntervalString(duration) {
+    const { hours = 0, minutes = 0 } = duration || {};
+    
+    const parts = [];
+    if (hours) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+    if (minutes) parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+    return parts.join(" ");
+  }
+
 // 팀 매치 목록 보기
 const getTeamMatchList = async (req,res,next) => {
     const {page} = req.query
@@ -53,7 +64,7 @@ const getTeamMatchList = async (req,res,next) => {
 // 공개 매치 목록 가져오기
 const getOpenMatchList = async (req,res,next) => {
     const {page} = req.query
-    console.log(1)
+
     try{
         const result = await client.query(getOpenMatchDataSQL, [page])
         res.status(200).send({ match : result.rows })
@@ -76,6 +87,8 @@ const postOpenMatch = async (req,res,next) => {
         my_player_list_idx
     } = req.decoded
 
+    const intervalString = convertToIntervalString(match_match_duration);
+
     try{
         const result = await client.query(postOpenMatchSQL, [
             my_player_list_idx,
@@ -83,20 +96,11 @@ const postOpenMatch = async (req,res,next) => {
             match_match_participation_type,
             match_type_idx,
             match_match_start_time,
-            match_match_duration
+            intervalString
         ])
-        const matchData = result.rows[0];
 
-        const duration = matchData.match_match_duration;
 
-        if (typeof duration === "object" && (duration.hours || duration.minutes)) {
-        const hourText = duration.hours ? `${duration.hours} hour${duration.hours > 1 ? "s" : ""}` : "";
-        const minText = duration.minutes ? `${duration.minutes} minute${duration.minutes > 1 ? "s" : ""}` : "";
-
-        matchData.match_match_duration = [hourText, minText].filter(Boolean).join(" ");
-        }
-
-        res.status(200).send({ matchData : matchData })
+        res.status(200).send({ matchData : result.rows[0] })
     } catch(e){
         next(e)
     }
@@ -116,6 +120,8 @@ const putTeamMatch = async (req,res,next) => {
     const {
         my_player_list_idx
     } = req.decoded
+
+    const intervalString = convertToIntervalString(match_match_duration);
 
     const check_match_match_attribute = req.matchInfo.match_match_attribute
     try{
@@ -151,7 +157,7 @@ const putTeamMatch = async (req,res,next) => {
                 match_match_participation_type,
                 match_match_attribute,
                 match_match_start_time,
-                match_match_duration,
+                intervalString,
                 match_formation_idx
             ])
         }
@@ -203,6 +209,8 @@ const postTeamMatch = async (req,res,next) => {
 
     const { my_player_list_idx } = req.decoded
 
+    const intervalString = convertToIntervalString(match_match_duration);
+
     try{
         const result = await client.query(postTeamMatchSQL, [
             team_list_idx,
@@ -212,20 +220,9 @@ const postTeamMatch = async (req,res,next) => {
             match_type_idx,
             MATCH_ATTRIBUTE.PRIVATE,
             match_match_start_time,
-            match_match_duration
+            intervalString
         ])
-        const matchData = result.rows[0];
-
-        const duration = matchData.match_match_duration;
-
-        if (typeof duration === "object" && (duration.hours || duration.minutes)) {
-        const hourText = duration.hours ? `${duration.hours} hour${duration.hours > 1 ? "s" : ""}` : "";
-        const minText = duration.minutes ? `${duration.minutes} minute${duration.minutes > 1 ? "s" : ""}` : "";
-
-        matchData.match_match_duration = [hourText, minText].filter(Boolean).join(" ");
-        }
-
-        res.status(200).send({ matchData : matchData })
+        res.status(200).send({ matchData : result.rows[0] })
     } catch(e){
         next(e)
     }

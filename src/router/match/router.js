@@ -50,7 +50,8 @@ const {
     checkMatchType,
     checkMatchAttribute,
     checkPosition,
-    checkMatchStartTimeValid
+    checkMatchStartTimeValid,
+    checkMatchDuration
 } = require("../../middleware/checkInput")
 
 const {
@@ -112,7 +113,7 @@ router.post("/team/:team_list_idx",
     checkMatchParticipationType(),
     checkMatchType(),
     checkRegInput(regMatchDatetime,"match_match_start_time"),
-    checkRegInput(regMatchDuration,"match_match_duration"),
+    checkMatchDuration(),
     checkMatchStartTimeValid(),
     checkLogin,
     checkIsTeamMember(),
@@ -127,7 +128,7 @@ router.post("/open",
     checkMatchParticipationType(),
     checkMatchType(),
     checkRegInput(regMatchDatetime,"match_match_start_time"),
-    checkRegInput(regMatchDuration,"match_match_duration"),
+    checkMatchDuration(),
     checkMatchStartTimeValid(),
     checkLogin,
     postOpenMatch
