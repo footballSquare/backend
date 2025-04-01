@@ -85,7 +85,18 @@ const postOpenMatch = async (req,res,next) => {
             match_match_start_time,
             match_match_duration
         ])
-        res.status(200).send({ matchData : result.rows[0] })
+        const matchData = result.rows[0];
+
+        const duration = matchData.match_match_duration;
+
+        if (typeof duration === "object" && (duration.hours || duration.minutes)) {
+        const hourText = duration.hours ? `${duration.hours} hour${duration.hours > 1 ? "s" : ""}` : "";
+        const minText = duration.minutes ? `${duration.minutes} minute${duration.minutes > 1 ? "s" : ""}` : "";
+
+        matchData.match_match_duration = [hourText, minText].filter(Boolean).join(" ");
+        }
+
+        res.status(200).send({ matchData : matchData })
     } catch(e){
         next(e)
     }
@@ -203,7 +214,18 @@ const postTeamMatch = async (req,res,next) => {
             match_match_start_time,
             match_match_duration
         ])
-        res.status(200).send({ matchData : result.rows[0] })
+        const matchData = result.rows[0];
+
+        const duration = matchData.match_match_duration;
+
+        if (typeof duration === "object" && (duration.hours || duration.minutes)) {
+        const hourText = duration.hours ? `${duration.hours} hour${duration.hours > 1 ? "s" : ""}` : "";
+        const minText = duration.minutes ? `${duration.minutes} minute${duration.minutes > 1 ? "s" : ""}` : "";
+
+        matchData.match_match_duration = [hourText, minText].filter(Boolean).join(" ");
+        }
+
+        res.status(200).send({ matchData : matchData })
     } catch(e){
         next(e)
     }
