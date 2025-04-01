@@ -3,9 +3,8 @@ const client = require("../database/postgreSQL")
 
 const checkExistsInDB = (table, column) => {
     return async (req, res, next) => {
-        const value = req.body[column] ?? req.params[column] ?? req.query[column] ?? req.decoded[column]
-
-        console.log(value)
+        const value = req.body[column] ?? req.params[column] ?? req.query[column]
+        
 
         const sql = `SELECT * FROM ${table} WHERE ${column} = $1`;
 
@@ -47,6 +46,7 @@ const checkIsBoard = checkExistsInDB("board.list","board_list_idx")
 
 // 댓글 존재 여부 확인
 const checkIsComment = checkExistsInDB("board.comment","board_comment_idx")
+
 
 module.exports = {
     checkIsTeam,

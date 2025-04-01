@@ -77,7 +77,7 @@ const postOpenMatch = async (req,res,next) => {
     } = req.decoded
 
     try{
-        await client.query(postOpenMatchSQL, [
+        const result = await client.query(postOpenMatchSQL, [
             my_player_list_idx,
             match_formation_idx,
             match_match_participation_type,
@@ -85,7 +85,7 @@ const postOpenMatch = async (req,res,next) => {
             match_match_start_time,
             match_match_duration
         ])
-        res.status(200).send({})
+        res.status(200).send({ matchData : result.rows[0] })
     } catch(e){
         next(e)
     }
@@ -193,7 +193,7 @@ const postTeamMatch = async (req,res,next) => {
     const { my_player_list_idx } = req.decoded
 
     try{
-        await client.query(postTeamMatchSQL, [
+        const result = await client.query(postTeamMatchSQL, [
             team_list_idx,
             my_player_list_idx,
             match_formation_idx,
@@ -203,7 +203,7 @@ const postTeamMatch = async (req,res,next) => {
             match_match_start_time,
             match_match_duration
         ])
-        res.status(200).send({})
+        res.status(200).send({ matchData : result.rows[0] })
     } catch(e){
         next(e)
     }

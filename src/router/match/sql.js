@@ -62,7 +62,8 @@ OFFSET
 // 공방 매치 생성하기
 const postOpenMatchSQL =
 `
-INSERT INTO match.match (
+WITH inserted_match AS (
+  INSERT INTO match.match (
     player_list_idx,
     team_list_idx,
     match_formation_idx,
@@ -71,7 +72,24 @@ INSERT INTO match.match (
     match_match_attribute,
     match_match_start_time,
     match_match_duration
-) VALUES ($1, NULL, $2, $3, $4, 0, $5, $6);
+  )
+  VALUES ($1, NULL, $2, $3, $4, 0, $5, $6)
+  RETURNING *
+)
+SELECT 
+  im.match_match_idx,
+  im.team_list_idx,
+  im.player_list_idx,
+  im.match_formation_idx,
+  im.match_match_participation_type,
+  im.match_type_idx,
+  im.match_match_attribute,
+  im.match_match_start_time,
+  im.match_match_duration,
+  tl.team_list_name,
+  tl.team_list_emblem
+FROM inserted_match im
+LEFT JOIN team.list tl ON im.team_list_idx = tl.team_list_idx;
 `
 
 // 팀 매치 수정하기
@@ -123,7 +141,8 @@ WHERE match_match_idx = $1;
 // 팀 매치 생성하기
 const postTeamMatchSQL = 
 `
-INSERT INTO match.match (
+WITH inserted_match AS (
+  INSERT INTO match.match (
     team_list_idx,
     player_list_idx,
     match_formation_idx,
@@ -132,7 +151,24 @@ INSERT INTO match.match (
     match_match_attribute,
     match_match_start_time,
     match_match_duration
-) VALUES ($1, $2, $3, $4, $5,  $6, $7, $8);
+  )
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+  RETURNING *
+)
+SELECT 
+  im.match_match_idx,
+  im.team_list_idx,
+  im.player_list_idx,
+  im.match_formation_idx,
+  im.match_match_participation_type,
+  im.match_type_idx,
+  im.match_match_attribute,
+  im.match_match_start_time,
+  im.match_match_duration,
+  tl.team_list_name,
+  tl.team_list_emblem
+FROM inserted_match im
+LEFT JOIN team.list tl ON im.team_list_idx = tl.team_list_idx;
 `
 
 // 매치 삭제하기
