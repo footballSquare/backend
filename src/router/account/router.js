@@ -15,10 +15,10 @@ const { checkRegInputs } = require("./../../middleware/checkInput");
 
 const { checkLogin, optionalLogin } = require("./../../middleware/checkLogin");
 
-const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
 const {
-    s3Uploader
-} = require("../../middleware/s3UpLoader")
+  multerMiddleware,
+} = require("../../database/s3Config/multerMiddleware");
+const { s3Uploader } = require("../../middleware/s3UpLoader");
 
 const {
   getDiscordSigninPage,
@@ -61,7 +61,7 @@ router.post(
 
 router.post(
   "/signup/logininfo",
-  checkRegInputs([regId, regPw, regNickname], ["id", "password", "nickname"]),
+  checkRegInputs([regId, regPw], ["id", "password"]),
   signupLoginInfo
 );
 

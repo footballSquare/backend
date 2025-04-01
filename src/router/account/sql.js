@@ -75,10 +75,9 @@ const signupLoginInfoSQL = `
 INSERT INTO player.list (
     player_list_id,
     player_list_password,
-    player_list_nickname,
     player_list_player_status
 ) VALUES (
-    $1, $2, $3, 'pending'
+    $1, $2, 'pending'
 )
 `;
 const getUserIdxSQL = `
@@ -94,13 +93,22 @@ const signupPlayerInfoSQL = `
 UPDATE player.list
 SET
     player_list_team_idx = $1,
-    player_list_platform = $2,
-    player_list_state = $3,
-    player_list_message = $4,
-    player_list_discord_tag = $5,
-    player_list_player_status = 'active'
+    player_list_nickname = $2,
+    player_list_platform = $3,
+    player_list_state = $4,
+    player_list_message = $5,
+    player_list_discord_tag = $6,
+    player_list_player_status = 'active',
+    player_list_active_at = now()
 WHERE
-    player_list_idx = $6
+    player_list_idx = $7
+`;
+const checkUserSQL = `
+SELECT EXISTS (
+    SELECT 1
+    FROM player.list
+    WHERE player_list_idx = $1
+) AS exists_flag
 `;
 // 회원 삭제
 const softDeleteSQL = `
@@ -206,12 +214,21 @@ WHERE
 const signupDiscordOauth = `
 INSERT INTO player.list (
     player_list_discord_id,
-    player_list_nickname,
     player_list_discord_tag,
     player_list_player_status
 ) VALUES (
-    $1, $2, $3, 'pending'
+    $1, $2, 'pending'
 )
+`;
+const getUserIdxDiscordOauthSQL = `
+SELECT 
+    player_list_idx AS user_idx,
+    player_list_player_status AS player_status,
+    player_list_discord_tag AS discord_tag
+FROM 
+    player.list
+WHERE 
+    player_list_discord_id = $1
 `;
 
 module.exports = {
@@ -235,4 +252,6 @@ module.exports = {
   updateProfileImageSQL,
   signinDiscordOauth,
   signupDiscordOauth,
+  getUserIdxDiscordOauthSQL,
+  checkUserSQL,
 };
