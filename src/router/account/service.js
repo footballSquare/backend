@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
 
-const {deleteFileFromS3} = require("../../database/s3Config/s3Deleter")
+const { deleteFileFromS3 } = require("../../database/s3Config/s3Deleter");
 
 const {
   checkUserPasswordSQL,
@@ -29,6 +29,8 @@ const {
   updateProfileImageSQL,
   signinDiscordOauth,
   signupDiscordOauth,
+  getUserIdxDiscordOauthSQL,
+  checkUserSQL,
 } = require("./sql");
 
 const {
@@ -42,7 +44,7 @@ const {
   regDiscordTag,
 } = require("./../../constant/regx");
 
-// Discord OAuth2---------------------------------------------------------------------------------
+// Discord OAuth2===========================================================
 const getDiscordSigninPage = (req, res, next) => {
   const state = crypto.randomBytes(16).toString("hex"); // CSRF 방지용 상태값
   const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${
@@ -51,7 +53,9 @@ const getDiscordSigninPage = (req, res, next) => {
     process.env.DISCORD_REDIRECT_URI
   )}&state=${state}&scope=identify`;
   res.status(200).send({
-    url: discordAuthUrl,
+    data: {
+      url: discordAuthUrl,
+    },
   });
 };
 const checkCode = async (req, res, next) => {
@@ -98,61 +102,12 @@ const discordOauthSigninLogic = async (req, res, next) => {
   if (result.rows.length === 0) {
     const signupResult = await client.query(signupDiscordOauth, [
       user.id,
-      user.username,
       discordTag,
     ]);
-    const result = await client.query(signinDiscordOauth, [user.id]);
+    const result = await client.query(getUserIdxDiscordOauthSQL, [user.id]);
 
-    const userIdx = result.rows[0].user_idx;
-
-    const playerStatus = result.rows[0].player_status;
-    if (playerStatus === "pending") {
-      res.status(200).send({
-        data: {
-          player_status: playerStatus,
-          user_idx: userIdx,
-        },
-      });
-      return;
-    } else if (playerStatus === "deleted") {
-      res.status(403).send({
-        message: "이용 불가능한 계정입니다.",
-      });
-      return;
-    }
-
-    const profileImage = result.rows[0].profile_image || null;
-    const teamIdx = result.rows[0].team_idx || null;
-
-    const teamRoleIdx = await getTeamRoleIdx(userIdx);
-    const communityRoleIdx = await getCommunityRoleIdx(userIdx);
-
-    const accessToken = setAccessToken(
-      userIdx,
-      teamIdx,
-      teamRoleIdx,
-      communityRoleIdx
-    );
-    const refreshToken = setRefreshToken();
-
-    await putRefreshToken(refreshToken, userIdx);
-
-    res.cookie("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: false, // true면 https 오는 요청만 받음
-      sameSite: "strict",
-      maxAge: 3 * 24 * 60 * 60 * 1000,
-    });
-
-    // 응답 구성
     res.status(200).send({
-      player_status: playerStatus,
-      access_token: accessToken,
-      user_idx: userIdx,
-      profile_image: profileImage,
-      team_idx: teamIdx,
-      team_role_idx: teamRoleIdx,
-      community_role_idx: communityRoleIdx,
+      data: result.rows[0],
     });
   }
 
@@ -199,13 +154,15 @@ const discordOauthSigninLogic = async (req, res, next) => {
 
   // 응답 구성
   res.status(200).send({
-    player_status: playerStatus,
-    access_token: accessToken,
-    user_idx: userIdx,
-    profile_image: profileImage,
-    team_idx: teamIdx,
-    team_role_idx: teamRoleIdx,
-    community_role_idx: communityRoleIdx,
+    data: {
+      player_status: playerStatus,
+      access_token: accessToken,
+      user_idx: userIdx,
+      profile_image: profileImage,
+      team_idx: teamIdx,
+      team_role_idx: teamRoleIdx,
+      community_role_idx: communityRoleIdx,
+    },
   });
 };
 // 로그인 및 토큰 =================================================================
@@ -277,13 +234,15 @@ const signinLogic = async (req, res, next) => {
 
   // 응답 구성
   res.status(200).send({
-    player_status: playerStatus,
-    access_token: accessToken,
-    user_idx: userIdx,
-    profile_image: profileImage,
-    team_idx: teamIdx,
-    team_role_idx: teamRoleIdx,
-    community_role_idx: communityRoleIdx,
+    data: {
+      player_status: playerStatus,
+      access_token: accessToken,
+      user_idx: userIdx,
+      profile_image: profileImage,
+      team_idx: teamIdx,
+      team_role_idx: teamRoleIdx,
+      community_role_idx: communityRoleIdx,
+    },
   });
 };
 
@@ -400,16 +359,12 @@ const checkDuplicateNickname = async (req, res, next) => {
 
 // 회원가입 =================================================================
 const signupLoginInfo = async (req, res, next) => {
-  const { id, password, nickname } = req.body;
+  const { id, password } = req.body;
 
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-  const result = await client.query(signupLoginInfoSQL, [
-    id,
-    hashedPassword,
-    nickname,
-  ]);
+  const result = await client.query(signupLoginInfoSQL, [id, hashedPassword]);
 
   const userIdxResult = await client.query(getUserIdxSQL, [id]);
   const userIdx = userIdxResult.rows[0]?.user_idx;
@@ -423,20 +378,38 @@ const signupLoginInfo = async (req, res, next) => {
 };
 
 const signupPlayerInfo = async (req, res, next) => {
-  let { user_idx, team_idx, platform, state, message, discord_tag } = req.body;
+  let { user_idx, nickname, team_idx, platform, state, message, discord_tag } =
+    req.body;
 
   if (!user_idx) {
     throw customError(400, "user_idx는 필수값입니다.");
   }
+  if (!nickname) {
+    throw customError(400, "nickname은 필수값입니다.");
+  }
 
   team_idx = validate(regIdx, team_idx);
+  nickname = validate(regNickname, nickname);
   platform = validate(regPlatform, platform);
   state = validate(regState, state);
   message = validate(regMessage, message);
   discord_tag = validate(regDiscordTag, discord_tag);
 
+  const checkUserResult = await client.query(checkUserSQL, [user_idx]);
+
+  const exists = checkUserResult.rows[0]?.exists_flag;
+
+  if (exists === undefined) {
+    throw customError(500, "중복 확인 실패");
+  }
+
+  if (!exists) {
+    throw customError(404, "존재하지 않는 유저입니다.");
+  }
+
   const result = await client.query(signupPlayerInfoSQL, [
     team_idx,
+    nickname,
     platform,
     state,
     message,
@@ -587,19 +560,17 @@ const updateUserInfo = async (req, res, next) => {
 // 이미지 관련 =================================================================
 const updateProfileImage = async (req, res, next) => {
   const { my_player_list_idx } = req.decoded;
-  const new_img_url = req.fileUrl; 
+  const new_img_url = req.fileUrl;
 
-  console.log("new_img_url",new_img_url)
-  console.log("my_player_list_idx",my_player_list_idx)
-  const { rows } = await client.query(getUserImageSQL, [
-    my_player_list_idx,
-  ]);
+  console.log("new_img_url", new_img_url);
+  console.log("my_player_list_idx", my_player_list_idx);
+  const { rows } = await client.query(getUserImageSQL, [my_player_list_idx]);
 
   const old_profileImg_url = rows[0].profile_image;
-  
+
   if (old_profileImg_url) {
     await deleteFileFromS3(old_profileImg_url);
-}
+  }
 
   const result = await client.query(updateProfileImageSQL, [
     new_img_url,
