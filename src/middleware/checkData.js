@@ -20,6 +20,25 @@ const checkExistsInDB = (table, column) => {
     };
 };
 
+// 진짜 존재하는 플레이어인지 체크
+const checkIsReallyPlayer = () => {
+    return async (req, res, next) => {
+        const value = req.decoded.my_player_list_idx
+        const sql = `SELECT * FROM player.list WHERE player_list_idx = $1`;
+
+        try {
+            const result = await client.query(sql, [value]);
+            if (!result.rows.length) {
+                throw customError(404, `선수가 존재하지 않습니다.`);
+            }
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
+
 // 팀 존재 여부 확인
 const checkIsTeam = checkExistsInDB("team.list", "team_list_idx");
 
@@ -57,6 +76,7 @@ module.exports = {
     checkIsFormation,
     checkIsPlayer,
     checkIsBoard,
-    checkIsComment
+    checkIsComment,
+    checkIsReallyPlayer
 }
 

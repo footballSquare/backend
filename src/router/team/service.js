@@ -125,7 +125,7 @@ const changeTeamData = async (req,res,next) => {
 const checkTeamName = async (req,res,next) => {
     const {
         team_list_name
-    } = req.body
+    } = req.params
 
     try{
         const result = await client.query(checkTeamNameSQL, [
@@ -145,7 +145,7 @@ const checkTeamName = async (req,res,next) => {
 const checkTeamShortName = async (req,res,next) => {
     const {
         team_list_short_name
-    } = req.body
+    } = req.params
 
     try{
         const result = await client.query(checkTeamShortNameSQL, [
@@ -373,7 +373,7 @@ const teamLeave = async (req,res,next) => {
     try{
         await client.query(kickMemberSQL, [
             team_list_idx,
-            player_list_idx
+            my_player_list_idx
         ])
         res.status(200).send({})
     } catch(e){

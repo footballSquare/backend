@@ -50,7 +50,8 @@ const {
     checkIsFormation,
     checkIsPlayer,
     checkIsBoard,
-    checkIsComment
+    checkIsComment,
+    checkIsReallyPlayer
 } = require("../../middleware/checkData")
 
 const {
@@ -127,13 +128,13 @@ router.put("/:team_list_idx",
 )
 
 // 팀명 중복 확인하기
-router.get("/check_name",
+router.get("/check_name/:team_list_name",
     checkRegInput(regTeamName,"team_list_name"),
     checkTeamName
 )
 
 // 팀 약칭 중복 확인하기
-router.get("/check_short_name",
+router.get("/check_short_name/:team_list_short_name",
     checkRegInput(regTeamShortName,"team_list_short_name"),
     checkTeamShortName
 )
@@ -251,6 +252,7 @@ router.delete("/:team_list_idx/leave",
     checkLogin,
     checkIsTeamMember(),
     checkIsTeam,
+    checkIsReallyPlayer(),
     teamLeave
 )
 
