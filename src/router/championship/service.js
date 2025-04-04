@@ -34,6 +34,27 @@ const {
     getChampionShipPlayerStatsSQL
 } = require("./sql")
 
+
+// 대회 종료하기
+const doneChampionship = async (req,res,next) => {
+    const {championship_list_idx} = req.params
+
+    try{
+        await client.query("BEGIN");
+
+        const result = await client.query(getChampionShipPlayerStatsSQL, [
+            championship_list_idx
+        ])
+
+        await client.query("COMMIT");
+        res.status(200).send({ result : result.rows })
+    } catch(e){
+        await client.query("ROLLBACK");
+        next(e)
+    }
+}
+
+
 // 대회 매치 생성하기
 const postChampionShipMatch = async (req,res,next) => {
     const {championship_list_idx} = req.params

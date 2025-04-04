@@ -126,24 +126,7 @@ const checkHasCommunityRole = () => {
 // 커뮤니티 운영진인지 체크
 const checkIsCommunityStaffRole = () => {
     return async (req, res, next) => {
-        const { my_player_list_idx } = req.decoded;
-
-        try {
-            if (my_community_role_idx != COMMUNITY_ROLE.ADMIN &&
-                my_community_role_idx != COMMUNITY_ROLE.STAFF
-             ) {
-                throw customError(403, "커뮤니티 운영진이 아닙니다.");
-            }
-            next();
-        } catch (e) {
-            next(e);
-        }
-    };
-};
-
-// 나인지 체크
-const checkIsMe = () => {
-    return async (req, res, next) => {
+        console.log(req.decoded)
         const { my_community_role_idx } = req.decoded;
 
         try {
