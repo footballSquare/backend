@@ -70,6 +70,7 @@ const {
     postTeam,
     getTeam,
     getMember,
+    getTeamHistory,
     teamMemberDeny,
     changeMemberRole,
     kickMember,
@@ -102,6 +103,13 @@ router.get("/:team_list_idx/member",
     checkIdx("team_list_idx"),
     checkIsTeam,
     getMember
+)
+
+// 팀 연혁 보기
+router.get("/:team_list_idx/history",
+    checkIdx("team_list_idx"),
+    checkIsTeam,
+    getTeamHistory
 )
 
 // 팀 생성하기

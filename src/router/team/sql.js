@@ -64,6 +64,21 @@ INSERT INTO team.member (
 ) VALUES ($1, $2, $3);
 `
 
+// 팀 연혁 추가
+const postTeamHistorySQL =
+`
+INSERT INTO team.history (
+    team_list_idx,
+    team_list_name,
+    team_history_created_at
+)
+VALUES (
+    $1,  -- team_list_idx
+    $2,  -- team_list_name
+    now()
+);
+`
+
 const getTeamSQL = 
 `
 SELECT 
@@ -108,6 +123,22 @@ LIMIT
     10 
 OFFSET 
     $2 * 10;
+`
+
+// 팀 연혁 가져오기
+const getTeamHistorySQL =
+`
+SELECT 
+    team_history_idx,
+    team_list_idx,
+    team_list_name,
+    team_history_created_at
+FROM 
+    team.history
+WHERE 
+    team_list_idx = $1
+ORDER BY 
+    team_history_created_at DESC;
 `
 
 // 팀 멤버 추가하기 SQL
@@ -223,12 +254,14 @@ module.exports = {
     getTeamListSQL,
     postTeamSQL,
     postTeamManagerSQL,
+    postTeamHistorySQL,
     changeTeamDataSQL,
     checkTeamNameSQL,
     checkTeamShortNameSQL,
     deleteTeamSQL,
     getTeamSQL,
     getMemberSQL,
+    getTeamHistorySQL,
     insertTeamMemberSQL,
     teamMemberDenySQL,
     deleteTeamMemeberSQL,
