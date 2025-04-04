@@ -125,6 +125,7 @@ const postChampionShipMatch = async (req,res,next) => {
             match_match_start_time,
             MATCH_DURATION.HALF_HOUR
         ])
+        
         await client.query("COMMIT");
         res.status(200).send({})
     } catch(e){
@@ -209,7 +210,7 @@ const fetchEvidanceImg = async (req,res,next) => {
         const result = await client.query(fetchEvidanceImgSQL, [
             championship_match_idx
         ])
-        res.status(200).send({ evidance_img : result.rows })
+        res.status(200).send({ evidance_img : result.rows[0] })
     } catch(e){
         next(e)
     }
