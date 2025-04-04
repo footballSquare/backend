@@ -10,7 +10,7 @@ app.use(
       "http://localhost:3000",       // CRA, Next.js 등
       "http://127.0.0.1:5173",
       "http://127.0.0.1:3000",
-      "https://footballsquare.vercel.app/"
+      "https://footballsquare.vercel.app"
     ],
     credentials: true,
   })
