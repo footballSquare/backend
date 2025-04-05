@@ -152,7 +152,7 @@ SELECT
     player_list_message AS message,
     player_list_discord_tag AS discord_tag,
     player_list_MMR AS MMR,
-    player_list_player_status AS player_status
+    player_list_player_status AS common_status_idx
 FROM 
     player.list
 WHERE 

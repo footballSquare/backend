@@ -76,6 +76,7 @@ router.get("/myinfo", checkLogin, getMyInfo);
 router.get(
   "/info/:userIdx",
   checkRegInputs([regIdx], ["userIdx"]),
+  optionalLogin,
   getUserInfo
 );
 

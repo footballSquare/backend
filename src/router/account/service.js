@@ -104,6 +104,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
       user.id,
       discordTag,
     ]);
+
     const result = await client.query(getUserIdxDiscordOauthSQL, [user.id]);
 
     res.status(200).send({
@@ -114,6 +115,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
   const userIdx = result.rows[0].user_idx;
 
   const playerStatus = result.rows[0].player_status;
+
   if (playerStatus === "pending") {
     res.status(200).send({
       data: {
@@ -186,6 +188,7 @@ const signinCheck = async (req, res, next) => {
   next();
 };
 
+// 로그인 서비스
 const signinLogic = async (req, res, next) => {
   const { id } = req.query;
 
@@ -194,6 +197,8 @@ const signinLogic = async (req, res, next) => {
   const userIdx = result.rows[0].user_idx;
 
   const playerStatus = result.rows[0].player_status;
+
+  // 아직 가입하지 않은 사용자 예외처리
   if (playerStatus === "pending") {
     res.status(200).send({
       data: {
@@ -235,7 +240,7 @@ const signinLogic = async (req, res, next) => {
   // 응답 구성
   res.status(200).send({
     data: {
-      player_status: playerStatus,
+      common_status_idx: playerStatus,
       access_token: accessToken,
       user_idx: userIdx,
       profile_image: profileImage,
