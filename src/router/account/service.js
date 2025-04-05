@@ -232,15 +232,15 @@ const signinLogic = async (req, res, next) => {
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: false, // true면 https 오는 요청만 받음
-    sameSite: "strict",
+    secure: true, 
+    sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
 
   // 응답 구성
   res.status(200).send({
     data: {
-      common_status_idx: playerStatus,
+      player_status: playerStatus,
       access_token: accessToken,
       user_idx: userIdx,
       profile_image: profileImage,
