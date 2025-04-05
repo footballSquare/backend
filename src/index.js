@@ -3,8 +3,20 @@ const cors = require('cors');
 const app = express();
 require("dotenv").config();
 
+const allowedOrigins = [
+  "https://footballsquare.co.kr",
+  "https://www.footballsquare.co.kr",
+  "http://localhost:5173",
+];
+
 app.use(cors({
-  origin: "https://footballsquare.co.kr", 
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
 }));
 
