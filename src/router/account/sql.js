@@ -141,23 +141,58 @@ FROM
 WHERE 
     player_list_idx = $1
 `;
+
 const getUserInfoSQL = `
 SELECT 
-    player_list_idx AS user_idx,
-    player_list_nickname AS nickname,
-    player_list_team_idx AS team_idx,
-    player_list_profile_image AS profile_image,
-    player_list_platform AS platform,
-    player_list_state AS state,
-    player_list_message AS message,
-    player_list_discord_tag AS discord_tag,
-    player_list_MMR AS MMR,
-    player_list_player_status AS common_status_idx
+    p.player_list_idx AS user_idx,
+    p.player_list_nickname AS nickname,
+    p.player_list_profile_image AS profile_image,
+    p.player_list_platform AS platform,
+    p.player_list_state AS player_status,
+    p.player_list_message AS message,
+    p.player_list_discord_tag AS discord_tag,
+    p.player_list_MMR AS mmr,
+    p.player_list_player_status AS common_status_idx,
+
+    t.team_list_idx AS team_idx,
+    t.team_list_name AS team_name,
+    t.team_list_short_name AS team_short_name,
+    t.team_list_color AS team_color,
+    t.team_list_emblem AS team_emblem
+
 FROM 
-    player.list
+    player.list p
+LEFT JOIN team.member tm ON p.player_list_idx = tm.player_list_idx
+LEFT JOIN team.list t ON tm.team_list_idx = t.team_list_idx
 WHERE 
-    player_list_idx = $1
+    p.player_list_idx = $1;
+
 `;
+
+const getUserAwardInfoSQL = 
+`
+SELECT 
+    aw.championship_award_winner_idx,
+    aw.championship_award_idx,
+    aw.championship_list_idx,
+    aw.championship_award_winner_player_nickname,
+
+    a.championship_award_name,
+
+    cl.championship_list_name,
+    cl.championship_list_start_date,
+    cl.championship_list_end_date,
+    cl.championship_list_color
+
+FROM championship.award_winner aw
+JOIN championship.award a 
+    ON aw.championship_award_idx = a.championship_award_idx
+JOIN championship.list cl 
+    ON aw.championship_list_idx = cl.championship_list_idx
+
+WHERE aw.player_list_idx = $1;
+`
+
 // 비밀번호 체크
 const checkPasswordSQL = `
 SELECT 
@@ -246,6 +281,7 @@ module.exports = {
   softDeleteSQL,
   getMyInfoSQL,
   getUserInfoSQL,
+  getUserAwardInfoSQL,
   checkPasswordSQL,
   updateUserInfoSQL,
   getUserImageSQL,

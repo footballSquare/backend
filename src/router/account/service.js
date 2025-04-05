@@ -23,6 +23,7 @@ const {
   softDeleteSQL,
   getMyInfoSQL,
   getUserInfoSQL,
+  getUserAwardInfoSQL,
   checkPasswordSQL,
   updateUserInfoSQL,
   getUserImageSQL,
@@ -469,8 +470,11 @@ const getUserInfo = async (req, res, next) => {
   if (result.rows.length === 0) {
     throw customError(404, "등록되지 않은 유저입니다.");
   }
+  const trophyResult = await client.query(getUserAwardInfoSQL,[userIdx]);
 
   result.rows[0].is_mine = isMine;
+
+  result.rows[0].Awards = trophyResult.rows
 
   res.status(200).send({
     data: result.rows[0],
