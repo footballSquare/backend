@@ -10,7 +10,7 @@ const sendSMS = async ({ sender, receiver, msg }) => {
   form.append("receiver", receiver);
   form.append("msg", msg);
   form.append("msg_type", "SMS");
-  form.append("testmode_yn", "Y");
+  form.append("testmode_yn", "N");
 
   const response = await axios.post("https://apis.aligo.in/send/", form, {
     headers: form.getHeaders(),
