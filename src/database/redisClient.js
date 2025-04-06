@@ -1,9 +1,12 @@
+require("dotenv").config({ path: "/app/src/.env" });
 const { createClient } = require("redis");
+
+console.log(process.env.REDIS_HOST)
 
 const redisClient = createClient({
   socket: {
-    host: "127.0.0.1",
-    port: 6379,
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
   },
 });
 

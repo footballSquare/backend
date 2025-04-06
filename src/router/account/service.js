@@ -623,7 +623,7 @@ const deleteImage = async (imageUrl) => {
 };
 
 // sms 관련
-const redisClient = require("./../../util/redisClient");
+const redisClient = require("../../database/redisClient");
 const PHONE_REGEX = /^01[016789]\d{7,8}$/;
 const CODE_EXPIRY = 180;
 const MAX_ATTEMPTS = 5; // 시도 제한 횟수
@@ -665,6 +665,7 @@ const smsSendMessage = async (req, res, next) => {
     receiver: phone,
     msg: `[footballsquare] 인증번호는 [${code}] 입니다.`,
   });
+
   res.status(200).send({ code: code, message: "인증번호 전송 성공" });
 };
 
