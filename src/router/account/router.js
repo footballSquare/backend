@@ -18,7 +18,11 @@ const { checkLogin, optionalLogin } = require("./../../middleware/checkLogin");
 const {
   multerMiddleware,
 } = require("../../database/s3Config/multerMiddleware");
-const { s3Uploader } = require("../../middleware/s3UpLoader");
+
+const { 
+  s3Uploader,
+  s3UploaderOptional
+ } = require("../../middleware/s3UpLoader");
 
 const {
   getDiscordSigninPage,
@@ -97,7 +101,7 @@ router.put(
   "/profileimage",
   multerMiddleware,
   checkLogin,
-  s3Uploader("account"),
+  s3UploaderOptional("account"),
   updateProfileImage
 );
 

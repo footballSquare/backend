@@ -15,6 +15,10 @@ const regChampionshipAwardName = /^.{1,10}$/; // 최대 50글자까지 가능
 
 const regChampionshipPeriod = /^\d{4}-\d{2}-\d{2}$/;
 
+
+// 커뮤니티 공지 길이 제한
+const regCommunityNotice = /^.{1,1000}$/;
+
 // 게시판 제목: 최대 50글자 (1~50자 허용)
 const regBoardTitle = /^.{1,50}$/;
 
@@ -56,4 +60,5 @@ module.exports = {
   regState,
   regMessage,
   regDiscordTag,
+  regCommunityNotice
 };

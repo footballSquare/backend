@@ -14,6 +14,7 @@ const {
     getCommunityStaffSQL,
     getCommunityTeamSQL,
     getCommunityChampionshipSQL,
+    putCommunityNoticeSQL,
     postChampioshipSQL,
     postChampioshipParticipantTeamSQL,
     postChampioshipAwardSQL,
@@ -88,6 +89,27 @@ const getCommunityChampionship = async (req,res,next) => {
         next(e)
     }
 }
+
+// 커뮤니티 공지 수정하기
+const putCommunityNotice = async (req,res,next) => {
+    const {community_list_idx} = req.params
+    const {community_list_notice} = req.body
+
+    try{
+        await client.query(
+            putCommunityNoticeSQL,
+            [
+                community_list_idx,
+                community_list_notice
+            ]
+        );
+
+        res.status(200).send({});
+    } catch(e){
+        next(e)
+    }
+} 
+
 
 // 커뮤니티 엠블렘 수정
 const putCommunityEmblem = async (req,res,next) => {
@@ -264,12 +286,14 @@ const kickCommunityStaff = async (req,res,next) => {
 // 커뮤니티 운영진 가입 신청
 const communityStaffApplication = async (req,res,next) => {
     const {community_list_idx} = req.params
-    const {player_list_idx} = req.body
+    const {
+        my_player_list_idx
+    } = req.decoded
 
     try{
         await client.query(communityStaffApplicationSQL, [
             community_list_idx,
-            player_list_idx
+            my_player_list_idx
         ])
         res.status(200).send({})
     } catch(e){
@@ -308,12 +332,12 @@ const getCommunityTeamApplication = async (req,res,next) => {
 // 커뮤니티 팀 가입 신청
 const communityTeamApplication = async (req,res,next) => {
     const {community_list_idx} = req.params
-    const {team_list_idx} = req.body
+    const {my_team_list_idx} = req.decoded
 
     try{
         await client.query(communityTeamApplicationSQL, [
             community_list_idx,
-            team_list_idx
+            my_team_list_idx
         ])
         res.status(200).send({})
     } catch(e){
@@ -325,8 +349,6 @@ const communityTeamApplication = async (req,res,next) => {
 const communityTeamAccess = async (req,res,next) => {
     const {team_list_idx} = req.params
     const {community_list_idx} = req.body
-
-    console.log(team_list_idx)
 
     try{
         await client.query("BEGIN");
@@ -385,6 +407,7 @@ module.exports = {
     getCommunityStaff,
     getCommunityTeam,
     getCommunityChampionship,
+    putCommunityNotice,
     putCommunityEmblem,
     putCommunityBanner,
     postChampioship,

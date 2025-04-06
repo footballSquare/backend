@@ -75,6 +75,11 @@ ORDER BY championship_list_start_date DESC
 LIMIT 10 OFFSET $2 * 10;
 `
 
+const putCommunityNoticeSQL =
+`
+UPDATE community.list SET community_list_notice = $2 WHERE community_list_idx = $1
+`
+
 // 대회 생성
 const postChampioshipSQL =
 `
@@ -236,6 +241,7 @@ module.exports = {
     getCommunityStaffSQL,
     getCommunityTeamSQL,
     getCommunityChampionshipSQL,
+    putCommunityNoticeSQL,
     postChampioshipSQL,
     postChampioshipParticipantTeamSQL,
     postChampioshipAwardSQL,

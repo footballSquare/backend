@@ -3,17 +3,22 @@ const cors = require('cors');
 const app = express();
 require("dotenv").config();
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",       // Vite 기본 포트
-      "http://localhost:3000",       // CRA, Next.js 등
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:3000",
-    ],
-    credentials: true,
-  })
-);
+// const allowedOrigins = [
+//   "https://footballsquare.co.kr",
+//   "https://www.footballsquare.co.kr",
+//   "https://localhost:5173",
+// ];
+
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true,
+// }));
 
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
@@ -60,6 +65,6 @@ app.use((req, res, next) => {
 
 // ===========================================
 
-app.listen(8000, () => {
-  console.log("8000번 포트에서 웹 서버 실행 중입니다.");
+app.listen(8000, '0.0.0.0', () => {
+  console.log('8000번 포트에서 웹 서버 실행 중입니다.');
 });

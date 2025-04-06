@@ -173,17 +173,20 @@ WHERE championship.participation_team.championship_list_idx = $1;
 const fetchChampionshipMatchesSQL = 
 `
 SELECT 
-    championship_match.championship_match_idx,
-    championship_match.championship_match_first_idx,
-    championship_match.championship_match_second_idx,
-    match_first.team_list_idx AS first_team_idx,
-    match_second.team_list_idx AS second_team_idx
-FROM championship.championship_match
-LEFT JOIN match.match AS match_first 
-    ON championship_match.championship_match_first_idx = match_first.match_match_idx
-LEFT JOIN match.match AS match_second 
-    ON championship_match.championship_match_second_idx = match_second.match_match_idx
-WHERE championship_match.championship_list_idx = $1;
+    cm.championship_match_idx,
+    cm.championship_match_first_idx,
+    cm.championship_match_second_idx,
+    
+    mf.team_list_idx AS first_team_idx,
+    mf.common_status_idx AS first_common_status_idx,
+
+    ms.team_list_idx AS second_team_idx,
+    ms.common_status_idx AS second_common_status_idx
+
+FROM championship.championship_match cm
+LEFT JOIN match.match mf ON cm.championship_match_first_idx = mf.match_match_idx
+LEFT JOIN match.match ms ON cm.championship_match_second_idx = ms.match_match_idx
+WHERE cm.championship_list_idx = $1;
 `
 
 // 각 팀 정보 가져오기

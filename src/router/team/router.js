@@ -50,7 +50,8 @@ const {
     checkIsFormation,
     checkIsPlayer,
     checkIsBoard,
-    checkIsComment
+    checkIsComment,
+    checkIsReallyPlayer
 } = require("../../middleware/checkData")
 
 const {
@@ -69,6 +70,7 @@ const {
     postTeam,
     getTeam,
     getMember,
+    getTeamHistory,
     teamMemberDeny,
     changeMemberRole,
     kickMember,
@@ -103,6 +105,13 @@ router.get("/:team_list_idx/member",
     getMember
 )
 
+// 팀 연혁 보기
+router.get("/:team_list_idx/history",
+    checkIdx("team_list_idx"),
+    checkIsTeam,
+    getTeamHistory
+)
+
 // 팀 생성하기
 router.post("/",
     checkRegInput(regTeamName,"team_list_name"),
@@ -127,13 +136,13 @@ router.put("/:team_list_idx",
 )
 
 // 팀명 중복 확인하기
-router.get("/check_name",
+router.get("/check_name/:team_list_name",
     checkRegInput(regTeamName,"team_list_name"),
     checkTeamName
 )
 
 // 팀 약칭 중복 확인하기
-router.get("/check_short_name",
+router.get("/check_short_name/:team_list_short_name",
     checkRegInput(regTeamShortName,"team_list_short_name"),
     checkTeamShortName
 )
@@ -251,6 +260,7 @@ router.delete("/:team_list_idx/leave",
     checkLogin,
     checkIsTeamMember(),
     checkIsTeam,
+    checkIsReallyPlayer(),
     teamLeave
 )
 

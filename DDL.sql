@@ -45,29 +45,30 @@ CREATE TABLE team.list (
 
 -- player
 CREATE TABLE player.list (
-  player_list_idx SERIAL PRIMARY KEY,
-  player_list_phone VARCHAR(15) UNIQUE,
-  player_list_id VARCHAR(20) UNIQUE,
-  player_list_password VARCHAR(255),
-  player_list_discord_id VARCHAR(255) UNIQUE,
-  player_list_name VARCHAR(10) UNIQUE,
-  player_list_nickname VARCHAR(10) NOT NULL UNIQUE,
-  player_list_refreshtoken VARCHAR(255),
-  player_list_refreshtoken_expires_at TIMESTAMP,
-  player_list_team_idx INT REFERENCES team.list(team_list_idx),
-  player_list_profile_image TEXT,
-  player_list_platform platform,
-  player_list_state INT REFERENCES common.status(common_status_idx),
-  player_list_message VARCHAR(50),
-  player_list_MMR INT,
-  player_list_discord_tag VARCHAR(40),
-  player_list_player_status player_status,
-  player_list_pending_at TIMESTAMP DEFAULT now(),
-  player_list_active_at TIMESTAMP,
-  player_list_deleted_at TIMESTAMP,
-  CONSTRAINT id_or_discord_id_not_null CHECK (
-    player_list_id IS NOT NULL OR player_list_discord_id IS NOT NULL
-  )
+    player_list_idx SERIAL PRIMARY KEY,
+    player_list_phone VARCHAR(15) UNIQUE,
+    player_list_id VARCHAR(20) UNIQUE,
+    player_list_password VARCHAR(255),
+    player_list_discord_id VARCHAR(255) UNIQUE,
+    player_list_name VARCHAR(10) UNIQUE,
+    player_list_nickname VARCHAR(10) UNIQUE,
+    player_list_refreshtoken VARCHAR(255),
+    player_list_refreshtoken_expires_at TIMESTAMP,
+    player_list_profile_image TEXT,
+    player_list_platform platform,
+    player_list_state INT,
+    player_list_message VARCHAR(50),
+    player_list_MMR INT NOT NULL DEFAULT 0,  -- MMR: 기본값 0, NOT NULL로 설정
+    player_list_discord_tag VARCHAR(40),
+    player_list_player_status player_status,
+    player_list_pending_at TIMESTAMP DEFAULT now(),
+    player_list_active_at TIMESTAMP,
+    player_list_deleted_at TIMESTAMP,
+    match_position_idx INT NOT NULL DEFAULT 0 REFERENCES match.position(match_position_idx),
+    FOREIGN KEY (player_list_state) REFERENCES common.status(common_status_idx),
+    CONSTRAINT id_or_discord_id_not_null CHECK (
+        player_list_id IS NOT NULL OR player_list_discord_id IS NOT NULL
+    )
 );
 
 -- team continued

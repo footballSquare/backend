@@ -24,6 +24,7 @@ const {
   softDeleteSQL,
   getMyInfoSQL,
   getUserInfoSQL,
+  getUserAwardInfoSQL,
   checkPasswordSQL,
   updateUserInfoSQL,
   getUserImageSQL,
@@ -105,6 +106,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
       user.id,
       discordTag,
     ]);
+    
     const result = await client.query(getUserIdxDiscordOauthSQL, [user.id]);
 
     res.status(200).send({
@@ -115,6 +117,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
   const userIdx = result.rows[0].user_idx;
 
   const playerStatus = result.rows[0].player_status;
+
   if (playerStatus === "pending") {
     res.status(200).send({
       data: {
@@ -148,8 +151,8 @@ const discordOauthSigninLogic = async (req, res, next) => {
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: false, // true면 https 오는 요청만 받음
-    sameSite: "strict",
+    secure: true, 
+    sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
 
@@ -187,6 +190,7 @@ const signinCheck = async (req, res, next) => {
   next();
 };
 
+// 로그인 서비스
 const signinLogic = async (req, res, next) => {
   const { id } = req.body;
 
@@ -195,6 +199,8 @@ const signinLogic = async (req, res, next) => {
   const userIdx = result.rows[0].user_idx;
 
   const playerStatus = result.rows[0].player_status;
+
+  // 아직 가입하지 않은 사용자 예외처리
   if (playerStatus === "pending") {
     res.status(200).send({
       data: {
@@ -228,8 +234,8 @@ const signinLogic = async (req, res, next) => {
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: false, // true면 https 오는 요청만 받음
-    sameSite: "strict",
+    secure: true, 
+    sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
 
@@ -438,6 +444,7 @@ const accountSoftDelete = async (req, res, next) => {
 const getMyInfo = async (req, res, next) => {
   const { my_player_list_idx } = req.decoded;
   const result = await client.query(getMyInfoSQL, [my_player_list_idx]);
+
   if (result.rows.length === 0) {
     throw customError(404, "등록되지 않은 유저입니다.");
   }
@@ -465,8 +472,11 @@ const getUserInfo = async (req, res, next) => {
   if (result.rows.length === 0) {
     throw customError(404, "등록되지 않은 유저입니다.");
   }
+  const trophyResult = await client.query(getUserAwardInfoSQL,[userIdx]);
 
   result.rows[0].is_mine = isMine;
+
+  result.rows[0].Awards = trophyResult.rows
 
   res.status(200).send({
     data: result.rows[0],

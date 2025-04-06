@@ -34,6 +34,27 @@ const {
     getChampionShipPlayerStatsSQL
 } = require("./sql")
 
+
+// 대회 종료하기
+const doneChampionship = async (req,res,next) => {
+    const {championship_list_idx} = req.params
+
+    try{
+        await client.query("BEGIN");
+
+        const result = await client.query(getChampionShipPlayerStatsSQL, [
+            championship_list_idx
+        ])
+
+        await client.query("COMMIT");
+        res.status(200).send({ result : result.rows })
+    } catch(e){
+        await client.query("ROLLBACK");
+        next(e)
+    }
+}
+
+
 // 대회 매치 생성하기
 const postChampionShipMatch = async (req,res,next) => {
     const {championship_list_idx} = req.params
@@ -104,6 +125,7 @@ const postChampionShipMatch = async (req,res,next) => {
             match_match_start_time,
             MATCH_DURATION.HALF_HOUR
         ])
+        
         await client.query("COMMIT");
         res.status(200).send({})
     } catch(e){
@@ -188,7 +210,7 @@ const fetchEvidanceImg = async (req,res,next) => {
         const result = await client.query(fetchEvidanceImgSQL, [
             championship_match_idx
         ])
-        res.status(200).send({ evidance_img : result.rows })
+        res.status(200).send({ evidance_img : result.rows[0] })
     } catch(e){
         next(e)
     }
@@ -252,6 +274,7 @@ const getChampionShipMatchList = async (req,res,next) => {
             .filter(Boolean);
         let matchStatsMap = new Map();
 
+        
 
         if (matchIdList.length > 0) {
             const matchStatsResult = await client.query(fetchMatchStatsSQL, [matchIdList]);
@@ -268,6 +291,8 @@ const getChampionShipMatchList = async (req,res,next) => {
                 };
             });
         }
+
+        
         
         // 데이터 병합 및 응답 생성
         const championshipMatches = championshipMatchList.map(match => {
@@ -285,24 +310,26 @@ const getChampionShipMatchList = async (req,res,next) => {
             return {
                 championship_match_idx: match.championship_match_idx, 
                 championship_match_first: firstTeam ? {
-                    match_match_idx: firstMatchIdx, 
+                    match_match_idx: firstMatchIdx,
                     team_list_idx: match.first_team_idx,
                     team_list_name: firstTeam.team_list_name,
                     team_list_short_name: firstTeam.team_list_short_name,
                     team_list_color: firstTeam.team_list_color,
                     team_list_emblem: firstTeam.team_list_emblem,
                     match_team_stats_our_score: firstMatchStats[match.first_team_idx]?.match_team_stats_our_score ?? null,
-                    match_team_stats_other_score: firstMatchStats[match.first_team_idx]?.match_team_stats_other_score ?? null
+                    match_team_stats_other_score: firstMatchStats[match.first_team_idx]?.match_team_stats_other_score ?? null,
+                    common_status_idx: match.first_common_status_idx ?? null
                 } : null,
                 championship_match_second: secondTeam ? {
-                    match_match_idx: secondMatchIdx, 
+                    match_match_idx: secondMatchIdx,
                     team_list_idx: match.second_team_idx,
                     team_list_name: secondTeam.team_list_name,
                     team_list_short_name: secondTeam.team_list_short_name,
                     team_list_color: secondTeam.team_list_color,
                     team_list_emblem: secondTeam.team_list_emblem,
                     match_team_stats_our_score: secondMatchStats[match.second_team_idx]?.match_team_stats_our_score ?? null,
-                    match_team_stats_other_score: secondMatchStats[match.second_team_idx]?.match_team_stats_other_score ?? null
+                    match_team_stats_other_score: secondMatchStats[match.second_team_idx]?.match_team_stats_other_score ?? null,
+                    common_status_idx: match.second_common_status_idx ?? null
                 } : null
             };
         });

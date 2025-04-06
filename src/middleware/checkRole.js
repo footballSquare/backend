@@ -8,7 +8,7 @@ const {
 
 // 이미 소속 팀이 존재하는지 여부 체크
 const checkHasTeam = () => {
-    return async (req, res, next) => {
+    return (req, res, next) => {
         const { my_team_list_idx } = req.decoded;
         console.log(req.decoded)
 
@@ -25,7 +25,7 @@ const checkHasTeam = () => {
 
 // 팀장인지 권한 체크
 const checkIsTeamLeader = () => {
-    return async (req, res, next) => {
+    return (req, res, next) => {
         const { my_team_role_idx } = req.decoded;
 
         try {
@@ -41,7 +41,7 @@ const checkIsTeamLeader = () => {
 
 // 팀장 또는 부팀장 인지 권한 체크
 const checkIsTeamSubLeader = () => {
-    return async (req, res, next) => {
+    return (req, res, next) => {
         const { my_team_role_idx } = req.decoded;
 
         try {
@@ -59,7 +59,7 @@ const checkIsTeamSubLeader = () => {
 
 // 해당 팀의 팀원인지 체크
 const checkIsTeamMember = () => {
-    return async (req, res, next) => {
+    return (req, res, next) => {
         const { my_team_list_idx } = req.decoded;
         const value = req.body.team_list_idx ?? req.params.team_list_idx ?? req.query.team_list_idx ?? req.matchInfo.team_list_idx;;
 
@@ -76,7 +76,7 @@ const checkIsTeamMember = () => {
 
 // 매치의 정보에서 해당 팀의 팀원인지 체크
 const checkIsTeamMemberAtMatch = () => {
-    return async (req, res, next) => {
+    return (req, res, next) => {
         const { my_team_list_idx } = req.decoded;
         const value = req.matchInfo.team_list_idx;
 
@@ -93,7 +93,7 @@ const checkIsTeamMemberAtMatch = () => {
 
 // 커뮤니티 운영자인지 체크
 const checkIsCommunityAdminRole = () => {
-    return async (req, res, next) => {
+    return (req, res, next) => {
         const { my_community_role_idx } = req.decoded;
 
         try {
@@ -109,7 +109,7 @@ const checkIsCommunityAdminRole = () => {
 
 // 커뮤니티 운영자인지 체크
 const checkHasCommunityRole = () => {
-    return async (req, res, next) => {
+    return (req, res, next) => {
         const { my_community_role_idx } = req.decoded;
 
         try {
@@ -125,25 +125,7 @@ const checkHasCommunityRole = () => {
 
 // 커뮤니티 운영진인지 체크
 const checkIsCommunityStaffRole = () => {
-    return async (req, res, next) => {
-        const { my_player_list_idx } = req.decoded;
-
-        try {
-            if (my_community_role_idx != COMMUNITY_ROLE.ADMIN &&
-                my_community_role_idx != COMMUNITY_ROLE.STAFF
-             ) {
-                throw customError(403, "커뮤니티 운영진이 아닙니다.");
-            }
-            next();
-        } catch (e) {
-            next(e);
-        }
-    };
-};
-
-// 나인지 체크
-const checkIsMe = () => {
-    return async (req, res, next) => {
+    return (req, res, next) => {
         const { my_community_role_idx } = req.decoded;
 
         try {

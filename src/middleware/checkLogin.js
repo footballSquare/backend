@@ -2,6 +2,11 @@ const customError = require("./../util/customError");
 const jwt = require("jsonwebtoken");
 
 const checkLogin = (req, res, next) => {
+
+  if (req.method === "OPTIONS") {
+    return next();
+  }
+  
   try {
     const { authorization } = req.headers;
 

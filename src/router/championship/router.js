@@ -57,6 +57,13 @@ const {
     getChampionShipPlayerStats
 } = require("./service")
 
+// 대회 종료하기
+router.put("/:championship_list_idx/done",
+    checkIdx("championship_list_idx"),
+    checkLogin,
+    // doneChampionship
+)
+
 // 대회 매치 생성하기
 router.post("/:championship_list_idx/championship_match",
     checkIdx("championship_list_idx"),

@@ -13,8 +13,10 @@ const {
     checkTeamShortNameSQL,
     deleteTeamSQL,
     postTeamManagerSQL,
+    postTeamHistorySQL,
     getTeamSQL,
     getMemberSQL,
+    getTeamHistorySQL,
     insertTeamMemberSQL,
     teamMemberDenySQL,
     deleteTeamMemeberSQL,
@@ -87,10 +89,17 @@ const postTeam = async (req,res,next) => {
             TEAM_ROLE.LEADER
         ]);
 
+        // 연혁 추가
+        await client.query(postTeamHistorySQL,[
+            teamListIdx, 
+            team_list_name
+        ]);
+
         await client.query("COMMIT"); 
 
         res.status(200).send({ team_list_idx : teamListIdx })
     } catch(e){
+        await client.query("ROLLBACK");
         next(e)
     }
 }
@@ -107,6 +116,21 @@ const changeTeamData = async (req,res,next) => {
     } = req.body
 
     try{
+        await client.query("BEGIN"); 
+        const oldResult = await client.query(
+            `SELECT team_list_name FROM team.list WHERE team_list_idx = $1`,
+            [team_list_idx]
+        );
+
+        const old_team_name = oldResult.rows[0].team_list_name;
+
+        if (old_team_name !== team_list_name) {
+            await client.query(
+                postTeamHistorySQL,
+                [team_list_idx, team_list_name]
+            );
+        }
+
         await client.query(changeTeamDataSQL, [
             team_list_idx,
             team_list_name,
@@ -115,8 +139,10 @@ const changeTeamData = async (req,res,next) => {
             team_list_announcement,
             common_status_idx
         ])
+        await client.query("COMMIT");
         res.status(200).send({})
     } catch(e){
+        await client.query("ROLLBACK");
         next(e)
     }
 }
@@ -125,7 +151,7 @@ const changeTeamData = async (req,res,next) => {
 const checkTeamName = async (req,res,next) => {
     const {
         team_list_name
-    } = req.body
+    } = req.params
 
     try{
         const result = await client.query(checkTeamNameSQL, [
@@ -145,7 +171,7 @@ const checkTeamName = async (req,res,next) => {
 const checkTeamShortName = async (req,res,next) => {
     const {
         team_list_short_name
-    } = req.body
+    } = req.params
 
     try{
         const result = await client.query(checkTeamShortNameSQL, [
@@ -249,6 +275,20 @@ const getMember = async (req,res,next) => {
             page
         ])
         res.status(200).send({ member : result.rows })
+    } catch(e){
+        next(e)
+    }
+}
+
+// 팀 연혁 보기
+const getTeamHistory = async (req,res,next) => {
+    const {team_list_idx} = req.params
+
+    try{
+        const result = await client.query(getTeamHistorySQL, [
+            team_list_idx
+        ])
+        res.status(200).send({ team_history : result.rows })
     } catch(e){
         next(e)
     }
@@ -373,7 +413,7 @@ const teamLeave = async (req,res,next) => {
     try{
         await client.query(kickMemberSQL, [
             team_list_idx,
-            player_list_idx
+            my_player_list_idx
         ])
         res.status(200).send({})
     } catch(e){
@@ -388,6 +428,7 @@ module.exports = {
     postTeam,
     getTeam,
     getMember,
+    getTeamHistory,
     deleteTeam,
     teamMemberApproval,
     teamMemberDeny,

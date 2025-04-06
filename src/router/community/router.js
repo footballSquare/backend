@@ -21,7 +21,8 @@ const {
     regChampionshipName,
     regChampionshipDescription,
     regChampionshipAwardName,
-    regChampionshipPeriod
+    regChampionshipPeriod,
+    regCommunityNotice
 } = require("../../constant/regx")
 
 const {
@@ -62,6 +63,7 @@ const {
     getCommunityStaff,
     getCommunityTeam,
     getCommunityChampionship,
+    putCommunityNotice,
     putCommunityEmblem,
     putCommunityBanner,
     postChampioship,
@@ -105,9 +107,19 @@ router.get("/:community_list_idx/championship",
     getCommunityChampionship
 )
 
+// 커뮤니티 공지 수정하기
+router.put("/:community_list_idx/notice",
+    checkLogin,
+    checkIdx("community_list_idx"),
+    checkRegInput(regCommunityNotice,"community_list_notice"),
+    checkIsCommunityAdminRole(),
+    putCommunityNotice
+)
+
 // 커뮤니티 엠블렘 수정하기
 router.put("/:community_list_idx/emblem",
     checkLogin,
+    checkIdx("community_list_idx"),
     checkIsCommunityAdminRole(),
     multerMiddleware,
     s3Uploader("team"),
@@ -117,6 +129,7 @@ router.put("/:community_list_idx/emblem",
 // 커뮤니티 배너 수정하기
 router.put("/:community_list_idx/banner",
     checkLogin,
+    checkIdx("community_list_idx"),
     checkIsCommunityAdminRole(),
     multerMiddleware,
     s3Uploader("team"),

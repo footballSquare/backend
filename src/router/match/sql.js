@@ -86,10 +86,17 @@ SELECT
   im.match_match_attribute,
   im.match_match_start_time,
   im.match_match_duration,
+
+  -- 팀 정보
   tl.team_list_name,
-  tl.team_list_emblem
+  tl.team_list_emblem,
+
+  -- 선수 정보
+  pl.player_list_nickname
+
 FROM inserted_match im
-LEFT JOIN team.list tl ON im.team_list_idx = tl.team_list_idx;
+LEFT JOIN team.list tl ON im.team_list_idx = tl.team_list_idx
+LEFT JOIN player.list pl ON im.player_list_idx = pl.player_list_idx;
 `
 
 // 팀 매치 수정하기
@@ -165,10 +172,17 @@ SELECT
   im.match_match_attribute,
   im.match_match_start_time,
   im.match_match_duration,
+
+  -- 팀 정보
   tl.team_list_name,
-  tl.team_list_emblem
+  tl.team_list_emblem,
+
+  -- 선수 정보
+  pl.player_list_nickname
+
 FROM inserted_match im
-LEFT JOIN team.list tl ON im.team_list_idx = tl.team_list_idx;
+LEFT JOIN team.list tl ON im.team_list_idx = tl.team_list_idx
+LEFT JOIN player.list pl ON im.player_list_idx = pl.player_list_idx;
 `
 
 // 매치 삭제하기

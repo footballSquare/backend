@@ -601,6 +601,23 @@ const checkAlreadyWaitList = () => {
     };
 };
 
+// 대회 매치인지 아닌지 체크
+const checkIfChampionshipMatchOnly = () => {
+    return (req, res, next) => {
+        try {
+            const { match_match_attribute } = req.matchInfo;
+
+            if (match_match_attribute != MATCH_ATTRIBUTE.CHAMPIONSHIP) {
+                throw customError(403, "이 기능은 대회 매치에서만 사용할 수 있습니다.");
+            }
+
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
 
 module.exports = {
     checkTeamMatchCooldown,
@@ -624,5 +641,6 @@ module.exports = {
     checkBothTeamsInChampionship,
     checkIsTherePositionParticipant,
     checkMatchNotEnded,
-    checkAlreadyWaitList
+    checkAlreadyWaitList,
+    checkIfChampionshipMatchOnly
 }
