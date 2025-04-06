@@ -6,7 +6,7 @@ require("dotenv").config();
 const allowedOrigins = [
   "https://footballsquare.co.kr",
   "https://www.footballsquare.co.kr",
-  "http://localhost:5173",
+  "https://localhost:5173",
 ];
 
 app.use(cors({
