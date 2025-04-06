@@ -512,7 +512,6 @@ const updateUserInfo = async (req, res, next) => {
     id,
     password,
     nickname,
-    team_idx,
     platform,
     state,
     message,
@@ -530,7 +529,6 @@ const updateUserInfo = async (req, res, next) => {
     player_list_id: validate(regId, id),
     player_list_password: hashedPassword,
     player_list_nickname: validate(regNickname, nickname),
-    player_list_team_idx: validate(regIdx, team_idx),
     player_list_platform: validate(regPlatform, platform),
     player_list_state: validate(regState, state),
     player_list_message: validate(regMessage, message),
@@ -624,6 +622,7 @@ const deleteImage = async (imageUrl) => {
 
 // sms 관련
 const redisClient = require("../../database/redisClient");
+const { env } = require("process");
 const PHONE_REGEX = /^01[016789]\d{7,8}$/;
 const CODE_EXPIRY = 180;
 const MAX_ATTEMPTS = 5; // 시도 제한 횟수
@@ -661,7 +660,7 @@ const smsSendMessage = async (req, res, next) => {
   }
 
   const result = await aligo.sendSMS({
-    sender: "01055921087",
+    sender: process.env.SMS_SENDER,
     receiver: phone,
     msg: `[footballsquare] 인증번호는 [${code}] 입니다.`,
   });
