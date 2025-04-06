@@ -26,7 +26,6 @@ const {
   getUserInfoSQL,
   getUserAwardInfoSQL,
   checkPasswordSQL,
-  updateUserInfoSQL,
   getUserImageSQL,
   updateProfileImageSQL,
   signinDiscordOauth,
@@ -36,12 +35,12 @@ const {
 } = require("./sql");
 
 const {
+  regPhone,
   regIdx,
   regId,
   regPw,
   regNickname,
   regPlatform,
-  regState,
   regMessage,
   regDiscordTag,
 } = require("./../../constant/regx");
@@ -106,7 +105,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
       user.id,
       discordTag,
     ]);
-    
+
     const result = await client.query(getUserIdxDiscordOauthSQL, [user.id]);
 
     res.status(200).send({
@@ -151,7 +150,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: true, 
+    secure: true,
     sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
@@ -234,7 +233,7 @@ const signinLogic = async (req, res, next) => {
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: true, 
+    secure: true,
     sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
@@ -385,21 +384,35 @@ const signupLoginInfo = async (req, res, next) => {
 };
 
 const signupPlayerInfo = async (req, res, next) => {
-  let { user_idx, nickname, platform, state, message, discord_tag } =
-    req.body;
+  let {
+    phone,
+    user_idx,
+    nickname,
+    platform,
+    common_status_idx,
+    message,
+    discord_tag,
+    match_position_idx,
+  } = req.body;
 
   if (!user_idx) {
     throw customError(400, "user_idx는 필수값입니다.");
+  }
+  if (!phone) {
+    throw customError(400, "phone은 필수값입니다.");
   }
   if (!nickname) {
     throw customError(400, "nickname은 필수값입니다.");
   }
 
+  user_idx = validate(regIdx, user_idx);
+  phone = validate(regPhone, phone);
   nickname = validate(regNickname, nickname);
   platform = validate(regPlatform, platform);
-  state = validate(regState, state);
+  common_status_idx = validate(regIdx, common_status_idx);
   message = validate(regMessage, message);
   discord_tag = validate(regDiscordTag, discord_tag);
+  match_position_idx = validate(regIdx, match_position_idx);
 
   const checkUserResult = await client.query(checkUserSQL, [user_idx]);
 
@@ -414,11 +427,13 @@ const signupPlayerInfo = async (req, res, next) => {
   }
 
   const result = await client.query(signupPlayerInfoSQL, [
+    phone,
     nickname,
     platform,
-    state,
+    common_status_idx,
     message,
     discord_tag,
+    match_position_idx,
     user_idx,
   ]);
 
@@ -470,11 +485,11 @@ const getUserInfo = async (req, res, next) => {
   if (result.rows.length === 0) {
     throw customError(404, "등록되지 않은 유저입니다.");
   }
-  const trophyResult = await client.query(getUserAwardInfoSQL,[userIdx]);
+  const trophyResult = await client.query(getUserAwardInfoSQL, [userIdx]);
 
   result.rows[0].is_mine = isMine;
 
-  result.rows[0].Awards = trophyResult.rows
+  result.rows[0].Awards = trophyResult.rows;
 
   res.status(200).send({
     data: result.rows[0],
@@ -508,30 +523,22 @@ const checkPassword = async (req, res, next) => {
 const updateUserInfo = async (req, res, next) => {
   const { my_player_list_idx } = req.decoded;
   const {
-    id,
-    password,
     nickname,
     platform,
-    state,
+    common_status_idx,
     message,
     discord_tag,
+    match_position_idx,
   } = req.body;
-
-  let hashedPassword = null;
-  if (password && validate(regPw, password) !== null) {
-    const saltRounds = 10;
-    hashedPassword = await bcrypt.hash(password, saltRounds);
-  }
 
   // 필드별 정규식 검증
   const fields = {
-    player_list_id: validate(regId, id),
-    player_list_password: hashedPassword,
     player_list_nickname: validate(regNickname, nickname),
     player_list_platform: validate(regPlatform, platform),
-    player_list_state: validate(regState, state),
+    player_list_state: validate(regIdx, common_status_idx),
     player_list_message: validate(regMessage, message),
     player_list_discord_tag: validate(regDiscordTag, discord_tag),
+    player_list_match_position_idx: validate(regIdx, match_position_idx),
   };
 
   // null이 아닌 값들만 추려서 SET 구문 생성
