@@ -41,12 +41,17 @@ const {
   checkPassword,
   updateUserInfo,
   updateProfileImage,
+  smsSendMessage,
+  smsVerify,
   uploadS3,
 } = require("./service");
 
 router.get("/oauth/url/discord", getDiscordSigninPage);
 
 router.get("/oauth/token/discord", checkCode, discordOauthSigninLogic);
+
+router.post("/sms/send", smsSendMessage);
+router.post("/sms/verify", smsVerify);
 
 router.get(
   "/signin",

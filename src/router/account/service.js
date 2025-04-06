@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
+const aligo = require("./../../util/aligo_sms");
 
 const { deleteFileFromS3 } = require("../../database/s3Config/s3Deleter");
 
@@ -105,7 +106,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
       user.id,
       discordTag,
     ]);
-
+    
     const result = await client.query(getUserIdxDiscordOauthSQL, [user.id]);
 
     res.status(200).send({
@@ -170,7 +171,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
 };
 // 로그인 및 토큰 =================================================================
 const signinCheck = async (req, res, next) => {
-  const { id, password } = req.query;
+  const { id, password } = req.body;
 
   const result = await client.query(checkUserPasswordSQL, [id]);
 
@@ -191,7 +192,7 @@ const signinCheck = async (req, res, next) => {
 
 // 로그인 서비스
 const signinLogic = async (req, res, next) => {
-  const { id } = req.query;
+  const { id } = req.body;
 
   const result = await client.query(signinSQL, [id]);
 
@@ -621,6 +622,82 @@ const deleteImage = async (imageUrl) => {
   await s3.send(new DeleteObjectCommand(deleteParams));
 };
 
+// sms 관련
+const redisClient = require("./../../util/redisClient");
+const PHONE_REGEX = /^01[016789]\d{7,8}$/;
+const CODE_EXPIRY = 180;
+const MAX_ATTEMPTS = 5; // 시도 제한 횟수
+const MAX_SEND_COUNT = 5; // 하루 전송 제한 횟수
+const SEND_COUNT_EXPIRY = 60 * 60 * 24; // 전송 제한 횟수 초기화화
+
+const smsSendMessage = async (req, res, next) => {
+  const { phone } = req.body;
+  if (!phone || !PHONE_REGEX.test(phone)) {
+    return res
+      .status(400)
+      .json({ message: "휴대폰 번호의 제약조건이 맞지 않습니다." });
+  }
+
+  const sendCountKey = `count:${phone}`;
+  let sendCount = await redisClient.get(sendCountKey);
+  sendCount = parseInt(sendCount) || 0;
+
+  if (sendCount >= MAX_SEND_COUNT) {
+    return res
+      .status(429)
+      .json({ message: "하루 전송 가능 횟수를 초과했습니다." });
+  }
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const data = { code, attempts: 0 };
+  await redisClient.setEx(phone, CODE_EXPIRY, JSON.stringify(data));
+
+  // Redis 발송 횟수 증가 및 만료시간 설정
+  if (sendCount === 0) {
+    // 처음 요청 시 expire 설정
+    await redisClient.set(sendCountKey, 1, { EX: SEND_COUNT_EXPIRY });
+  } else {
+    await redisClient.incr(sendCountKey);
+  }
+
+  const result = await aligo.sendSMS({
+    sender: "01055921087",
+    receiver: phone,
+    msg: `[footballsquare] 인증번호는 [${code}] 입니다.`,
+  });
+  res.status(200).send({ code: code, message: "인증번호 전송 성공" });
+};
+
+const smsVerify = async (req, res, next) => {
+  const { phone, code } = req.body;
+
+  const record = await redisClient.get(phone);
+
+  if (!record) {
+    return res
+      .status(400)
+      .send({ message: "인증번호가 만료되었거나 요청되지 않았습니다." });
+  }
+
+  const parsedRecord = JSON.parse(record);
+
+  if (parsedRecord.attempts >= MAX_ATTEMPTS) {
+    await redisClient.del(phone);
+    return res.status(429).send({ message: "인증 시도 횟수를 초과했습니다." });
+  }
+
+  if (parsedRecord.code !== code) {
+    parsedRecord.attempts += 1;
+    await redisClient.setEx(phone, CODE_EXPIRY, JSON.stringify(parsedRecord));
+
+    return res.status(400).send({ message: "인증번호가 일치하지 않습니다." });
+  }
+
+  // 인증 성공
+  await redisClient.del(phone);
+  return res.status(200).send({ message: "인증 성공" });
+};
+
 // 많이 사용하는 기능은 함수 선언식 사용해서 저장 (미들웨어화하기기)
 function validate(regex, value) {
   //js에서 함수 표현식은 호이스팅 되지 않기 때문에 함수 선언식으로 바꿈
@@ -652,5 +729,7 @@ module.exports = {
   checkPassword: trycatchWrapper(checkPassword),
   updateUserInfo: trycatchWrapper(updateUserInfo),
   updateProfileImage: trycatchWrapper(updateProfileImage),
+  smsSendMessage: trycatchWrapper(smsSendMessage),
+  smsVerify: trycatchWrapper(smsVerify),
   uploadS3,
 };
