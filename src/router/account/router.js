@@ -53,7 +53,7 @@ router.get("/oauth/token/discord", checkCode, discordOauthSigninLogic);
 router.post("/sms/send", smsSendMessage);
 router.post("/sms/verify", smsVerify);
 
-router.get(
+router.post(
   "/signin",
   checkRegInputs([regId, regPw], ["id", "password"]),
   signinCheck,
