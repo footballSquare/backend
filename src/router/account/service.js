@@ -150,8 +150,8 @@ const discordOauthSigninLogic = async (req, res, next) => {
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: false, // true면 https 오는 요청만 받음
-    sameSite: "strict",
+    secure: true, 
+    sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
 
@@ -443,6 +443,7 @@ const accountSoftDelete = async (req, res, next) => {
 const getMyInfo = async (req, res, next) => {
   const { my_player_list_idx } = req.decoded;
   const result = await client.query(getMyInfoSQL, [my_player_list_idx]);
+
   if (result.rows.length === 0) {
     throw customError(404, "등록되지 않은 유저입니다.");
   }
