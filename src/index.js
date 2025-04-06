@@ -3,22 +3,22 @@ const cors = require('cors');
 const app = express();
 require("dotenv").config();
 
-const allowedOrigins = [
-  "https://footballsquare.co.kr",
-  "https://www.footballsquare.co.kr",
-  "https://localhost:5173",
-];
+// const allowedOrigins = [
+//   "https://footballsquare.co.kr",
+//   "https://www.footballsquare.co.kr",
+//   "https://localhost:5173",
+// ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-}));
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true,
+// }));
 
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
