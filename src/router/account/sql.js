@@ -36,7 +36,7 @@ FROM
 WHERE 
     player_list_idx = $1
 `;
-// 위에 3개 하나의 sql문으로 묶는 방법도 고려해보자.
+
 const putRefreshtokenSQL = `
 UPDATE player.list
 SET
@@ -92,15 +92,17 @@ WHERE
 const signupPlayerInfoSQL = `
 UPDATE player.list
 SET
-    player_list_nickname = $1,
-    player_list_platform = $2,
-    player_list_state = $3,
-    player_list_message = $4,
-    player_list_discord_tag = $5,
+    player_list_phone = $1,
+    player_list_nickname = $2,
+    player_list_platform = $3,
+    player_list_state = $4,
+    player_list_message = $5,
+    player_list_discord_tag = $6,
     player_list_player_status = 'active',
-    player_list_active_at = now()
+    player_list_active_at = now(),
+    player_list_match_position_idx = $7
 WHERE
-    player_list_idx = $6
+    player_list_idx = $8
 `;
 const checkUserSQL = `
 SELECT EXISTS (
@@ -123,6 +125,9 @@ WHERE
 const getMyInfoSQL = `
 SELECT 
     p.player_list_idx AS user_idx,
+    p.player_list_phone AS phone,
+    p.player_list_id AS id,
+    p.player_list_discord_id AS discord_id,
     p.player_list_nickname AS nickname,
     p.player_list_profile_image AS profile_image,
     p.player_list_platform AS platform,
@@ -174,8 +179,7 @@ WHERE
     p.player_list_idx = $1;
 `;
 
-const getUserAwardInfoSQL = 
-`
+const getUserAwardInfoSQL = `
 SELECT 
     aw.championship_award_winner_idx,
     aw.championship_award_idx,
@@ -196,7 +200,7 @@ JOIN championship.list cl
     ON aw.championship_list_idx = cl.championship_list_idx
 
 WHERE aw.player_list_idx = $1;
-`
+`;
 
 // 비밀번호 체크
 const checkPasswordSQL = `
@@ -208,20 +212,6 @@ WHERE
     player_list_idx = $1
 `;
 // 회원 정보 업데이트
-const updateUserInfoSQL = `
-UPDATE player.list
-SET
-    player_list_id = $1,
-    player_list_password = $2,
-    player_list_nickname = $3,
-    player_list_team_idx = $4,
-    player_list_platform = $5,
-    player_list_state = $6,
-    player_list_message = $7,
-    player_list_discord_tag = $8
-WHERE
-    player_list_idx = $9
-`;
 const getUserImageSQL = `
 SELECT 
     player_list_profile_image AS profile_image
@@ -288,7 +278,6 @@ module.exports = {
   getUserInfoSQL,
   getUserAwardInfoSQL,
   checkPasswordSQL,
-  updateUserInfoSQL,
   getUserImageSQL,
   updateProfileImageSQL,
   signinDiscordOauth,

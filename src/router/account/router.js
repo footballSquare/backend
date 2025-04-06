@@ -19,10 +19,10 @@ const {
   multerMiddleware,
 } = require("../../database/s3Config/multerMiddleware");
 
-const { 
+const {
   s3Uploader,
-  s3UploaderOptional
- } = require("../../middleware/s3UpLoader");
+  s3UploaderOptional,
+} = require("../../middleware/s3UpLoader");
 
 const {
   getDiscordSigninPage,
@@ -60,10 +60,7 @@ router.post(
   signinLogic
 );
 
-router.post("/check/id", 
-  checkRegInputs([regId], ["id"]), 
-  checkDuplicateId
-);
+router.post("/check/id", checkRegInputs([regId], ["id"]), checkDuplicateId);
 
 router.post(
   "/check/nickname",
@@ -77,23 +74,13 @@ router.post(
   signupLoginInfo
 );
 
-router.post("/signup/playerinfo", 
-  signupPlayerInfo
-);
+router.post("/signup/playerinfo", signupPlayerInfo);
 
-router.get("/accesstoken", 
-  checkRefreshToken
-);
+router.get("/accesstoken", checkRefreshToken);
 
-router.delete("/user/delete", 
-  checkLogin, 
-  accountSoftDelete
-);
+router.delete("/user/delete", checkLogin, accountSoftDelete);
 
-router.get("/myinfo", 
-  checkLogin, 
-  getMyInfo
-);
+router.get("/myinfo", checkLogin, getMyInfo);
 
 router.get(
   "/info/:userIdx",
@@ -108,10 +95,7 @@ router.post(
   checkPassword
 );
 
-router.put("/user/update", 
-  checkLogin, 
-  updateUserInfo
-);
+router.put("/user/update", checkLogin, updateUserInfo);
 
 router.put(
   "/profileimage",
