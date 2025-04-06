@@ -385,7 +385,7 @@ const signupLoginInfo = async (req, res, next) => {
 };
 
 const signupPlayerInfo = async (req, res, next) => {
-  let { user_idx, nickname, team_idx, platform, state, message, discord_tag } =
+  let { user_idx, nickname, platform, state, message, discord_tag } =
     req.body;
 
   if (!user_idx) {
@@ -395,7 +395,6 @@ const signupPlayerInfo = async (req, res, next) => {
     throw customError(400, "nickname은 필수값입니다.");
   }
 
-  team_idx = validate(regIdx, team_idx);
   nickname = validate(regNickname, nickname);
   platform = validate(regPlatform, platform);
   state = validate(regState, state);
@@ -415,7 +414,6 @@ const signupPlayerInfo = async (req, res, next) => {
   }
 
   const result = await client.query(signupPlayerInfoSQL, [
-    team_idx,
     nickname,
     platform,
     state,
@@ -505,6 +503,7 @@ const checkPassword = async (req, res, next) => {
     message: "비밀번호 인증에 성공했습니다.",
   });
 };
+
 // 회원 정보 업데이트 =================================================================
 const updateUserInfo = async (req, res, next) => {
   const { my_player_list_idx } = req.decoded;

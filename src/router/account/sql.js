@@ -92,16 +92,15 @@ WHERE
 const signupPlayerInfoSQL = `
 UPDATE player.list
 SET
-    player_list_team_idx = $1,
-    player_list_nickname = $2,
-    player_list_platform = $3,
-    player_list_state = $4,
-    player_list_message = $5,
-    player_list_discord_tag = $6,
+    player_list_nickname = $1,
+    player_list_platform = $2,
+    player_list_state = $3,
+    player_list_message = $4,
+    player_list_discord_tag = $5,
     player_list_player_status = 'active',
     player_list_active_at = now()
 WHERE
-    player_list_idx = $7
+    player_list_idx = $6
 `;
 const checkUserSQL = `
 SELECT EXISTS (
