@@ -100,7 +100,7 @@ SET
     player_list_discord_tag = $6,
     player_list_player_status = 'active',
     player_list_active_at = now(),
-    player_list_match_position_idx = $7
+    match_position_idx = $7
 WHERE
     player_list_idx = $8
 `;
