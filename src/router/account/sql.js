@@ -12,6 +12,11 @@ SELECT
     p.player_list_player_status AS player_status,
     p.player_list_idx AS user_idx,
     p.player_list_profile_image AS profile_image,
+    p.player_list_nickname AS nickname,
+    p.player_list_platform AS platform,
+    p.player_list_state AS common_status_idx,
+    p.player_list_message AS message,
+    p.player_list_discord_tag AS discord_tag,
     tm.team_list_idx AS team_idx
 FROM 
     player.list p
@@ -47,11 +52,12 @@ WHERE
 `;
 const checkRefreshtokenSQL = `
 SELECT 
-    player_list_idx AS user_idx,
-    player_list_team_idx AS team_idx,
-    player_list_refreshtoken_expires_at AS expires_at
+    p.player_list_idx AS user_idx,
+    tm.team_list_idx AS team_idx
 FROM 
-    player.list
+    player.list p
+LEFT JOIN 
+    team.member tm ON p.player_list_idx = tm.player_list_idx
 WHERE 
     player_list_refreshtoken = $1
 `;
@@ -100,7 +106,7 @@ SET
     player_list_discord_tag = $6,
     player_list_player_status = 'active',
     player_list_active_at = now(),
-    player_list_match_position_idx = $7
+    match_position_idx = $7
 WHERE
     player_list_idx = $8
 `;
@@ -233,6 +239,11 @@ SELECT
     p.player_list_player_status AS player_status,
     p.player_list_idx AS user_idx,
     p.player_list_profile_image AS profile_image,
+    p.player_list_nickname AS nickname,
+    p.player_list_platform AS platform,
+    p.player_list_state AS common_status_idx,
+    p.player_list_message AS message,
+    p.player_list_discord_tag AS discord_tag,
     tm.team_list_idx AS team_idx
 FROM 
     player.list p

@@ -56,7 +56,6 @@ module.exports = {
   regPw,
   regNickname,
   regPlatform,
-  regState,
   regMessage,
   regDiscordTag,
   regCommunityNotice,

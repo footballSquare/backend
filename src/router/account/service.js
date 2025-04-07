@@ -132,7 +132,11 @@ const discordOauthSigninLogic = async (req, res, next) => {
     return;
   }
 
+  const nickname = result.rows[0].nickname;
   const profileImage = result.rows[0].profile_image || null;
+  const platform = result.rows[0].platform || null;
+  const commonStatusIdx = result.rows[0].common_status_idx || null;
+  const message = result.rows[0].message || null;
   const teamIdx = result.rows[0].team_idx || null;
 
   const teamRoleIdx = await getTeamRoleIdx(userIdx);
@@ -161,6 +165,11 @@ const discordOauthSigninLogic = async (req, res, next) => {
       player_status: playerStatus,
       access_token: accessToken,
       user_idx: userIdx,
+      nickname: nickname,
+      platform: platform,
+      common_status_idx: commonStatusIdx,
+      message: message,
+      discord_tag: discordTag,
       profile_image: profileImage,
       team_idx: teamIdx,
       team_role_idx: teamRoleIdx,
@@ -215,7 +224,12 @@ const signinLogic = async (req, res, next) => {
     return;
   }
 
+  const nickname = result.rows[0].nickname;
   const profileImage = result.rows[0].profile_image || null;
+  const platform = result.rows[0].platform || null;
+  const commonStatusIdx = result.rows[0].common_status_idx || null;
+  const message = result.rows[0].message || null;
+  const discordTag = result.rows[0].discord_tag || null;
   const teamIdx = result.rows[0].team_idx || null;
 
   const teamRoleIdx = await getTeamRoleIdx(userIdx);
@@ -233,7 +247,7 @@ const signinLogic = async (req, res, next) => {
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: true,
+    secure: false,
     sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
@@ -244,6 +258,11 @@ const signinLogic = async (req, res, next) => {
       player_status: playerStatus,
       access_token: accessToken,
       user_idx: userIdx,
+      nickname: nickname,
+      platform: platform,
+      common_status_idx: commonStatusIdx,
+      message: message,
+      discord_tag: discordTag,
       profile_image: profileImage,
       team_idx: teamIdx,
       team_role_idx: teamRoleIdx,
@@ -538,7 +557,7 @@ const updateUserInfo = async (req, res, next) => {
     player_list_state: validate(regIdx, common_status_idx),
     player_list_message: validate(regMessage, message),
     player_list_discord_tag: validate(regDiscordTag, discord_tag),
-    player_list_match_position_idx: validate(regIdx, match_position_idx),
+    match_position_idx: validate(regIdx, match_position_idx),
   };
 
   // null이 아닌 값들만 추려서 SET 구문 생성
