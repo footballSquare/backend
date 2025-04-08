@@ -1,15 +1,6 @@
 const router = require("express").Router();
 
-const {
-  regIdx,
-  regId,
-  regPw,
-  regNickname,
-  regPlatform,
-  regState,
-  regMessage,
-  regDiscordTag,
-} = require("./../../constant/regx");
+const { regIdx, regId, regPw, regNickname } = require("./../../constant/regx");
 
 const { checkRegInputs } = require("./../../middleware/checkInput");
 
@@ -19,10 +10,7 @@ const {
   multerMiddleware,
 } = require("../../database/s3Config/multerMiddleware");
 
-const {
-  s3Uploader,
-  s3UploaderOptional,
-} = require("../../middleware/s3UpLoader");
+const { s3UploaderOptional } = require("../../middleware/s3UpLoader");
 
 const {
   getDiscordSigninPage,
