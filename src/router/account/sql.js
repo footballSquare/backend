@@ -35,7 +35,8 @@ WHERE
 `;
 const checkCommunityRoleSQL = `
 SELECT 
-    community_role_idx
+    community_role_idx,
+    community_list_idx
 FROM 
     community.staff
 WHERE 
@@ -218,6 +219,18 @@ WHERE
     player_list_idx = $1
 `;
 // 회원 정보 업데이트
+const updateUserInfoSQL = `
+UPDATE player.list
+SET
+    player_list_nickname = $1,
+    player_list_platform = $2,
+    player_list_state = $3,
+    player_list_message = $4,
+    player_list_discord_tag = $5,
+    match_position_idx = $6
+WHERE
+    player_list_idx = $7
+`;
 const getUserImageSQL = `
 SELECT 
     player_list_profile_image AS profile_image
@@ -295,9 +308,7 @@ UPDATE player.list
 SET
     player_list_password = $1
 WHERE
-    player_list_idx = $2
-AND
-    player_list_id = $3
+    player_list_id = $2
 `;
 module.exports = {
   checkUserPasswordSQL,
@@ -322,4 +333,8 @@ module.exports = {
   signupDiscordOauth,
   getUserIdxDiscordOauthSQL,
   checkUserSQL,
+  updateUserInfoSQL,
+  searchIdSQL,
+  checkUserIdxSQL,
+  updatePasswordSQL,
 };
