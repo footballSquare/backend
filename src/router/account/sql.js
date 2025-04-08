@@ -187,6 +187,7 @@ SELECT
     aw.championship_award_winner_player_nickname,
 
     a.championship_award_name,
+    a.championship_award_throphy_image,
 
     cl.championship_list_name,
     cl.championship_list_start_date,
