@@ -38,22 +38,144 @@ const {
 // 대회 종료하기
 const doneChampionship = async (req,res,next) => {
     const {championship_list_idx} = req.params
+    const {
+        winner_team_idx,
+        awards
+    } = req.body
 
     try{
         await client.query("BEGIN");
 
-        const result = await client.query(getChampionShipPlayerStatsSQL, [
-            championship_list_idx
-        ])
+        await client.query(
+            `UPDATE championship.list 
+             SET common_status_idx = 4 
+             WHERE championship_list_idx = $1`,
+            [championship_list_idx]
+        );
+
+        // 2. 우승팀 이름 조회
+        const teamResult = await client.query(
+            `SELECT team_list_name 
+             FROM team.list 
+             WHERE team_list_idx = $1`,
+            [winner_team_idx]
+        );
+
+        if (teamResult.rowCount === 0) {
+            throw customError(404, "해당 팀이 존재하지 않습니다.");
+        }
+
+        const teamName = teamResult.rows[0].team_list_name;
+
+        // 3. 우승팀 저장
+        await client.query(
+            `INSERT INTO championship.winner (championship_list_idx, team_list_idx, championship_winner_team_name)
+             VALUES ($1, $2, $3)`,
+            [championship_list_idx, winner_team_idx, teamName]
+        );
+
+        // 4. 수상자 목록 저장
+        for (const award of awards) {
+            const { championship_award_idx, championship_winner_idxs } = award;
+
+            if (!Array.isArray(championship_winner_idxs)) {
+                throw customError(400, `"championship_winner_idxs"는 배열이어야 합니다.`);
+            }
+
+            for (const playerIdx of championship_winner_idxs) {
+                const playerResult = await client.query(
+                    `SELECT player_list_nickname  
+                     FROM player.list 
+                     WHERE player_list_idx = $1`,
+                    [playerIdx]
+                );
+
+                if (playerResult.rowCount === 0) {
+                    throw customError(404, `player_list_idx ${playerIdx} 에 해당하는 유저가 없습니다.`);
+                }
+
+                const nickname = playerResult.rows[0].player_list_nickname;
+
+                await client.query(
+                    `INSERT INTO championship.award_winner 
+                     (championship_list_idx, championship_award_idx, player_list_idx, championship_award_winner_player_nickname)
+                     VALUES ($1, $2, $3, $4)`,
+                    [championship_list_idx, championship_award_idx, playerIdx, nickname]
+                );
+            }
+        }
+
 
         await client.query("COMMIT");
-        res.status(200).send({ result : result.rows })
+        res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
         next(e)
     }
 }
 
+// 대회 종료하기 정보 전달
+const fetchDoneChampionship = async (req, res, next) => {
+    const { championship_list_idx } = req.params;
+  
+    try {
+      // 1. 참여 팀 정보 가져오기
+      const teamResult = await client.query(
+        `
+        SELECT 
+          team_list_idx,
+          team_list_name
+        FROM championship.participation_team
+        WHERE championship_list_idx = $1
+        `,
+        [championship_list_idx]
+      );
+  
+      const teams = teamResult.rows;
+      const teamIds = teams.map(team => team.team_list_idx);
+  
+      // 2. 각 팀 소속 선수 정보 가져오기
+      const playerResult = await client.query(
+        `
+        SELECT 
+          tm.team_list_idx,
+          tm.player_list_idx,
+          pl.player_list_nickname
+        FROM team.member tm
+        JOIN player.list pl 
+          ON tm.player_list_idx = pl.player_list_idx
+        WHERE tm.team_list_idx = ANY($1::int[])
+        `,
+        [teamIds]
+      );
+  
+      const players = playerResult.rows;
+  
+      // 3. 해당 대회에 등록된 어워드 정보 가져오기
+      const awardResult = await client.query(
+        `
+        SELECT 
+          championship_award_idx,
+          championship_award_name,
+          championship_award_throphy_image
+        FROM championship.award
+        WHERE championship_list_idx = $1
+        `,
+        [championship_list_idx]
+      );
+  
+      const awards = awardResult.rows;
+  
+      // 최종 응답
+      res.status(200).send({
+        teams,    // 참여 팀 정보
+        players,  // 소속 선수 정보
+        awards    // 수상 항목 정보
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
 
 // 대회 매치 생성하기
 const postChampionShipMatch = async (req,res,next) => {
@@ -484,6 +606,8 @@ const getChampionShipPlayerStats = async (req,res,next) => {
 
 
 module.exports = {
+    doneChampionship,
+    fetchDoneChampionship,
     postChampionShipMatch,
     deleteChampionShipMatch,
     championShipMatchDone,

@@ -133,6 +133,7 @@ GROUP BY
 const getChampionShipDataSQL =
 `
 SELECT 
+    c.community_list_idx,
     c.championship_list_idx,
     c.championship_list_name,
     c.championship_list_description,

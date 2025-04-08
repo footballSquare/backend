@@ -271,9 +271,10 @@ CREATE TABLE championship.participation_team (
 );
 
 CREATE TABLE championship.award (
-  championship_award_idx SERIAL PRIMARY KEY,
-  championship_list_idx INT NOT NULL REFERENCES championship.list(championship_list_idx) ON DELETE CASCADE,
-  championship_award_name VARCHAR(50) NOT NULL
+    championship_award_idx SERIAL PRIMARY KEY,
+    championship_list_idx INT NOT NULL REFERENCES championship.list(championship_list_idx) ON DELETE CASCADE,
+    championship_award_name VARCHAR(50) NOT NULL,
+    championship_award_throphy_image TEXT  -- 트로피 이미지 URL 저장용 컬럼
 );
 
 CREATE TABLE championship.award_winner (

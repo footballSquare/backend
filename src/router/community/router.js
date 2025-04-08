@@ -1,14 +1,18 @@
 const router = require("express").Router()
 
-const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
+const { 
+    multerMiddleware,
+    multerArrayMiddleware
+ } = require("../../database/s3Config/multerMiddleware")
 
 const { 
     checkLogin, 
-    optionalLogin 
+    optionalLogin
 } = require("../../middleware/checkLogin")
 
 const {
-    s3Uploader
+    s3Uploader,
+    s3UploaderMultiple
 } = require("../../middleware/s3UpLoader")
 
 const {
@@ -55,7 +59,8 @@ const {
     checkMatchParticipationType,
     checkMatchType,
     checkMatchAttribute,
-    checkChampionshipType
+    checkChampionshipType,
+    validateAwardForm
 } = require("../../middleware/checkInput")
 
 const {
@@ -140,7 +145,7 @@ router.put("/:community_list_idx/banner",
 router.post("/:community_list_idx/championship",
     checkLogin,
     checkIsCommunityAdminRole(),
-    multerMiddleware,
+    multerArrayMiddleware,
     checkIdx("community_list_idx"),
     checkRegInput(regChampionshipName,"championship_list_name"),
     checkRegInput(regChampionshipDescription,"championship_list_description"),
@@ -149,7 +154,8 @@ router.post("/:community_list_idx/championship",
     checkRegInput(regChampionshipPeriod,"championship_list_end_date"),
     checkIdx("participation_team_idxs"),
     checkRegInput(regChampionshipAwardName,"championship_award_name"),
-    s3Uploader("championship"),
+    validateAwardForm,
+    s3UploaderMultiple("championship"),
     postChampioship
 )
 
