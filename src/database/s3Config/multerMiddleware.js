@@ -4,4 +4,9 @@ const storage = multer.memoryStorage();
 
 const multerMiddleware = multer({ storage }).single("file");
 
-module.exports = { multerMiddleware };
+const multerArrayMiddleware = multer({ storage }).array("file");
+
+module.exports = { 
+    multerMiddleware,
+    multerArrayMiddleware
+ };

@@ -64,6 +64,24 @@ INSERT INTO team.member (
 ) VALUES ($1, $2, $3);
 `
 
+// 팀 수상 목록
+const getTeamAwardSQL = 
+`
+SELECT 
+  w.championship_winner_idx,
+  w.championship_list_idx,
+  cl.championship_list_name,
+  cl.championship_list_start_date,
+  cl.championship_list_end_date,
+  cl.championship_list_color,
+  cl.championship_list_throphy_img
+FROM championship.winner w
+JOIN championship.list cl 
+  ON w.championship_list_idx = cl.championship_list_idx
+WHERE w.team_list_idx = $1
+ORDER BY cl.championship_list_start_date DESC;
+`
+
 // 팀 연혁 추가
 const postTeamHistorySQL =
 `
@@ -261,6 +279,7 @@ module.exports = {
     deleteTeamSQL,
     getTeamSQL,
     getMemberSQL,
+    getTeamAwardSQL,
     getTeamHistorySQL,
     insertTeamMemberSQL,
     teamMemberDenySQL,

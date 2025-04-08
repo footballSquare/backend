@@ -16,6 +16,7 @@ const {
     postTeamHistorySQL,
     getTeamSQL,
     getMemberSQL,
+    getTeamAwardSQL,
     getTeamHistorySQL,
     insertTeamMemberSQL,
     teamMemberDenySQL,
@@ -280,6 +281,21 @@ const getMember = async (req,res,next) => {
     }
 }
 
+// 팀 수상 목록 보기
+const getTeamAward = async (req, res, next) => {
+    const { team_list_idx } = req.params;
+  
+    try {
+      const result = await client.query(getTeamAwardSQL, [team_list_idx]);
+  
+      res.status(200).send({
+        team_award: result.rows
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
 // 팀 연혁 보기
 const getTeamHistory = async (req,res,next) => {
     const {team_list_idx} = req.params
@@ -429,6 +445,7 @@ module.exports = {
     getTeam,
     getMember,
     getTeamHistory,
+    getTeamAward,
     deleteTeam,
     teamMemberApproval,
     teamMemberDeny,

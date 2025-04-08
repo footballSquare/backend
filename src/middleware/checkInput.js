@@ -355,6 +355,34 @@ const checkMatchDuration = () => {
   };
 };
 
+const validateAwardForm = (req, res, next) => {
+  try {
+    const { championship_award_name } = req.body;
+    const files = req.files;
+
+    if (!files) {
+      return res.status(400).json({ message: "우승 트로피 이미지가 존재하지 않습니다." });
+    }
+
+    // 문자열 하나만 올 경우, championship_award_name은 string
+    const awardNames = Array.isArray(championship_award_name)
+      ? championship_award_name
+      : [championship_award_name];
+
+    if (files.length !== awardNames.length + 1) {
+      return res.status(400).json({
+        message: `파일 수가 올바르지 않습니다. 상 이름 ${awardNames.length}개 + 트로피 이미지 1개 = 총 ${awardNames.length + 1}개의 파일이 필요합니다.`,
+      });
+    }
+    
+    next();
+  } catch (e) {
+    next(e);
+  }
+};
+
+
+
 module.exports = {
   checkRegInput,
   checkRegInputs,
@@ -368,5 +396,6 @@ module.exports = {
   checkPosition,
   checkCategory,
   checkMatchStartTimeValid,
-  checkMatchDuration
+  checkMatchDuration,
+  validateAwardForm
 };

@@ -118,10 +118,13 @@ JOIN team.list t ON team_idx.team_list_idx = t.team_list_idx;
 const postChampioshipAwardSQL =
 `
 INSERT INTO championship.award (
-    championship_list_idx, championship_award_name
+  championship_list_idx, 
+  championship_award_name, 
+  championship_award_throphy_image
 )
 SELECT 
-    $1, unnest($2::text[]);
+  $1, name, image
+FROM unnest($2::text[], $3::text[]) AS t(name, image);
 `
 
 // 운영진 가입 승인

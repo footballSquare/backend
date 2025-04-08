@@ -187,11 +187,17 @@ const postChampioship = async (req,res,next) => {
         championship_award_name
     } = req.body
 
-    const championship_list_throphy_img = req.fileUrl
+    const championship_list_throphy_img = req.fileUrls?.[0]; // 첫 번째 파일은 대회 트로피 이미지
+    const awardThrophyImages = req.fileUrls?.slice(1) || []; // 나머지는 수상 항목 트로피 이미지
 
+    const awardNames = Array.isArray(championship_award_name)
+    ? championship_award_name
+    : [championship_award_name];
+    
     try{
         await client.query("BEGIN");
 
+        // 대회 생성
         const championshipResult = await client.query(postChampioshipSQL, [
             community_list_idx,
             championship_type_idx,
@@ -213,11 +219,14 @@ const postChampioship = async (req,res,next) => {
             participation_team_idxs,
         ])
 
-        // 개인 수상 목록 추가
-        await client.query(postChampioshipAwardSQL, [
-            championship_list_idx,
-            championship_award_name,
-        ])
+        
+        if (awardNames[0]) {
+            await client.query(postChampioshipAwardSQL, [
+              championship_list_idx,
+              awardNames,
+              awardThrophyImages,
+            ]);
+        }
 
         await client.query("COMMIT");
 

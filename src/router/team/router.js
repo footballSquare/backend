@@ -70,6 +70,7 @@ const {
     postTeam,
     getTeam,
     getMember,
+    getTeamAward,
     getTeamHistory,
     teamMemberDeny,
     changeMemberRole,
@@ -103,6 +104,13 @@ router.get("/:team_list_idx/member",
     checkIdx("team_list_idx"),
     checkIsTeam,
     getMember
+)
+
+// 수상 목록 보기
+router.get("/:team_list_idx/award",
+    checkIdx("team_list_idx"),
+    checkIsTeam,
+    getTeamAward
 )
 
 // 팀 연혁 보기

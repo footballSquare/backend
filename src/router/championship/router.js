@@ -46,6 +46,8 @@ const {
 } = require("../../middleware/checkData")
 
 const {
+    doneChampionship,
+    fetchDoneChampionship,
     postChampionShipMatch,
     deleteChampionShipMatch,
     championShipMatchDone,
@@ -61,8 +63,20 @@ const {
 router.put("/:championship_list_idx/done",
     checkIdx("championship_list_idx"),
     checkLogin,
-    // doneChampionship
+    checkIsCommunityAdminRole(),
+    checkIsChampionship,
+    doneChampionship
 )
+
+// 대회 종료하기 정보 전달
+router.get("/:championship_list_idx/done",
+    checkIdx("championship_list_idx"),
+    checkLogin,
+    checkIsCommunityAdminRole(),
+    checkIsChampionship,
+    fetchDoneChampionship
+)
+
 
 // 대회 매치 생성하기
 router.post("/:championship_list_idx/championship_match",
@@ -112,6 +126,7 @@ router.get("/:championship_list_idx",
 // 대회 참여 팀 가져오기
 router.get("/:championship_list_idx/participation_team",
     checkIdx("championship_list_idx"),
+    checkIsChampionship,
     getChampionShipParticipationTeam
 )
 
@@ -131,6 +146,7 @@ router.get("/championship_match/:championship_match_idx/detail",
 // 대회 개인 스탯 가져오기
 router.get("/:championship_list_idx/player_stats",
     checkIdx("championship_list_idx"),
+    checkIsChampionship,
     getChampionShipPlayerStats
 )
 
