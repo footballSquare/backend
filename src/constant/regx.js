@@ -28,9 +28,11 @@ const regBoardContent = /^.{1,1000}$/;
 const regCommentContent = /^.{1,100}$/;
 
 // 계정 관련 regex
+const regId = /^[A-Za-z0-9]{5,20}$/;
+const regPw = /^.{5,20}$/;
 const regIdx = /^[0-9]+$/;
-const regId = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{12,20}$/;
-const regPw = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{12,20}$/;
+// const regId = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,20}$/;
+// const regPw = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,20}$/;
 const regPhone = /^01[016789]\d{7,8}$/;
 const regNickname = /^[A-Za-z0-9가-힣]{2,10}$/;
 const regPlatform = /^(pc|xbox|playstation)$/;

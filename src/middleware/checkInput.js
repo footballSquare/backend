@@ -372,13 +372,10 @@ const validateAwardForm = (req, res, next) => {
 
     if (files.length !== awardNames.length + 1) {
       return res.status(400).json({
-        message: `파일 수가 올바르지 않습니다. 상 이름 ${
-          awardNames.length
-        }개 + 트로피 이미지 1개 = 총 ${
-          awardNames.length + 1
-        }개의 파일이 필요합니다.`,
+        message: `파일 수가 올바르지 않습니다. 상 이름 ${awardNames.length}개 + 트로피 이미지 1개 = 총 ${awardNames.length + 1}개의 파일이 필요합니다.`,
       });
     }
+    
     next();
   } catch (e) {
     next(e);
