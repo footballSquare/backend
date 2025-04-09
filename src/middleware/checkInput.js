@@ -217,11 +217,12 @@ const checkPosition = () => {
       req.body.match_position_idx ??
       req.params.match_position_idx ??
       req.query.match_position_idx;
-      value = Number(value);
+    value = Number(value);
     try {
       if (
-        value == null || 
-        isNaN(value) || !Object.values(MATCH_POSITION).includes(value)
+        value == null ||
+        isNaN(value) ||
+        !Object.values(MATCH_POSITION).includes(value)
       )
         throw customError(400, `포메이션에 존재하지 않는 포지션`);
       next();
@@ -333,7 +334,7 @@ const checkMatchDuration = () => {
     try {
       const duration = req.body.match_match_duration;
 
-      if (!duration || typeof duration !== 'object') {
+      if (!duration || typeof duration !== "object") {
         throw customError(404, "duration 형식이 올바르지 않습니다.");
       }
 
@@ -380,8 +381,6 @@ const validateAwardForm = (req, res, next) => {
     next(e);
   }
 };
-
-
 
 module.exports = {
   checkRegInput,
