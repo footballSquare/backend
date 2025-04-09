@@ -16,8 +16,6 @@ const sendSMS = async ({ sender, receiver, msg }) => {
     headers: form.getHeaders(),
   });
 
-  console.log(response.data)
-
   return response.data;
 };
 

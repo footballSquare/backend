@@ -12,6 +12,11 @@ SELECT
     p.player_list_player_status AS player_status,
     p.player_list_idx AS user_idx,
     p.player_list_profile_image AS profile_image,
+    p.player_list_nickname AS nickname,
+    p.player_list_platform AS platform,
+    p.player_list_state AS common_status_idx,
+    p.player_list_message AS message,
+    p.player_list_discord_tag AS discord_tag,
     tm.team_list_idx AS team_idx
 FROM 
     player.list p
@@ -48,11 +53,12 @@ WHERE
 `;
 const checkRefreshtokenSQL = `
 SELECT 
-    player_list_idx AS user_idx,
-    player_list_team_idx AS team_idx,
-    player_list_refreshtoken_expires_at AS expires_at
+    p.player_list_idx AS user_idx,
+    tm.team_list_idx AS team_idx
 FROM 
-    player.list
+    player.list p
+LEFT JOIN 
+    team.member tm ON p.player_list_idx = tm.player_list_idx
 WHERE 
     player_list_refreshtoken = $1
 `;
@@ -214,6 +220,18 @@ WHERE
     player_list_idx = $1
 `;
 // 회원 정보 업데이트
+const updateUserInfoSQL = `
+UPDATE player.list
+SET
+    player_list_nickname = $1,
+    player_list_platform = $2,
+    player_list_state = $3,
+    player_list_message = $4,
+    player_list_discord_tag = $5,
+    match_position_idx = $6
+WHERE
+    player_list_idx = $7
+`;
 const getUserImageSQL = `
 SELECT 
     player_list_profile_image AS profile_image
@@ -235,6 +253,11 @@ SELECT
     p.player_list_player_status AS player_status,
     p.player_list_idx AS user_idx,
     p.player_list_profile_image AS profile_image,
+    p.player_list_nickname AS nickname,
+    p.player_list_platform AS platform,
+    p.player_list_state AS common_status_idx,
+    p.player_list_message AS message,
+    p.player_list_discord_tag AS discord_tag,
     tm.team_list_idx AS team_idx
 FROM 
     player.list p
@@ -263,6 +286,31 @@ WHERE
     player_list_discord_id = $1
 `;
 
+const searchIdSQL = `
+SELECT
+    player_list_id AS id
+FROM
+    player.list
+WHERE
+    player_list_phone = $1
+`;
+
+const checkUserIdxSQL = `
+SELECT
+    player_list_idx AS user_idx
+FROM
+    player.list
+WHERE
+    player_list_id = $1
+`;
+
+const updatePasswordSQL = `
+UPDATE player.list
+SET
+    player_list_password = $1
+WHERE
+    player_list_id = $2
+`;
 module.exports = {
   checkUserPasswordSQL,
   signinSQL,
@@ -286,4 +334,8 @@ module.exports = {
   signupDiscordOauth,
   getUserIdxDiscordOauthSQL,
   checkUserSQL,
+  updateUserInfoSQL,
+  searchIdSQL,
+  checkUserIdxSQL,
+  updatePasswordSQL,
 };
