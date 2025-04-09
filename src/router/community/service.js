@@ -239,18 +239,19 @@ const postChampioship = async (req,res,next) => {
 
 // 운영진 가입 승인
 const communityStaffAccess = async (req,res,next) => {
-    const {community_list_idx,player_list_idx} = req.params
+    const {player_list_idx} = req.params
+    const {my_community_list_idx} = req.decoded
 
     try{
         await client.query("BEGIN");
 
         await client.query(communityStaffAccessDenySQL, [
-            community_list_idx,
+            my_community_list_idx,
             player_list_idx
         ])
 
         await client.query(communityStaffAccessSQL,[
-            community_list_idx,
+            my_community_list_idx,
             player_list_idx,
             COMMUNITY_ROLE.STAFF
         ])
@@ -281,10 +282,12 @@ const communityStaffAccessDeny = async (req,res,next) => {
 // 커뮤니티 운영진 추방
 const kickCommunityStaff = async (req,res,next) => {
     const {player_list_idx} = req.params
+    const {my_community_list_idx} = req.decoded
 
     try{
         await client.query(kickCommunityStaffSQL, [
-            player_list_idx
+            player_list_idx,
+            my_community_list_idx
         ])
         res.status(200).send({})
     } catch(e){
@@ -357,17 +360,17 @@ const communityTeamApplication = async (req,res,next) => {
 // 커뮤니티 팀 가입 신청 승인
 const communityTeamAccess = async (req,res,next) => {
     const {team_list_idx} = req.params
-    const {community_list_idx} = req.body
+    const {my_community_list_idx} = req.decoded
 
     try{
         await client.query("BEGIN");
         await client.query(communityTeamAccessDenySQL, [
-            community_list_idx,
+            my_community_list_idx,
             team_list_idx
         ])
 
         await client.query(communityTeamAccessSQL, [
-            community_list_idx,
+            my_community_list_idx,
             team_list_idx
         ])
 
@@ -382,11 +385,11 @@ const communityTeamAccess = async (req,res,next) => {
 // 커뮤니티 팀 가입 신청 거절
 const communityTeamAccessDeny = async (req,res,next) => {
     const {team_list_idx} = req.params
-    const {community_list_idx} = req.body
+    const {my_community_list_idx} = req.decoded
 
     try{
         await client.query(communityTeamAccessDenySQL, [
-            community_list_idx,
+            my_community_list_idx,
             team_list_idx
         ])
         res.status(200).send({})
@@ -398,11 +401,11 @@ const communityTeamAccessDeny = async (req,res,next) => {
 // 커뮤니티 추방
 const communityTeamKick = async (req,res,next) => {
     const {team_list_idx} = req.params
-    const {community_list_idx} = req.body
+    const {my_community_list_idx} = req.decoded
 
     try{
         await client.query(communityTeamKickSQL, [
-            community_list_idx,
+            my_community_list_idx,
             team_list_idx
         ])
         res.status(200).send({})

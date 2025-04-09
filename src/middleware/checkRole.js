@@ -141,6 +141,23 @@ const checkIsCommunityStaffRole = () => {
     };
 };
 
+// 자신의 커뮤니티 인지 체크
+const checkIsYourCommunity = () => {
+    return (req, res, next) => {
+        const { my_community_list_idx } = req.decoded;
+        const { community_list_idx } = req.params ?? req.body ?? req.query
+
+        try {
+            if (my_community_list_idx != community_list_idx) {
+                throw customError(403, "해당 커뮤니티의 운영진이 아닙니다.");
+            }
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
 module.exports = {
     checkIsTeamLeader,
     checkIsTeamSubLeader,
@@ -149,6 +166,7 @@ module.exports = {
     checkIsTeamMemberAtMatch,
     checkIsCommunityAdminRole,
     checkHasCommunityRole,
-    checkIsCommunityStaffRole
+    checkIsCommunityStaffRole,
+    checkIsYourCommunity
 }
 

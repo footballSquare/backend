@@ -362,9 +362,7 @@ const validateAwardForm = (req, res, next) => {
     const files = req.files;
 
     if (!files) {
-      return res
-        .status(400)
-        .json({ message: "우승 트로피 이미지가 존재하지 않습니다." });
+      return res.status(400).json({ message: "우승 트로피 이미지가 존재하지 않습니다." });
     }
 
     // 문자열 하나만 올 경우, championship_award_name은 string
@@ -381,7 +379,6 @@ const validateAwardForm = (req, res, next) => {
         }개의 파일이 필요합니다.`,
       });
     }
-
     next();
   } catch (e) {
     next(e);
@@ -402,5 +399,5 @@ module.exports = {
   checkCategory,
   checkMatchStartTimeValid,
   checkMatchDuration,
-  validateAwardForm,
+  validateAwardForm
 };

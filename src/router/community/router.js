@@ -32,7 +32,8 @@ const {
 const {
     checkIsCommunityAdminRole,
     checkHasCommunityRole,
-    checkIsTeamLeader
+    checkIsTeamLeader,
+    checkIsYourCommunity
 } = require("../../middleware/checkRole")
 
 const {
@@ -118,6 +119,7 @@ router.put("/:community_list_idx/notice",
     checkIdx("community_list_idx"),
     checkRegInput(regCommunityNotice,"community_list_notice"),
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     putCommunityNotice
 )
 
@@ -126,6 +128,7 @@ router.put("/:community_list_idx/emblem",
     checkLogin,
     checkIdx("community_list_idx"),
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     multerMiddleware,
     s3Uploader("team"),
     putCommunityEmblem
@@ -136,6 +139,7 @@ router.put("/:community_list_idx/banner",
     checkLogin,
     checkIdx("community_list_idx"),
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     multerMiddleware,
     s3Uploader("team"),
     putCommunityBanner
@@ -145,6 +149,7 @@ router.put("/:community_list_idx/banner",
 router.post("/:community_list_idx/championship",
     checkLogin,
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     multerArrayMiddleware,
     checkIdx("community_list_idx"),
     checkRegInput(regChampionshipName,"championship_list_name"),
@@ -166,6 +171,7 @@ router.post("/:community_list_idx/staff/:player_list_idx/access",
     checkIdx("player_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     checkIsPlayer,
     checkIsCommunityAdmin(),
     communityStaffAccess
@@ -177,15 +183,17 @@ router.delete("/:community_list_idx/staff/:player_list_idx/access",
     checkIdx("player_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     checkIsPlayer,
     communityStaffAccessDeny
 )
 
 // 커뮤니티 운영진 추방
-router.delete("/staff/:player_list_idx/kick",
+router.delete("/:community_list_idx/staff/:player_list_idx/kick",
     checkIdx("player_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     checkIsPlayer,
     kickCommunityStaff
 )
@@ -224,29 +232,32 @@ router.post("/:community_list_idx/team/application",
 )
 
 // 커뮤니티 팀 가입 신청 승인
-router.post("/team/:team_list_idx/access",
+router.post("/:community_list_idx/team/:team_list_idx/access",
     checkIdx("team_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     checkIsTeam,
     checkIsTeamInCommunity(),
     communityTeamAccess
 )
 
 // 커뮤니티 팀 가입 신청 거절
-router.delete("/team/:team_list_idx/access",
+router.delete("/:community_list_idx/team/:team_list_idx/access",
     checkIdx("team_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     checkIsTeam,
     communityTeamAccessDeny
 )
 
 // 커뮤니티 팀 추방
-router.delete("/team/:team_list_idx/kick",
+router.delete("/:community_list_idx/team/:team_list_idx/kick",
     checkIdx("team_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
     checkIsTeam,
     communityTeamKick
 )

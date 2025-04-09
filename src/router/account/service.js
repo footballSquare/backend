@@ -232,9 +232,7 @@ const signinLogic = async (req, res, next) => {
   const teamIdx = result.rows[0].team_idx || null;
 
   const teamRoleIdx = await getTeamRoleIdx(userIdx);
-  const { community_role_idx, community_list_idx } = await getCommunityIdx(
-    userIdx
-  );
+  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(userIdx);
 
   const accessToken = setAccessToken(
     userIdx,
@@ -268,8 +266,7 @@ const signinLogic = async (req, res, next) => {
       profile_image: profileImage,
       team_idx: teamIdx,
       team_role_idx: teamRoleIdx,
-      community_role_idx: community_role_idx || null,
-      community_list_idx: community_list_idx || null,
+      community_role_idx: community_role_idx,
     },
   });
 };
@@ -296,9 +293,7 @@ const checkRefreshToken = async (req, res, next) => {
   const userIdx = result.rows[0].user_idx;
   const teamIdx = result.rows[0].team_idx;
   const teamRoleIdx = await getTeamRoleIdx(userIdx);
-  const { community_role_idx, community_list_idx } = await getCommunityIdx(
-    userIdx
-  );
+  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(userIdx);
 
   const accessToken = setAccessToken(
     userIdx,
@@ -318,9 +313,20 @@ async function getTeamRoleIdx(userIdx) {
   const result = await client.query(checkTeamRoleSQL, [userIdx]);
   return result.rows.length > 0 ? result.rows[0].team_role_idx : null;
 }
-async function getCommunityIdx(userIdx) {
+
+async function getCommunityRoleIdx(userIdx) {
   const result = await client.query(checkCommunityRoleSQL, [userIdx]);
-  return result.rows.length > 0 ? result.rows[0] : {};
+
+  if (result.rows.length === 0) {
+    return {
+      community_role_idx: null,
+      community_list_idx: null,
+    };
+  }
+
+  const { community_role_idx, community_list_idx } = result.rows[0];
+
+  return { community_role_idx, community_list_idx };
 }
 async function putRefreshToken(refreshToken, userIdx) {
   const expiresAt = new Date();
@@ -331,20 +337,15 @@ async function putRefreshToken(refreshToken, userIdx) {
     userIdx,
   ]);
 }
-function setAccessToken(
-  userIdx,
-  teamIdx,
-  teamRoleIdx,
-  communityRoleIdx,
-  communityListIdx
-) {
+function setAccessToken(userIdx, teamIdx, teamRoleIdx, communityRoleIdx, community_list_idx) {
+
   const accessToken = jwt.sign(
     {
       my_player_list_idx: userIdx,
       my_team_list_idx: teamIdx ?? null,
       my_team_role_idx: teamRoleIdx ?? null,
       my_community_role_idx: communityRoleIdx ?? null,
-      my_community_list_idx: communityListIdx ?? null,
+      my_community_list_idx: community_list_idx ?? null
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
