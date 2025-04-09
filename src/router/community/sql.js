@@ -150,7 +150,8 @@ AND player_list_idx = $2;
 const kickCommunityStaffSQL = 
 `
 DELETE FROM community.staff
-WHERE player_list_idx = $1;
+WHERE player_list_idx = $1
+AND community_list_idx = $2;
 `
 
 // 커뮤니티 운영진 가입 신청

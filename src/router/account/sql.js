@@ -30,7 +30,8 @@ WHERE
 `;
 const checkCommunityRoleSQL = `
 SELECT 
-    community_role_idx
+    community_role_idx,
+    community_list_idx
 FROM 
     community.staff
 WHERE 
