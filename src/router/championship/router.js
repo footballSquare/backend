@@ -66,8 +66,8 @@ router.put("/:championship_list_idx/done",
     checkIdx("championship_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
-    checkIsYourCommunityAtDB(),
     checkIsChampionship,
+    checkIsYourCommunityAtDB(),
     doneChampionship
 )
 
@@ -76,8 +76,8 @@ router.get("/:championship_list_idx/done",
     checkIdx("championship_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
-    checkIsYourCommunityAtDB(),
     checkIsChampionship,
+    checkIsYourCommunityAtDB(),
     fetchDoneChampionship
 )
 
@@ -100,8 +100,8 @@ router.delete("/championship_match/:championship_match_idx",
     checkIdx("championship_match_idx"),
     checkLogin,
     checkIsCommunityStaffRole(),
-    checkIsYourCommunityAtDB(),
     checkIsChampionshipMatch,
+    checkIsYourCommunityAtDB(),
     deleteChampionShipMatch
 )
 
@@ -110,8 +110,8 @@ router.put("/championship_match/:championship_match_idx/done",
     checkIdx("championship_match_idx"),
     checkLogin,
     checkIsCommunityStaffRole(),
-    checkIsYourCommunityAtDB(),
     checkIsChampionshipMatch,
+    checkIsYourCommunityAtDB(),
     checkChampionshipMatchStatus(),
     championShipMatchDone
 )
