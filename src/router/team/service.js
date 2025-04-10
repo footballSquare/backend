@@ -28,6 +28,10 @@ const {
     changeTeamEmblemSQL
 } = require("./sql")
 
+const {
+    sequenceAutoIncrease
+} = require("../commonSQL")
+
 // 팀 목록 가져오기
 const getTeamList = async (req,res,next) => {
     const {page} = req.query
@@ -101,6 +105,7 @@ const postTeam = async (req,res,next) => {
         res.status(200).send({ team_list_idx : teamListIdx })
     } catch(e){
         await client.query("ROLLBACK");
+        await client.query(sequenceAutoIncrease)
         next(e)
     }
 }
@@ -144,6 +149,7 @@ const changeTeamData = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        await client.query(sequenceAutoIncrease)
         next(e)
     }
 }
@@ -334,6 +340,7 @@ const teamMemberApproval = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK"); 
+        await client.query(sequenceAutoIncrease)
         next(e)
     }
 }
