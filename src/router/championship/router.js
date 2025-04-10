@@ -22,7 +22,8 @@ const {
     checkHasCommunityRole,
     checkIsTeamLeader,
     checkIsCommunityStaffRole,
-    checkIsYourCommunity
+    checkIsYourCommunity,
+    checkIsYourCommunityAtDB
 } = require("../../middleware/checkRole")
 
 const {
@@ -65,7 +66,7 @@ router.put("/:championship_list_idx/done",
     checkIdx("championship_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
-    checkIsYourCommunity(),
+    checkIsYourCommunityAtDB(),
     checkIsChampionship,
     doneChampionship
 )
@@ -75,7 +76,7 @@ router.get("/:championship_list_idx/done",
     checkIdx("championship_list_idx"),
     checkLogin,
     checkIsCommunityAdminRole(),
-    checkIsYourCommunity(),
+    checkIsYourCommunityAtDB(),
     checkIsChampionship,
     fetchDoneChampionship
 )
@@ -89,7 +90,7 @@ router.post("/:championship_list_idx/championship_match",
     checkRegInput(regMatchDatetime,"match_match_start_time"),
     checkLogin,
     checkIsCommunityStaffRole(),
-    checkIsYourCommunity(),
+    checkIsYourCommunityAtDB(),
     checkBothTeamsInChampionship(),
     postChampionShipMatch
 )
@@ -99,7 +100,7 @@ router.delete("/championship_match/:championship_match_idx",
     checkIdx("championship_match_idx"),
     checkLogin,
     checkIsCommunityStaffRole(),
-    checkIsYourCommunity(),
+    checkIsYourCommunityAtDB(),
     checkIsChampionshipMatch,
     deleteChampionShipMatch
 )
@@ -109,7 +110,7 @@ router.put("/championship_match/:championship_match_idx/done",
     checkIdx("championship_match_idx"),
     checkLogin,
     checkIsCommunityStaffRole(),
-    checkIsYourCommunity(),
+    checkIsYourCommunityAtDB(),
     checkIsChampionshipMatch,
     checkChampionshipMatchStatus(),
     championShipMatchDone

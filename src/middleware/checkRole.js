@@ -141,7 +141,6 @@ const checkIsCommunityStaffRole = () => {
     };
 };
 
-// 자신의 커뮤니티 인지 체크
 const checkIsYourCommunity = () => {
     return (req, res, next) => {
         const { my_community_list_idx } = req.decoded;
@@ -149,6 +148,28 @@ const checkIsYourCommunity = () => {
 
         try {
             if (my_community_list_idx != community_list_idx) {
+                throw customError(403, "해당 커뮤니티의 운영진이 아닙니다.");
+            }
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
+// 자신의 커뮤니티 인지 체크
+const checkIsYourCommunityAtDB = () => {
+    return async (req, res, next) => {
+        const { my_community_list_idx } = req.decoded;
+        const { championship_list_idx } = req.params ?? req.body ?? req.query
+        console.log(championship_list_idx)
+
+        try {
+            const result = await client.query(`
+                SELECT * FROM championship.list WHERE championship_list_idx = $1
+                `, [championship_list_idx]);
+                console.log(result.rows)
+            if (my_community_list_idx != result.rows[0].community_list_idx) {
                 throw customError(403, "해당 커뮤니티의 운영진이 아닙니다.");
             }
             next();
@@ -167,6 +188,7 @@ module.exports = {
     checkIsCommunityAdminRole,
     checkHasCommunityRole,
     checkIsCommunityStaffRole,
-    checkIsYourCommunity
+    checkIsYourCommunity,
+    checkIsYourCommunityAtDB
 }
 

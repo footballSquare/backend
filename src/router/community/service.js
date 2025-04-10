@@ -234,7 +234,7 @@ const postChampioship = async (req,res,next) => {
 
         await client.query("COMMIT");
 
-        res.status(200).send({})
+        res.status(200).send({ "championship_list_idx" : championship_list_idx})
     } catch(e){
         await client.query("ROLLBACK");
         await client.query(sequenceAutoIncrease)
