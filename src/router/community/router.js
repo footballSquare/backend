@@ -65,6 +65,10 @@ const {
 } = require("../../middleware/checkInput")
 
 const {
+    checkChampionshipNameDuplicate
+} = require("../../middleware/checkDuplicate")
+
+const {
     getCommunity,
     getCommunityStaff,
     getCommunityTeam,
@@ -159,6 +163,7 @@ router.post("/:community_list_idx/championship",
     checkRegInput(regChampionshipPeriod,"championship_list_end_date"),
     checkIdx("participation_team_idxs"),
     checkRegInput(regChampionshipAwardName,"championship_award_name"),
+    checkChampionshipNameDuplicate(),
     validateAwardForm,
     s3UploaderMultiple("championship"),
     postChampioship
