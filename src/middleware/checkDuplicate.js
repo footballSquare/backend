@@ -43,7 +43,34 @@ const checkTeamShortNameDuplicate = () => {
     };
 };
 
+// 대회 명 중복 체크
+const checkChampionshipNameDuplicate = () => {
+    return async (req, res, next) => {
+        const { championship_list_name } = req.body;
+
+        const sql = `
+            SELECT COUNT(*) 
+            FROM championship.list 
+            WHERE championship_list_name = $1
+        `;
+
+        try {
+            const result = await client.query(sql, [championship_list_name]);
+
+            if (parseInt(result.rows[0].count) > 0) {
+                throw customError(409, "이미 존재하는 대회명입니다.");
+            }
+
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
+
 module.exports = {
     checkTeamNameDuplicate,
-    checkTeamShortNameDuplicate
+    checkTeamShortNameDuplicate,
+    checkChampionshipNameDuplicate
 };
