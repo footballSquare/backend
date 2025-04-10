@@ -149,12 +149,18 @@ SELECT
     t.team_list_name AS team_name,
     t.team_list_short_name AS team_short_name,
     t.team_list_color AS team_color,
-    t.team_list_emblem AS team_emblem
+    t.team_list_emblem AS team_emblem,
+
+    tm.team_role_idx AS team_role_idx,
+
+    cs.community_role_idx AS community_role_idx,
+    cs.community_list_idx AS community_list_idx
 
 FROM 
     player.list p
 LEFT JOIN team.member tm ON p.player_list_idx = tm.player_list_idx
 LEFT JOIN team.list t ON tm.team_list_idx = t.team_list_idx
+LEFT JOIN community.staff cs ON p.player_list_idx = cs.player_list_idx
 WHERE 
     p.player_list_idx = $1;
 `;
@@ -176,12 +182,19 @@ SELECT
     t.team_list_name AS team_name,
     t.team_list_short_name AS team_short_name,
     t.team_list_color AS team_color,
-    t.team_list_emblem AS team_emblem
+    t.team_list_emblem AS team_emblem,
+    t.team_list_emblem AS team_emblem,
+
+    tm.team_role_idx AS team_role_idx,
+
+    cs.community_role_idx AS community_role_idx,
+    cs.community_list_idx AS community_list_idx
 
 FROM 
     player.list p
 LEFT JOIN team.member tm ON p.player_list_idx = tm.player_list_idx
 LEFT JOIN team.list t ON tm.team_list_idx = t.team_list_idx
+LEFT JOIN community.staff cs ON p.player_list_idx = cs.player_list_idx
 WHERE 
     p.player_list_idx = $1;
 `;

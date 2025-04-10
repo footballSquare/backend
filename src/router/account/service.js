@@ -488,6 +488,8 @@ const getMyInfo = async (req, res, next) => {
     data: result.rows[0],
   });
 };
+
+
 const getUserInfo = async (req, res, next) => {
   const { userIdx } = req.params;
   console.log(userIdx);
