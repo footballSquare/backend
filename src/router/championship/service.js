@@ -34,6 +34,10 @@ const {
     getChampionShipPlayerStatsSQL
 } = require("./sql")
 
+const {
+    sequenceAutoIncrease
+} = require("../commonSQL")
+
 
 // 대회 종료하기
 const doneChampionship = async (req,res,next) => {
@@ -252,6 +256,7 @@ const postChampionShipMatch = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        await client.query(sequenceAutoIncrease)
         next(e)
     }
 }
@@ -288,6 +293,7 @@ const deleteChampionShipMatch = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        await client.query(sequenceAutoIncrease)
         next(e)
     }
 }
@@ -301,7 +307,6 @@ const championShipMatchDone = async (req,res,next) => {
 
     try{
         await client.query("BEGIN");
-        console.log(championship_match_idx)
         // 각 팀의 매치 인덱스 가져오기
         const result = await client.query(getChampionshipMatchIdx, [championship_match_idx]);
 

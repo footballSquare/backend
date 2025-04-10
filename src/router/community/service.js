@@ -30,6 +30,10 @@ const {
     communityTeamKickSQL
 } = require("./sql")
 
+const {
+    sequenceAutoIncrease
+} = require("../commonSQL")
+
 // 커뮤니티 정보 보기
 const getCommunity = async (req,res,next) => {
     const {community_list_idx} = req.params
@@ -233,6 +237,7 @@ const postChampioship = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        await client.query(sequenceAutoIncrease)
         next(e)
     }
 }
@@ -260,6 +265,7 @@ const communityStaffAccess = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        await client.query(sequenceAutoIncrease)
         next(e)
     }
 }
@@ -378,6 +384,7 @@ const communityTeamAccess = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        await client.query(sequenceAutoIncrease)
         next(e)
     }
 }
