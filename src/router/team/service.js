@@ -368,13 +368,43 @@ const changeMemberRole = async (req,res,next) => {
     const {} = req.body
 
     try{
-        await client.query(changeMemberRoleSQL, [
-            team_list_idx,
-            player_list_idx,
-            team_role_idx
-        ])
+        if(parseInt(team_role_idx) === TEAM_ROLE.LEADER){
+            await client.query('BEGIN');
+            usedTransaction = true;
+
+            // 먼저 본인 부팀장으로 강등
+            await client.query(
+                `
+                UPDATE team.member
+                SET team_role_idx = $1
+                WHERE team_list_idx = $2 AND team_role_idx = $3
+                `,
+                [TEAM_ROLE.SUB_LEADER, team_list_idx, TEAM_ROLE.LEADER]
+              );
+        
+              // 2. 새로운 팀장으로 지정
+              await client.query(
+                `
+                UPDATE team.member
+                SET team_role_idx = $1
+                WHERE team_list_idx = $2 AND player_list_idx = $3
+                `,
+                [TEAM_ROLE.LEADER, team_list_idx, player_list_idx]
+              );
+        
+              await client.query('COMMIT');
+        } else {
+            await client.query(changeMemberRoleSQL, [
+                team_list_idx,
+                player_list_idx,
+                team_role_idx
+            ])
+        }
         res.status(200).send({})
     } catch(e){
+        if (usedTransaction) {
+            await client.query('ROLLBACK');
+        }
         next(e)
     }
 }

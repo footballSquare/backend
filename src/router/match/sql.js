@@ -1,3 +1,7 @@
+const { 
+    COMMON_STATUS
+} = require("../../constant/constantIndex")
+
 // 팀 매치 목록 보기
 const getTeamMatchListSQL = 
 `
@@ -199,6 +203,27 @@ const deleteParticipantSQL =
 DELETE FROM match.participant
 WHERE match_match_idx = $1 AND player_list_idx = $2;
 `;
+
+// 매치 대기자 목록 가져오기 
+const getMatchStanbyListSQL = 
+`
+SELECT 
+    p.player_list_idx,
+    p.player_list_nickname,
+    p.player_list_profile_image,
+    p.match_position_idx,
+    tm.team_list_idx,
+    t.team_list_short_name,
+    t.team_list_emblem
+FROM 
+    player.list p
+LEFT JOIN 
+    team.member tm ON p.player_list_idx = tm.player_list_idx
+LEFT JOIN 
+    team.list t ON tm.team_list_idx = t.team_list_idx
+WHERE 
+    p.player_list_state = ${COMMON_STATUS.OPEN_MATCH_PARTICIPATION};
+`
 
 // 매치 세부 정보 가져오기
 const getMatchDetailDataSQL =
@@ -495,6 +520,7 @@ module.exports = {
     deleteWaitlistSQL,
     postTeamMatchSQL,
     deleteMatchSQL,
+    getMatchStanbyListSQL,
     getMatchDetailDataSQL,
     getMatchParticipantListSQL,
     checkMatchParticipationSQL,

@@ -77,6 +77,7 @@ const {
     getOpenMatchList,
     postOpenMatch,
     deleteMatch,
+    getMatchStanbyList,
     getMatchDetailData,
     postTeamMatch,
     putTeamMatch,
@@ -170,6 +171,11 @@ router.delete("/:match_match_idx",
     checkIsMatchOwner(),
     checkMatchNotStarted(),
     deleteMatch
+)
+
+// 매치 참여 희망자 목록 가져오기
+router.get("/stanbylist",
+    getMatchStanbyList
 )
 
 // 매치 세부 정보 가져오기
