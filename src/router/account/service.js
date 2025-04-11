@@ -247,7 +247,7 @@ const signinLogic = async (req, res, next) => {
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: false,
+    secure: true,
     sameSite: "None",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
