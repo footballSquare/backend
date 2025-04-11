@@ -1,7 +1,8 @@
 const client = require("../../database/postgreSQL")
 const customError = require("../../util/customError")
 
-const { COMMUNITY_ROLE,
+const { 
+    COMMUNITY_ROLE,
     MATCH_ATTRIBUTE
 } = require("../../constant/constantIndex")
 
@@ -21,6 +22,7 @@ const {
     postMatchParticipantSQL,
     getMatchWaitListSQL,
     deleteFromWaitListSQL,
+    getMatchStanbyListSQL,
     insertIntoParticipantSQL,
     postMatchWaitListSQL,
     postTeamStatsSQL,
@@ -254,6 +256,17 @@ const deleteMatch = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        next(e)
+    }
+}
+
+// 매치 대기자 목록 가져오기
+const getMatchStanbyList = async (req,res,next) => {
+
+    try{
+        const result = await client.query(getMatchStanbyListSQL)
+        res.status(200).send({ stanbylist : result.rows })
+    } catch(e){
         next(e)
     }
 }
@@ -666,6 +679,7 @@ module.exports = {
     closedMatch,
     postTeamMatch,
     deleteMatch,
+    getMatchStanbyList,
     getMatchDetailData,
     getMatchParticipantList,
     getMatchWaitList,
