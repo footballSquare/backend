@@ -103,6 +103,14 @@ const postTeam = async (req,res,next) => {
     } = req.decoded
 
     try{
+
+        const result = await client.query(
+            `SELECT 1 FROM team.member WHERE player_list_idx = $1`,
+            [my_player_list_idx]
+          );
+
+        if(result.rowCount > 0) throw customError (403, `이미 가입한 팀이 존재합니다.`);
+
         await client.query('BEGIN');
         // 팀 생성
         const teamResult = await client.query(postTeamSQL,[
