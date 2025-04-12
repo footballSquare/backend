@@ -2,42 +2,54 @@ const getTeamListSQL =
 `
 WITH captain_data AS (
     SELECT 
-        team.member.team_list_idx, 
-        player.list.player_list_idx, 
-        player.list.player_list_nickname, 
-        player.list.player_list_profile_image
-    FROM team.member
-    JOIN player.list ON team.member.player_list_idx = player.list.player_list_idx
-    WHERE team.member.team_role_idx = 0
+        tm.team_list_idx, 
+        pl.player_list_idx, 
+        pl.player_list_nickname, 
+        pl.player_list_profile_image
+    FROM team.member tm
+    JOIN player.list pl ON tm.player_list_idx = pl.player_list_idx
+    WHERE tm.team_role_idx = 0
+),
+waitlist_data AS (
+    SELECT 
+        team_list_idx, 
+        TRUE AS is_waiting
+    FROM team.waitlist
+    WHERE player_list_idx = $2 
 )
 SELECT 
-    community.team.community_list_idx,
-    team.list.team_list_idx,
-    team.list.team_list_name,
-    team.list.team_list_short_name,
-    team.list.team_list_color,
-    team.list.team_list_emblem,
-    team.list.team_list_created_at,
-    COUNT(team.member.player_list_idx) AS whole_member,
-    captain_data.player_list_idx AS player_list_idx,
-    captain_data.player_list_nickname AS player_list_name,
-    captain_data.player_list_profile_image AS player_list_profile_image
-FROM team.list
-LEFT JOIN community.team ON team.list.team_list_idx = community.team.team_list_idx
-LEFT JOIN team.member ON team.list.team_list_idx = team.member.team_list_idx
-LEFT JOIN captain_data ON team.list.team_list_idx = captain_data.team_list_idx
+    ct.community_list_idx,
+    tl.team_list_idx,
+    tl.team_list_name,
+    tl.team_list_short_name,
+    tl.team_list_color,
+    tl.team_list_emblem,
+    tl.team_list_created_at,
+    tl.common_status_idx,
+    COUNT(tm.player_list_idx) AS whole_member,
+    cd.player_list_idx AS player_list_idx,
+    cd.player_list_nickname AS player_list_name,
+    cd.player_list_profile_image AS player_list_profile_image,
+    COALESCE(wd.is_waiting, FALSE) AS is_waiting
+FROM team.list tl
+LEFT JOIN community.team ct ON tl.team_list_idx = ct.team_list_idx
+LEFT JOIN team.member tm ON tl.team_list_idx = tm.team_list_idx
+LEFT JOIN captain_data cd ON tl.team_list_idx = cd.team_list_idx
+LEFT JOIN waitlist_data wd ON tl.team_list_idx = wd.team_list_idx
 GROUP BY 
-    community.team.community_list_idx,
-    team.list.team_list_idx,
-    team.list.team_list_name,
-    team.list.team_list_short_name,
-    team.list.team_list_color,
-    team.list.team_list_emblem,
-    team.list.team_list_created_at,
-    captain_data.player_list_idx,
-    captain_data.player_list_nickname,
-    captain_data.player_list_profile_image
-ORDER BY team.list.team_list_created_at DESC
+    ct.community_list_idx,
+    tl.team_list_idx,
+    tl.team_list_name,
+    tl.team_list_short_name,
+    tl.team_list_color,
+    tl.team_list_emblem,
+    tl.team_list_created_at,
+    tl.common_status_idx,
+    cd.player_list_idx,
+    cd.player_list_nickname,
+    cd.player_list_profile_image,
+    wd.is_waiting
+ORDER BY tl.team_list_created_at DESC
 LIMIT 10 OFFSET $1 * 10;
 `
 
