@@ -35,10 +35,14 @@ const {
 // 팀 목록 가져오기
 const getTeamList = async (req,res,next) => {
     const {page} = req.query
+    const {
+        my_player_list_idx
+    } = req.decoded
     
     try{
         const result = await client.query(getTeamListSQL, [
-            page
+            page,
+            my_player_list_idx
         ])
         res.status(200).send({ member : result.rows })
     } catch(e){

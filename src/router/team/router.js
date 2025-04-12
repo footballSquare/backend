@@ -89,6 +89,7 @@ const {
 
 // 팀 목록보기
 router.get("/list",
+    optionalLogin,
     getTeamList
 )
 
