@@ -7,6 +7,7 @@ const {deleteFileFromS3} = require("../../database/s3Config/s3Deleter")
 
 const {
     getTeamListSQL,
+    getRecruitingTeamListSQL,
     postTeamSQL,
     changeTeamDataSQL,
     checkTeamNameSQL,
@@ -50,12 +51,36 @@ const getTeamList = async (req,res,next) => {
     }
 }
 
+// 팀원 모집 중 팀 목록 가져오기
+const getRecruitingTeamList = async (req,res,next) => {
+    const {page} = req.query
+    const {
+        my_player_list_idx
+    } = req.decoded
+    
+    try{
+        const result = await client.query(getRecruitingTeamListSQL, [
+            page,
+            my_player_list_idx
+        ])
+        res.status(200).send({ member : result.rows })
+    } catch(e){
+        next(e)
+    }
+}
+
 // 팀 페이지 상세 정보 보기
 const getTeam = async (req,res,next) => {
     const {team_list_idx} = req.params
-    
+    const {
+        my_player_list_idx
+    } = req.decoded
+
     try{
-        const result = await client.query(getTeamSQL, [team_list_idx])
+        const result = await client.query(getTeamSQL, [
+            team_list_idx,
+            my_player_list_idx
+        ])
         res.status(200).send({ team : result.rows[0] })
     } catch(e){
         next(e)
@@ -482,6 +507,7 @@ const teamLeave = async (req,res,next) => {
 
 module.exports = {
     getTeamList,
+    getRecruitingTeamList,
     postTeam,
     getTeam,
     getMember,

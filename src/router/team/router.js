@@ -67,6 +67,7 @@ const {
 
 const {
     getTeamList,
+    getRecruitingTeamList,
     postTeam,
     getTeam,
     getMember,
@@ -93,10 +94,17 @@ router.get("/list",
     getTeamList
 )
 
+// 팀 목록보기
+router.get("/list/recruiting",
+    optionalLogin,
+    getRecruitingTeamList
+)
+
 // 팀 페이지 상세 정보 보기
 router.get("/:team_list_idx/information",
     checkIdx("team_list_idx"),
     checkIsTeam,
+    optionalLogin,
     getTeam
 )
 

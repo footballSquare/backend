@@ -1,3 +1,8 @@
+const { 
+    COMMON_STATUS,
+    TEAM_ROLE
+} = require("../../constant/constantIndex")
+
 const getTeamListSQL = 
 `
 WITH captain_data AS (
@@ -8,7 +13,7 @@ WITH captain_data AS (
         pl.player_list_profile_image
     FROM team.member tm
     JOIN player.list pl ON tm.player_list_idx = pl.player_list_idx
-    WHERE tm.team_role_idx = 0
+    WHERE tm.team_role_idx = ${TEAM_ROLE.LEADER}
 ),
 waitlist_data AS (
     SELECT 
@@ -36,6 +41,62 @@ LEFT JOIN community.team ct ON tl.team_list_idx = ct.team_list_idx
 LEFT JOIN team.member tm ON tl.team_list_idx = tm.team_list_idx
 LEFT JOIN captain_data cd ON tl.team_list_idx = cd.team_list_idx
 LEFT JOIN waitlist_data wd ON tl.team_list_idx = wd.team_list_idx
+GROUP BY 
+    ct.community_list_idx,
+    tl.team_list_idx,
+    tl.team_list_name,
+    tl.team_list_short_name,
+    tl.team_list_color,
+    tl.team_list_emblem,
+    tl.team_list_created_at,
+    tl.common_status_idx,
+    cd.player_list_idx,
+    cd.player_list_nickname,
+    cd.player_list_profile_image,
+    wd.is_waiting
+ORDER BY tl.team_list_created_at DESC
+LIMIT 10 OFFSET $1 * 10;
+`
+
+const getRecruitingTeamListSQL = 
+`
+WITH captain_data AS (
+    SELECT 
+        tm.team_list_idx, 
+        pl.player_list_idx, 
+        pl.player_list_nickname, 
+        pl.player_list_profile_image
+    FROM team.member tm
+    JOIN player.list pl ON tm.player_list_idx = pl.player_list_idx
+    WHERE tm.team_role_idx = ${TEAM_ROLE.LEADER}
+),
+waitlist_data AS (
+    SELECT 
+        team_list_idx, 
+        TRUE AS is_waiting
+    FROM team.waitlist
+    WHERE player_list_idx = $2
+)
+SELECT 
+    ct.community_list_idx,
+    tl.team_list_idx,
+    tl.team_list_name,
+    tl.team_list_short_name,
+    tl.team_list_color,
+    tl.team_list_emblem,
+    tl.team_list_created_at,
+    tl.common_status_idx,
+    COUNT(tm.player_list_idx) AS whole_member,
+    cd.player_list_idx AS player_list_idx,
+    cd.player_list_nickname AS player_list_name,
+    cd.player_list_profile_image AS player_list_profile_image,
+    COALESCE(wd.is_waiting, FALSE) AS is_waiting
+FROM team.list tl
+LEFT JOIN community.team ct ON tl.team_list_idx = ct.team_list_idx
+LEFT JOIN team.member tm ON tl.team_list_idx = tm.team_list_idx
+LEFT JOIN captain_data cd ON tl.team_list_idx = cd.team_list_idx
+LEFT JOIN waitlist_data wd ON tl.team_list_idx = wd.team_list_idx
+WHERE tl.common_status_idx = ${COMMON_STATUS.TEAM_RECRUITING}
 GROUP BY 
     ct.community_list_idx,
     tl.team_list_idx,
@@ -112,25 +173,31 @@ VALUES (
 const getTeamSQL = 
 `
 SELECT 
-    team.list.team_list_idx,
-    team.list.team_list_name,
-    team.list.team_list_short_name,
-    team.list.team_list_color,
-    team.list.team_list_emblem,
-    team.list.team_list_banner,
-    team.list.team_list_announcement,
-    team.list.common_status_idx,
-    team.list.team_list_created_at,
-    team.list.team_list_updated_at,
-    community.list.community_list_idx
+    t.team_list_idx,
+    t.team_list_name,
+    t.team_list_short_name,
+    t.team_list_color,
+    t.team_list_emblem,
+    t.team_list_banner,
+    t.team_list_announcement,
+    t.common_status_idx,
+    t.team_list_created_at,
+    t.team_list_updated_at,
+    cl.community_list_idx,
+    COALESCE(w.team_waiting, FALSE) AS is_waiting
 FROM 
-    team.list
+    team.list t
 LEFT JOIN 
-    community.team ON team.list.team_list_idx = community.team.team_list_idx
+    community.team ct ON t.team_list_idx = ct.team_list_idx
 LEFT JOIN 
-    community.list ON community.team.community_list_idx = community.list.community_list_idx
+    community.list cl ON ct.community_list_idx = cl.community_list_idx
+LEFT JOIN (
+    SELECT team_list_idx, TRUE AS team_waiting
+    FROM team.waitlist
+    WHERE player_list_idx = $2
+) w ON t.team_list_idx = w.team_list_idx
 WHERE 
-    team.list.team_list_idx = $1;
+    t.team_list_idx = $1;
 `
 
 const getMemberSQL =
@@ -282,6 +349,7 @@ WHERE team_list_idx = $1;
 
 module.exports = {
     getTeamListSQL,
+    getRecruitingTeamListSQL,
     postTeamSQL,
     postTeamManagerSQL,
     postTeamHistorySQL,
