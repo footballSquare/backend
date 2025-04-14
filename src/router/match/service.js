@@ -89,6 +89,8 @@ const postOpenMatch = async (req,res,next) => {
         my_player_list_idx
     } = req.decoded
 
+    console.log(match_match_start_time)
+
     const intervalString = convertToIntervalString(match_match_duration);
 
     try{
@@ -100,6 +102,8 @@ const postOpenMatch = async (req,res,next) => {
             match_match_start_time,
             intervalString
         ])
+
+        console.log(result.rows)
 
 
         res.status(200).send({ matchData : result.rows[0] })
@@ -378,7 +382,7 @@ const joinOpenMatch = async (req,res,next) => {
         // 매치 생성자 이거나, 공개 매치일 경우 대기자 목록이 아닌 즉시 참여
         if (result.rows[0].player_list_idx == my_player_list_idx || result.rows[0].match_match_participation_type == 1) sql = postMatchParticipantSQL
         else if(result.rows[0].match_match_participation_type == 0) sql = postMatchWaitListSQL
-        console.log("sql",sql)
+
         await client.query(sql, [
             match_match_idx,
             my_player_list_idx,

@@ -101,7 +101,7 @@ const checkMatchEnded = () => {
         const {match_match_start_time,match_match_duration} = req.matchInfo
         const start = new Date(match_match_start_time);
         const end = new Date(start);
-        
+
         if (match_match_duration.hours) {
             end.setHours(end.getHours() + parseInt(match_match_duration.hours));
         }
@@ -110,8 +110,9 @@ const checkMatchEnded = () => {
         }
     
         const now = new Date();
+        const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
 
-        if (end > now) {
+        if (end > kstNow) {
         throw customError(403, "매치가 아직 종료되지 않았습니다.");
         }
 
@@ -130,8 +131,9 @@ const checkMatchNotStarted = () => {
         try {
             const matchStartTime = new Date(match_match_start_time);
             const now = new Date();
+            const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
 
-            if (now >= matchStartTime) {
+            if (kstNow >= matchStartTime) {
                 throw customError(403, `매치가 이미 시작되었습니다.`);
             }
 
@@ -325,47 +327,53 @@ const checkIsMatchOwner = () => {
 // 같은 시간대에 진행중인 매치에 참여하고 있는지 확인
 const checkMatchOverlap = () => {
     return async (req, res, next) => {
-        const my_player_list_idx = req.decoded.my_player_list_idx;
-        const match_match_idx = req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+      const my_player_list_idx = req.decoded.my_player_list_idx;
+      const match_match_idx =
+        req.body.match_match_idx ?? req.params.match_match_idx ?? req.query.match_match_idx;
+  
+      try {
 
-        try {
-            // 1. 매치 시작시간과 지속시간 가져오기
-            const matchResult = await client.query(
-                `SELECT match_match_start_time, match_match_duration
-                 FROM match.match
-                 WHERE match_match_idx = $1`,
-                [match_match_idx]
-            );
-
-            const { match_match_start_time, match_match_duration } = matchResult.rows[0];
-
-            // 2. JS에서 endTime 계산 (PostgresInterval 객체 파싱)
-            const durationMs =
-                (match_match_duration.hours ?? 0) * 60 * 60 * 1000 +
-                (match_match_duration.minutes ?? 0) * 60 * 1000 +
-                (match_match_duration.seconds ?? 0) * 1000;
-
-            const startTime = new Date(match_match_start_time);
-            const endTime = new Date(startTime.getTime() + durationMs);
-
-            // PostgreSQL에서 tstzrange 타입으로 비교
-            const overlapResult = await client.query(
-                `SELECT 1 FROM match.participant
-                 WHERE player_list_idx = $1
-                 AND match_time_range && tstzrange($2::timestamptz, $3::timestamptz)`,
-                [my_player_list_idx, startTime.toISOString(), endTime.toISOString()]
-            );
-
-            if (overlapResult.rowCount > 0) {
-                throw customError(403, '이미 해당 시간대에 다른 매치에 참여 중입니다.');
-            }
-
-            next();
-        } catch (err) {
-            next(err);
+        const parseDurationToMs = (interval) => {
+            const hours = parseInt(interval.hours ?? 0);
+            const minutes = parseInt(interval.minutes ?? 0);
+            const seconds = parseInt(interval.seconds ?? 0);
+          
+            return (hours * 3600 + minutes * 60 + seconds) * 1000;
+        };
+          
+        // 1. 매치 시간 가져오기
+        const matchResult = await client.query(
+          `SELECT match_match_start_time, match_match_duration
+           FROM match.match
+           WHERE match_match_idx = $1`,
+          [match_match_idx]
+        );
+  
+        const { match_match_start_time, match_match_duration } = matchResult.rows[0];
+  
+        // 2. endTime 계산
+        const durationMs = parseDurationToMs(match_match_duration);
+        const startTime = new Date(match_match_start_time);
+        const endTime = new Date(startTime.getTime() + durationMs);
+  
+        // 3. 겹치는지 확인 (tstzrange)
+        const overlapResult = await client.query(
+          `SELECT 1 FROM match.participant
+           WHERE player_list_idx = $1
+           AND match_time_range && tstzrange($2::timestamptz, $3::timestamptz, '[)')`,
+          [my_player_list_idx, startTime.toISOString(), endTime.toISOString()]
+        );
+  
+        if (overlapResult.rowCount > 0) {
+          throw customError(403, '이미 해당 시간대에 다른 매치에 참여 중입니다.');
         }
+  
+        next();
+      } catch (err) {
+        next(err);
+      }
     };
-};
+  };
 
 // 게시글 작성자 인지 확인하는
 const checkIsPostOwner = () => {
@@ -556,8 +564,9 @@ const checkMatchNotEnded = () => {
             }
 
             const now = new Date();
+            const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
 
-            if (now >= end) {
+            if (now >= kstNow) {
                 throw customError(403, "이미 종료된 매치입니다.");
             }
 

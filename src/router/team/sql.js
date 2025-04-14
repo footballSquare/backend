@@ -215,6 +215,7 @@ JOIN
 WHERE 
     team.member.team_list_idx = $1
 ORDER BY 
+    team.member.team_role_idx ASC,
     player.list.player_list_idx ASC
 LIMIT 
     10 
