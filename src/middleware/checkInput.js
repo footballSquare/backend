@@ -269,10 +269,12 @@ const checkMatchStartTimeValid = () => {
     const { match_match_start_time } = req.body;
 
     try {
-      const inputStartTime = new Date(match_match_start_time);
-      const now = new Date();
+      const inputKST = new Date(match_match_start_time);
+      const inputUTC = new Date(inputKST.getTime() - 9 * 60 * 60 * 1000);
 
-      if (inputStartTime < now) {
+      const nowUTC = new Date(); // 현재 시간은 UTC 기준
+
+      if (inputUTC < nowUTC) {
         throw customError(
           400,
           "매치 시작 시간이 현재 시각보다 과거일 수 없습니다."
