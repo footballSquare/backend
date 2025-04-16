@@ -31,6 +31,9 @@ const {
   checkDuplicateId,
   checkDuplicateNickname,
   signupLoginInfo,
+  signupSend,
+  signupVerify,
+  signupCheckUser,
   signupPlayerInfo,
   checkRefreshToken,
   accountSoftDelete,
@@ -39,19 +42,16 @@ const {
   checkPassword,
   updateUserInfo,
   updateProfileImage,
-  smsSendMessage,
-  smsVerify,
   searchId,
   checkUser,
   updatePassword,
+  searchIdSend,
+  searchIdVerify,
 } = require("./service");
 
 router.get("/oauth/url/discord", getDiscordSigninPage);
 
 router.get("/oauth/token/discord", checkCode, discordOauthSigninLogic);
-
-router.post("/sms/send", checkRegInputs([regPhone], ["phone"]), smsSendMessage);
-router.post("/sms/verify", checkRegInputs([regPhone], ["phone"]), smsVerify);
 
 router.post(
   "/signin",
@@ -75,19 +75,17 @@ router.post(
 );
 
 router.post(
-  "/signup/playerinfo",
+  "/sms/signup/send",
+  checkRegInputs([regPhone], ["phone"]),
+  signupSend
+);
+
+router.post(
+  "/sms/signup/verify",
   checkTemporaryAccessToken,
-  checkRegInputs(
-    [regPhone, regNickname, regPlatform, regIdx, regDiscordTag, regIdx],
-    [
-      "phone",
-      "nickname",
-      "platform",
-      "common_status_idx",
-      "discord_tag",
-      "match_position_idx",
-    ]
-  ),
+  checkRegInputs([regPhone], ["phone"]),
+  signupVerify,
+  signupCheckUser,
   signupPlayerInfo
 );
 
@@ -134,7 +132,18 @@ router.put(
   updateProfileImage
 );
 
-router.post("/search/id", checkRegInputs([regPhone], ["phone"]), searchId);
+router.post(
+  "/sms/search_id/send",
+  checkRegInputs([regPhone], ["phone"]),
+  searchIdSend
+);
+
+router.post(
+  "/sms/search_id/verify",
+  checkRegInputs([regPhone], ["phone"]),
+  searchIdVerify,
+  searchId
+);
 
 router.post("/check/user", checkRegInputs([regId], ["id"]), checkUser);
 

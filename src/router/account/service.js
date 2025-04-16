@@ -36,6 +36,7 @@ const {
   searchIdSQL,
   checkUserIdxSQL,
   updatePasswordSQL,
+  getUserStatusSQL,
 } = require("./sql");
 
 const { regMessage } = require("./../../constant/regx");
@@ -232,7 +233,9 @@ const signinLogic = async (req, res, next) => {
   const teamIdx = result.rows[0].team_idx || null;
 
   const teamRoleIdx = await getTeamRoleIdx(userIdx);
-  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(userIdx);
+  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(
+    userIdx
+  );
 
   const accessToken = setAccessToken(
     userIdx,
@@ -294,7 +297,9 @@ const checkRefreshToken = async (req, res, next) => {
   const userIdx = result.rows[0].user_idx;
   const teamIdx = result.rows[0].team_idx;
   const teamRoleIdx = await getTeamRoleIdx(userIdx);
-  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(userIdx);
+  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(
+    userIdx
+  );
 
   const accessToken = setAccessToken(
     userIdx,
@@ -314,7 +319,6 @@ async function getTeamRoleIdx(userIdx) {
   const result = await client.query(checkTeamRoleSQL, [userIdx]);
   return result.rows.length > 0 ? result.rows[0].team_role_idx : null;
 }
-
 async function getCommunityRoleIdx(userIdx) {
   const result = await client.query(checkCommunityRoleSQL, [userIdx]);
 
@@ -338,15 +342,20 @@ async function putRefreshToken(refreshToken, userIdx) {
     userIdx,
   ]);
 }
-function setAccessToken(userIdx, teamIdx, teamRoleIdx, communityRoleIdx, community_list_idx) {
-
+function setAccessToken(
+  userIdx,
+  teamIdx,
+  teamRoleIdx,
+  communityRoleIdx,
+  community_list_idx
+) {
   const accessToken = jwt.sign(
     {
       my_player_list_idx: userIdx,
       my_team_list_idx: teamIdx ?? null,
       my_team_role_idx: teamRoleIdx ?? null,
       my_community_role_idx: communityRoleIdx ?? null,
-      my_community_list_idx: community_list_idx ?? null
+      my_community_list_idx: community_list_idx ?? null,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
@@ -414,31 +423,83 @@ const signupLoginInfo = async (req, res, next) => {
     data: userIdxResult.rows[0],
   });
 };
-const signupPlayerInfo = async (req, res, next) => {
-  const {
-    phone,
-    nickname,
-    platform,
-    common_status_idx,
-    discord_tag,
-    match_position_idx,
-  } = req.body;
+const signupSend = async (req, res, next) => {
+  const { phone } = req.body;
 
-  let { message } = req.body;
+  const sendCountKey = `count:${phone}`;
+  let sendCount = await redisClient.get(sendCountKey);
+  sendCount = parseInt(sendCount) || 0;
+
+  if (sendCount >= process.env.MAX_SEND_COUNT)
+    throw customError(429, "하루 전송 가능 횟수를 초과했습니다.");
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const data = { code, attempts: 0 };
+  await redisClient.setEx(phone, process.env.CODE_EXPIRY, JSON.stringify(data));
+
+  // Redis 발송 횟수 증가 및 만료시간 설정
+  if (sendCount === 0) {
+    // 처음 요청 시 expire 설정
+    await redisClient.set(sendCountKey, 1, {
+      EX: process.env.SEND_COUNT_EXPIRY,
+    });
+  } else {
+    await redisClient.incr(sendCountKey);
+  }
+
+  const result = await aligo.sendSMS({
+    sender: process.env.SMS_SENDER,
+    receiver: phone,
+    msg: `[footballsquare] 회원가입 인증번호는 [${code}] 입니다.`,
+  });
+
+  res.status(200).send({ code: code, message: "인증번호 전송 성공" });
+};
+const signupVerify = async (req, res, next) => {
+  const { phone, code } = req.body;
+
+  const record = await redisClient.get(phone);
+
+  if (!record)
+    throw customError(400, "인증번호가 만료되었거나 요청되지 않았습니다.");
+
+  const parsedRecord = JSON.parse(record);
+
+  if (parsedRecord.attempts >= process.env.MAX_ATTEMPTS) {
+    await redisClient.del(phone);
+    throw customError(429, "인증 시도 횟수를 초과했습니다.");
+  }
+
+  if (parsedRecord.code !== code) {
+    parsedRecord.attempts += 1;
+    await redisClient.setEx(
+      phone,
+      process.env.CODE_EXPIRY,
+      JSON.stringify(parsedRecord)
+    );
+    throw customError(400, "인증번호가 일치하지 않습니다.");
+  }
+  next();
+};
+const signupCheckUser = async (req, res, next) => {
+  const { my_player_list_idx } = req.decoded;
+  const result = await client.query(getUserStatusSQL, [my_player_list_idx]);
+  if (result.rows.length === 0)
+    throw customError(404, "존재하지 않는 유저입니다.");
+  if (result.rows[0].player_status !== "pending")
+    throw customError(409, "이미 회원가입한 유저입니다.");
+  next();
+};
+const signupPlayerInfo = async (req, res, next) => {
+  const { phone } = req.body;
 
   const { my_player_list_idx } = req.decoded;
-
-  message = validate(regMessage, message);
-
-  const checkUserResult = await client.query(checkUserSQL, [
-    my_player_list_idx,
-  ]);
-
-  const exists = checkUserResult.rows[0]?.exists_flag;
-
-  if (exists === undefined) throw customError(500, "중복 확인 실패");
-
-  if (!exists) throw customError(404, "존재하지 않는 유저입니다.");
+  const nickname = generate10DigitRandom(my_player_list_idx);
+  const platform = "pc";
+  const message = "잘 부탁드립니다!";
+  const discord_tag = "footballsquare#001";
+  const common_status_idx = 8;
+  const match_position_idx = 0;
 
   const result = await client.query(signupPlayerInfoSQL, [
     phone,
@@ -467,6 +528,19 @@ function setTemporaryAccessToken(userIdx) {
   );
   return accessToken;
 }
+function generate10DigitRandom(idx) {
+  const now = Date.now(); // 밀리초 기준 timestamp
+  const baseString = `${idx}-${now}`;
+
+  // SHA256 해시 생성
+  const hash = crypto.createHash("sha256").update(baseString).digest("hex");
+
+  // 해시 문자열에서 앞부분 숫자 추출
+  const numericHash = parseInt(hash.slice(0, 12), 16); // 16진수 → 10진수
+  const tenDigit = numericHash.toString().slice(0, 10); // 앞 10자리만 사용
+
+  return tenDigit;
+}
 // 회원 삭제(soft delete) =================================================================
 const accountSoftDelete = async (req, res, next) => {
   const { my_player_list_idx } = req.decoded;
@@ -490,10 +564,8 @@ const getMyInfo = async (req, res, next) => {
   });
 };
 
-
 const getUserInfo = async (req, res, next) => {
   const { userIdx } = req.params;
-  console.log(userIdx);
   const { authorization } = req.headers;
   let isMine = false;
 
@@ -614,10 +686,6 @@ const uploadS3 = multer({
 // sms 관련
 const redisClient = require("../../database/redisClient");
 const { env } = require("process");
-const CODE_EXPIRY = 180;
-const MAX_ATTEMPTS = 5; // 시도 제한 횟수
-const MAX_SEND_COUNT = 5; // 하루 전송 제한 횟수
-const SEND_COUNT_EXPIRY = 60 * 60 * 24; // 전송 제한 횟수 초기화화
 const smsSendMessage = async (req, res, next) => {
   const { phone } = req.body;
 
@@ -674,6 +742,64 @@ const smsVerify = async (req, res, next) => {
   return res.status(200).send({ message: "인증 성공" });
 };
 // id, password 찾기
+const searchIdSend = async (req, res, next) => {
+  const { phone } = req.body;
+
+  const sendCountKey = `count:${phone}`;
+  let sendCount = await redisClient.get(sendCountKey);
+  sendCount = parseInt(sendCount) || 0;
+
+  if (sendCount >= process.env.MAX_SEND_COUNT)
+    throw customError(429, "하루 전송 가능 횟수를 초과했습니다.");
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const data = { code, attempts: 0 };
+  await redisClient.setEx(phone, process.env.CODE_EXPIRY, JSON.stringify(data));
+
+  // Redis 발송 횟수 증가 및 만료시간 설정
+  if (sendCount === 0) {
+    // 처음 요청 시 expire 설정
+    await redisClient.set(sendCountKey, 1, {
+      EX: process.env.SEND_COUNT_EXPIRY,
+    });
+  } else {
+    await redisClient.incr(sendCountKey);
+  }
+
+  const result = await aligo.sendSMS({
+    sender: process.env.SMS_SENDER,
+    receiver: phone,
+    msg: `[footballsquare] 아이디찾기 인증번호는 [${code}] 입니다.`,
+  });
+
+  res.status(200).send({ code: code, message: "인증번호 전송 성공" });
+};
+const searchIdVerify = async (req, res, next) => {
+  const { phone, code } = req.body;
+
+  const record = await redisClient.get(phone);
+
+  if (!record)
+    throw customError(400, "인증번호가 만료되었거나 요청되지 않았습니다.");
+
+  const parsedRecord = JSON.parse(record);
+
+  if (parsedRecord.attempts >= process.env.MAX_ATTEMPTS) {
+    await redisClient.del(phone);
+    throw customError(429, "인증 시도 횟수를 초과했습니다.");
+  }
+
+  if (parsedRecord.code !== code) {
+    parsedRecord.attempts += 1;
+    await redisClient.setEx(
+      phone,
+      process.env.CODE_EXPIRY,
+      JSON.stringify(parsedRecord)
+    );
+    throw customError(400, "인증번호가 일치하지 않습니다.");
+  }
+  next();
+};
 const searchId = async (req, res, next) => {
   const { phone } = req.body;
   const result = await client.query(searchIdSQL, [phone]);
@@ -725,6 +851,9 @@ module.exports = {
   checkDuplicateId: trycatchWrapper(checkDuplicateId),
   checkDuplicateNickname: trycatchWrapper(checkDuplicateNickname),
   signupLoginInfo: trycatchWrapper(signupLoginInfo),
+  signupSend: trycatchWrapper(signupSend),
+  signupVerify: trycatchWrapper(signupVerify),
+  signupCheckUser: trycatchWrapper(signupCheckUser),
   signupPlayerInfo: trycatchWrapper(signupPlayerInfo),
   checkRefreshToken: trycatchWrapper(checkRefreshToken),
   accountSoftDelete: trycatchWrapper(accountSoftDelete),
@@ -735,6 +864,8 @@ module.exports = {
   updateProfileImage: trycatchWrapper(updateProfileImage),
   smsSendMessage: trycatchWrapper(smsSendMessage),
   smsVerify: trycatchWrapper(smsVerify),
+  searchIdSend: trycatchWrapper(searchIdSend),
+  searchIdVerify: trycatchWrapper(searchIdVerify),
   searchId: trycatchWrapper(searchId),
   checkUser: trycatchWrapper(checkUser),
   updatePassword: trycatchWrapper(updatePassword),
