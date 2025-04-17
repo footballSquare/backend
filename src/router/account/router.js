@@ -77,6 +77,7 @@ router.post(
 router.post(
   "/sms/signup/send",
   checkRegInputs([regPhone], ["phone"]),
+  signupCheckUser,
   signupSend
 );
 
