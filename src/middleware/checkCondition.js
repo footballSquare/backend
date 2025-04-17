@@ -143,7 +143,6 @@ const checkMatchEnded = () => {
 const checkMatchNotStarted = () => {
   return async (req, res, next) => {
     const { match_match_start_time } = req.matchInfo;
-
     try {
       const matchStartTime = new Date(match_match_start_time);
       const now = new Date();
@@ -152,7 +151,6 @@ const checkMatchNotStarted = () => {
       if (kstNow >= matchStartTime) {
         throw customError(403, `매치가 이미 시작되었습니다.`);
       }
-
       next();
     } catch (e) {
       next(e);
