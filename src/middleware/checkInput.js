@@ -306,7 +306,7 @@ const checkRegInputs = (regs, checks) => {
         const key = checks[i];
         const reg = regs[i];
 
-        const value = req.body[key] || req.params[key] || req.query[key];
+        const value = req.body[key] ?? req.params[key] ?? req.query[key];
 
         if (value === undefined || value === null || value === "") {
           throw customError(400, `${key} 값이 없습니다.`);
