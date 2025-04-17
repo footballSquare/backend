@@ -143,7 +143,6 @@ const checkMatchEnded = () => {
 const checkMatchNotStarted = () => {
   return async (req, res, next) => {
     const { match_match_start_time } = req.matchInfo;
-    
     try {
       const matchStartTime = new Date(match_match_start_time);
       const now = new Date();
