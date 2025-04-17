@@ -693,7 +693,7 @@ const smsSendMessage = async (req, res, next) => {
   let sendCount = await redisClient.get(sendCountKey);
   sendCount = parseInt(sendCount) || 0;
 
-  if (sendCount >= MAX_SEND_COUNT)
+  if (sendCount >= process.env.MAX_SEND_COUNT)
     throw customError(429, "하루 전송 가능 횟수를 초과했습니다.");
 
   const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -714,7 +714,7 @@ const smsSendMessage = async (req, res, next) => {
     msg: `[footballsquare] 인증번호는 [${code}] 입니다.`,
   });
 
-  res.status(200).send({ code: code, message: "인증번호 전송 성공" });
+  res.status(200).send({ message: "인증번호 전송 성공" });
 };
 const smsVerify = async (req, res, next) => {
   const { phone, code } = req.body;
