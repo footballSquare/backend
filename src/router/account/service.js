@@ -453,7 +453,7 @@ const signupSend = async (req, res, next) => {
     msg: `[footballsquare] 회원가입 인증번호는 [${code}] 입니다.`,
   });
 
-  res.status(200).send({ code: code, message: "인증번호 전송 성공" });
+  res.status(200).send({ message: "인증번호 전송 성공" });
 };
 const signupVerify = async (req, res, next) => {
   const { phone, code } = req.body;
@@ -772,7 +772,7 @@ const searchIdSend = async (req, res, next) => {
     msg: `[footballsquare] 아이디찾기 인증번호는 [${code}] 입니다.`,
   });
 
-  res.status(200).send({ code: code, message: "인증번호 전송 성공" });
+  res.status(200).send({ message: "인증번호 전송 성공" });
 };
 const searchIdVerify = async (req, res, next) => {
   const { phone, code } = req.body;
