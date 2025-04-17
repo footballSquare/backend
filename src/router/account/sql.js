@@ -324,6 +324,14 @@ SET
 WHERE
     player_list_id = $2
 `;
+const getUserStatusSQL = `
+SELECT
+    player_list_player_status AS player_status
+FROM
+    player.list
+WHERE
+    player_list_idx = $1
+`;
 module.exports = {
   checkUserPasswordSQL,
   signinSQL,
@@ -351,4 +359,5 @@ module.exports = {
   searchIdSQL,
   checkUserIdxSQL,
   updatePasswordSQL,
+  getUserStatusSQL,
 };
