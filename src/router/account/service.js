@@ -31,12 +31,11 @@ const {
   signinDiscordOauth,
   signupDiscordOauth,
   getUserIdxDiscordOauthSQL,
-  checkUserSQL,
   updateUserInfoSQL,
   searchIdSQL,
   checkUserIdxSQL,
   updatePasswordSQL,
-  getUserStatusSQL,
+  checkDuplicatePhoneSQL,
 } = require("./sql");
 
 const { regMessage } = require("./../../constant/regx");
@@ -482,12 +481,19 @@ const signupVerify = async (req, res, next) => {
   next();
 };
 const signupCheckUser = async (req, res, next) => {
-  const { my_player_list_idx } = req.decoded;
-  const result = await client.query(getUserStatusSQL, [my_player_list_idx]);
-  if (result.rows.length === 0)
-    throw customError(404, "존재하지 않는 유저입니다.");
-  if (result.rows[0].player_status !== "pending")
-    throw customError(409, "이미 회원가입한 유저입니다.");
+  const { phone } = req.body;
+
+  const result = await client.query(checkDuplicatePhoneSQL, [phone]);
+
+  const exists = result.rows[0]?.exists_flag;
+
+  if (exists === undefined) {
+    throw customError(500, "중복 확인 실패");
+  }
+
+  if (exists) {
+    throw customError(409, "이미 회원가입된 유저입니다.");
+  }
   next();
 };
 const signupPlayerInfo = async (req, res, next) => {

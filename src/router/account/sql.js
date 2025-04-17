@@ -332,6 +332,13 @@ FROM
 WHERE
     player_list_idx = $1
 `;
+const checkDuplicatePhoneSQL = `
+SELECT EXISTS (
+    SELECT 1
+    FROM player.list
+    WHERE player_list_phone = $1
+) AS exists_flag
+`;
 module.exports = {
   checkUserPasswordSQL,
   signinSQL,
@@ -360,4 +367,5 @@ module.exports = {
   checkUserIdxSQL,
   updatePasswordSQL,
   getUserStatusSQL,
+  checkDuplicatePhoneSQL,
 };
