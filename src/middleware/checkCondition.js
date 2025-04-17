@@ -143,6 +143,7 @@ const checkMatchEnded = () => {
 const checkMatchNotStarted = () => {
   return async (req, res, next) => {
     const { match_match_start_time } = req.matchInfo;
+    
     try {
       const matchStartTime = new Date(match_match_start_time);
       const now = new Date();
@@ -698,11 +699,9 @@ const checkIfChampionshipMatchOnly = () => {
   return (req, res, next) => {
     try {
       const { match_match_attribute } = req.matchInfo;
-
       if (match_match_attribute != MATCH_ATTRIBUTE.CHAMPIONSHIP) {
         throw customError(403, "이 기능은 대회 매치에서만 사용할 수 있습니다.");
       }
-
       next();
     } catch (e) {
       next(e);
