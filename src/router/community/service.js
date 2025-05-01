@@ -10,6 +10,8 @@ const { COMMUNITY_ROLE,
 const {deleteFileFromS3} = require("../../database/s3Config/s3Deleter")
 
 const {
+    getCommunityBoardListSQL,
+    postCommunityBoardSQL,
     getCommunitySQL,
     getCommunityStaffSQL,
     getCommunityTeamSQL,
@@ -33,6 +35,52 @@ const {
 const {
     sequenceAutoIncrease
 } = require("../commonSQL")
+
+// 게시글 목록 가져오기
+const getCommunityBoardList = async (req,res,next) => {
+    const {community_list_idx} = req.params
+    const {page} = req.query
+
+    try{
+        const result = await client.query(getCommunityBoardListSQL, [
+            community_list_idx,
+            page
+        ]);
+
+        res.status(200).send({
+            board_list : result.rows
+        })
+    } catch(e){
+        next(e)
+    }
+}
+
+// 커뮤니티 게시글 작성하기
+const postCommunityBoard = async (req,res,next) => {
+    const {community_list_idx} = req.params
+    const {
+        board_list_title,
+        board_list_content
+    } = req.body
+
+    const { my_player_list_idx } = req.decoded
+
+    const new_img_url = req.fileUrl
+
+    try{
+        await client.query(postCommunityBoardSQL, [
+            board_list_title,
+            board_list_content,
+            my_player_list_idx,  
+            new_img_url,
+            community_list_idx
+        ]);
+
+        res.status(200).send({})
+    } catch(e){
+        next(e)
+    }
+}
 
 // 커뮤니티 정보 보기
 const getCommunity = async (req,res,next) => {
@@ -422,6 +470,8 @@ const communityTeamKick = async (req,res,next) => {
 }
 
 module.exports = {
+    getCommunityBoardList,
+    postCommunityBoard,
     getCommunity,
     getCommunityStaff,
     getCommunityTeam,

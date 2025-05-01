@@ -54,7 +54,7 @@ GROUP BY
     cd.player_list_nickname,
     cd.player_list_profile_image,
     wd.is_waiting
-ORDER BY tl.team_list_created_at DESC
+ORDER BY RANDOM()
 LIMIT 10 OFFSET $1 * 10;
 `
 
@@ -110,7 +110,7 @@ GROUP BY
     cd.player_list_nickname,
     cd.player_list_profile_image,
     wd.is_waiting
-ORDER BY tl.team_list_created_at DESC
+ORDER BY RANDOM()
 LIMIT 10 OFFSET $1 * 10;
 `
 

@@ -56,5 +56,6 @@ INSERT INTO championship.type (championship_type_idx, championship_type_name) VA
 -- board.category
 INSERT INTO board.category (board_category_idx, board_category_name) VALUES
 (0, '자유게시판'),
-(1, '커뮤니티 게시판');
+(1, '커뮤니티 게시판'),
+(2, '팀 게시판');
 
