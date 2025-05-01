@@ -314,6 +314,7 @@ CREATE TABLE board.list (
   board_list_content TEXT,
   player_list_idx INT NOT NULL REFERENCES player.list(player_list_idx) ON DELETE CASCADE,
   community_list_idx INT REFERENCES community.list(community_list_idx) ON DELETE CASCADE,
+  team_list_idx INT REFERENCES team.list(team_list_idx) ON DELETE CASCADE,
   board_list_img JSONB,
   board_list_created_at TIMESTAMP DEFAULT now(),
   board_list_updated_at TIMESTAMP DEFAULT now(),

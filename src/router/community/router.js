@@ -12,7 +12,8 @@ const {
 
 const {
     s3Uploader,
-    s3UploaderMultiple
+    s3UploaderMultiple,
+    s3UploaderOptional
 } = require("../../middleware/s3UpLoader")
 
 const {
@@ -26,7 +27,10 @@ const {
     regChampionshipDescription,
     regChampionshipAwardName,
     regChampionshipPeriod,
-    regCommunityNotice
+    regCommunityNotice,
+    regBoardTitle,
+    regBoardContent,
+    regCommentContent
 } = require("../../constant/regx")
 
 const {
@@ -69,6 +73,8 @@ const {
 } = require("../../middleware/checkDuplicate")
 
 const {
+    getCommunityBoardList,
+    postCommunityBoard,
     getCommunity,
     getCommunityStaff,
     getCommunityTeam,
@@ -88,6 +94,26 @@ const {
     communityTeamAccessDeny,
     communityTeamKick
 } = require("./service")
+
+// 커뮤니티 게시글 목록 가져오기
+router.get("/:community_list_idx/board",
+    checkIdx("community_list_idx"),
+    checkPage(),
+    checkIsCommunity,
+    getCommunityBoardList
+)
+
+// 커뮤니티 게시글 작성하기
+router.post("/:community_list_idx/board",
+    multerMiddleware,
+    checkRegInput(regBoardTitle,"board_list_title"),
+    checkRegInput(regBoardContent,"board_list_content"),
+    checkLogin,
+    checkIsCommunityAdminRole(),
+    checkIsYourCommunity(),
+    s3UploaderOptional("board"),
+    postCommunityBoard
+)
 
 // 커뮤니티 정보 가져오기
 router.get("/:community_list_idx",
