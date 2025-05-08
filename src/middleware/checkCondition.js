@@ -641,10 +641,14 @@ const checkMatchNotEnded = () => {
         );
       }
 
+      console.log(
+        end
+      )
+
       const now = new Date();
       const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
 
-      if (now >= kstNow) {
+      if (kstNow >= end) {
         throw customError(403, "이미 종료된 매치입니다.");
       }
 
