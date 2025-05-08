@@ -53,7 +53,9 @@ const {
 const {
     checkIsCommunityAdmin,
     checkIsTeamInCommunity,
-    checkTeamNotJoinedCommunity
+    checkTeamNotJoinedCommunity,
+    checkTeamNotJoinedCommunityWaitList,
+    checkIsAlreadyWaitlist
 } = require("../../middleware/checkCondition")
 
 const {
@@ -235,6 +237,7 @@ router.post("/:community_list_idx/staff/application",
     checkLogin,
     checkIsCommunity,
     checkHasCommunityRole(),
+    checkIsAlreadyWaitlist(),
     communityStaffApplication
 )
 
@@ -258,6 +261,7 @@ router.post("/:community_list_idx/team/application",
     checkLogin,
     checkIsTeamLeader(),
     checkTeamNotJoinedCommunity(),
+    checkTeamNotJoinedCommunityWaitList(),
     checkIsCommunity,
     communityTeamApplication
 )
