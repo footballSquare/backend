@@ -57,7 +57,8 @@ const {
 const {
     checkTeamMatchCooldown,
     checkTeamMemberCount,
-    checkPlayerNotInTeam
+    checkPlayerNotInTeam,
+    checkIsAlreadyTeamWaitlist
 } = require("../../middleware/checkCondition")
 
 const {
@@ -258,6 +259,7 @@ router.put("/:team_list_idx/application",
     checkLogin,
     checkHasTeam(),
     checkIsTeam,
+    checkIsAlreadyTeamWaitlist(),
     teamApplication
 )
 

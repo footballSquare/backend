@@ -550,6 +550,76 @@ const checkTeamNotJoinedCommunity = () => {
   };
 };
 
+// 팀이 이미 커뮤니티 가입 신청을 넣었을 경우
+const checkTeamNotJoinedCommunityWaitList = () => {
+  return async (req, res, next) => {
+    const teamIdx = req.decoded.my_team_list_idx;
+
+    try {
+      const result = await client.query(
+        `SELECT 1 FROM community.team_waitlist
+                 WHERE team_list_idx = $1`,
+        [teamIdx]
+      );
+
+      if (result.rowCount > 0) {
+        throw customError(403, "이미 가입 신청 완료되었습니다.");
+      }
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+};
+
+// 선수가 이미 커뮤니티 운영진 가입 신청을 넣었을 경우
+const checkIsAlreadyWaitlist = () => {
+  return async (req, res, next) => {
+    const my_player_list_idx = req.decoded.my_player_list_idx;
+
+    try {
+      const result = await client.query(
+        `SELECT 1 FROM community.waitlist
+                 WHERE player_list_idx = $1`,
+        [my_player_list_idx]
+      );
+
+      if (result.rowCount > 0) {
+        throw customError(403, "이미 가입 신청 완료되었습니다.");
+      }
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+};
+
+// 선수가 이미 팀 가입 신청을 넣었을 경우
+const checkIsAlreadyTeamWaitlist = () => {
+  return async (req, res, next) => {
+    const {my_player_list_idx} = req.decoded;
+    const { team_list_idx } = req.params;
+
+    try {
+      const result = await client.query(
+        `SELECT 1 FROM team.waitlist
+        WHERE player_list_idx = $1 AND team_list_idx = $2`,
+        [my_player_list_idx,team_list_idx]
+      );
+
+      if (result.rowCount > 0) {
+        throw customError(403, "이미 가입 신청 완료되었습니다.");
+      }
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+};
+
 // 두 팀이 대회에 참여한 팀인지 확인
 const checkBothTeamsInChampionship = () => {
   return async (req, res, next) => {
@@ -731,6 +801,9 @@ module.exports = {
   checkLikeExists,
   checkIsCommentOwner,
   checkTeamNotJoinedCommunity,
+  checkTeamNotJoinedCommunityWaitList,
+  checkIsAlreadyWaitlist,
+  checkIsAlreadyTeamWaitlist,
   checkBothTeamsInChampionship,
   checkIsTherePositionParticipant,
   checkMatchNotEnded,
