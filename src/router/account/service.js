@@ -136,7 +136,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
   const teamIdx = result.rows[0].team_idx || null;
 
   const teamRoleIdx = await getTeamRoleIdx(userIdx);
-  const { community_role_idx, community_list_idx } = await getCommunityIdx(
+  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(
     userIdx
   );
 
