@@ -342,6 +342,26 @@ const checkPositionInFormation = () => {
   };
 };
 
+// 공개 매치인지 확인하는 미들웨어
+const checkIsOpenMatch = () => {
+  return async (req, res, next) => {
+    try {
+      const { match_match_attribute } = req.matchInfo;
+
+      if (match_match_attribute != MATCH_ATTRIBUTE.PUBLIC) {
+        throw customError(
+          403,
+          "공개 매치가 아닌 매치에는 참여가 불가능합니다."
+        );
+      }
+
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
 // 매치 생성자인지 확인
 const checkIsMatchOwner = () => {
   return async (req, res, next) => {
@@ -809,4 +829,5 @@ module.exports = {
   checkMatchNotEnded,
   checkAlreadyWaitList,
   checkIfChampionshipMatchOnly,
+  checkIsOpenMatch
 };
