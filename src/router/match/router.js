@@ -69,7 +69,8 @@ const {
     checkIsTherePositionParticipant,
     checkMatchNotEnded,
     checkAlreadyWaitList,
-    checkIfChampionshipMatchOnly
+    checkIfChampionshipMatchOnly,
+    checkIsOpenMatch
 } = require("../../middleware/checkCondition")
 
 const {
@@ -217,6 +218,7 @@ router.put("/:match_match_idx/open/join",
     checkPosition(),
     checkLogin,
     getMatchAndTeamInfo,
+    checkIsOpenMatch(),
     checkMatchOverlap(),
     checkMatchNotEnded(),
     checkPositionInFormation(),
