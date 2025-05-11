@@ -1,3 +1,7 @@
+const { 
+    BOARD_CATEGORY
+} = require("../../constant/constantIndex")
+
 // 게시글 목록 가져오기
 const getBoardListSQL =
 `
@@ -109,12 +113,18 @@ GROUP BY bd.board_list_idx, bd.board_category_idx, bd.board_list_title, bd.board
          bd.player_list_nickname, bd.player_list_profile_image, lc.is_liked;
 `
 
-// 게시글 작성하기
+// 커뮤니티 게시글 작성하기
 const postBoardSQL = 
 `
 WITH community_info AS (
     SELECT community_list_idx 
     FROM community.staff
+    WHERE player_list_idx = $4 
+    LIMIT 1
+),
+team_info AS (
+    SELECT team_list_idx
+    FROM team.member
     WHERE player_list_idx = $4 
     LIMIT 1
 )
@@ -126,12 +136,17 @@ INSERT INTO board.list (
     board_list_img, 
     board_list_created_at, 
     board_list_updated_at,
-    community_list_idx
+    community_list_idx,
+    team_list_idx
 ) VALUES (
     $1, $2, $3, $4, to_jsonb(array[$5]), now(), now(),
     CASE 
-        WHEN $1 = 1 THEN (SELECT community_list_idx FROM community_info) 
+        WHEN $1 = ${BOARD_CATEGORY.COMMUNITY_BOARD} THEN (SELECT community_list_idx FROM community_info) 
         ELSE NULL 
+    END,
+    CASE
+        WHEN $1 = ${BOARD_CATEGORY.TEAM_BOARD} THEN (SELECT team_list_idx FROM team_info)
+        ELSE NULL
     END
 )
 `
