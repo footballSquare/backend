@@ -238,20 +238,20 @@ const checkCategory = () => {
     let value = req.body.category ?? req.params.category ?? req.query.category;
 
     try {
-      // ✅ undefined 또는 null 체크
+      // undefined 또는 null 체크
       if (value == null) {
         throw customError(400, `category 값이 없습니다.`);
       }
 
-      // ✅ 숫자로 변환 (숫자가 아닐 경우 NaN 처리됨)
+      // 숫자로 변환 (숫자가 아닐 경우 NaN 처리됨)
       value = Number(value);
 
-      // ✅ NaN(숫자로 변환할 수 없는 값)인지 체크
+      // NaN(숫자로 변환할 수 없는 값)인지 체크
       if (isNaN(value)) {
         throw customError(400, `category 값이 올바르지 않습니다.`);
       }
 
-      // ✅ BOARD_CATEGORY에 존재하는 값인지 확인
+      // BOARD_CATEGORY에 존재하는 값인지 확인
       if (!Object.values(BOARD_CATEGORY).includes(value)) {
         throw customError(400, `category 값이 올바르지 않습니다.`);
       }

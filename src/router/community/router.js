@@ -105,17 +105,17 @@ router.get("/:community_list_idx/board",
     getCommunityBoardList
 )
 
-// 커뮤니티 게시글 작성하기
-router.post("/:community_list_idx/board",
-    multerMiddleware,
-    checkRegInput(regBoardTitle,"board_list_title"),
-    checkRegInput(regBoardContent,"board_list_content"),
-    checkLogin,
-    checkIsCommunityAdminRole(),
-    checkIsYourCommunity(),
-    s3UploaderOptional("board"),
-    postCommunityBoard
-)
+// // 커뮤니티 게시글 작성하기
+// router.post("/:community_list_idx/board",
+//     multerMiddleware,
+//     checkRegInput(regBoardTitle,"board_list_title"),
+//     checkRegInput(regBoardContent,"board_list_content"),
+//     checkLogin,
+//     checkIsCommunityAdminRole(),
+//     checkIsYourCommunity(),
+//     s3UploaderOptional("board"),
+//     postCommunityBoard
+// )
 
 // 커뮤니티 정보 가져오기
 router.get("/:community_list_idx",

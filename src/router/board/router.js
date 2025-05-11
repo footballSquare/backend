@@ -59,6 +59,10 @@ const {
 } = require("../../middleware/checkData")
 
 const {
+    checkHasTeamOrCommunity
+} = require("../../middleware/checkRole")
+
+const {
     getBoardList,
     getBoard,
     postBoard,
@@ -93,6 +97,7 @@ router.post("/",
     checkRegInput(regBoardTitle,"board_list_title"),
     checkRegInput(regBoardContent,"board_list_content"),
     checkLogin,
+    checkHasTeamOrCommunity(),
     s3UploaderOptional("board"),
     postBoard
 )

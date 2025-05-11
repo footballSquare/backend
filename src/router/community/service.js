@@ -55,32 +55,32 @@ const getCommunityBoardList = async (req,res,next) => {
     }
 }
 
-// 커뮤니티 게시글 작성하기
-const postCommunityBoard = async (req,res,next) => {
-    const {community_list_idx} = req.params
-    const {
-        board_list_title,
-        board_list_content
-    } = req.body
+// // 커뮤니티 게시글 작성하기
+// const postCommunityBoard = async (req,res,next) => {
+//     const {community_list_idx} = req.params
+//     const {
+//         board_list_title,
+//         board_list_content
+//     } = req.body
 
-    const { my_player_list_idx } = req.decoded
+//     const { my_player_list_idx } = req.decoded
 
-    const new_img_url = req.fileUrl
+//     const new_img_url = req.fileUrl
 
-    try{
-        await client.query(postCommunityBoardSQL, [
-            board_list_title,
-            board_list_content,
-            my_player_list_idx,  
-            new_img_url,
-            community_list_idx
-        ]);
+//     try{
+//         await client.query(postCommunityBoardSQL, [
+//             board_list_title,
+//             board_list_content,
+//             my_player_list_idx,  
+//             new_img_url,
+//             community_list_idx
+//         ]);
 
-        res.status(200).send({})
-    } catch(e){
-        next(e)
-    }
-}
+//         res.status(200).send({})
+//     } catch(e){
+//         next(e)
+//     }
+// }
 
 // 커뮤니티 정보 보기
 const getCommunity = async (req,res,next) => {

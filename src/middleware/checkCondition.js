@@ -444,9 +444,9 @@ const checkIsPostOwner = () => {
   return async (req, res, next) => {
     const my_player_list_idx = req.decoded.my_player_list_idx;
     const board_list_idx =
-      req.body.match_match_idx ??
-      req.params.match_match_idx ??
-      req.query.match_match_idx;
+      req.body.board_list_idx ??
+      req.params.board_list_idx ??
+      req.query.board_list_idx;
 
     try {
       const result = await client.query(

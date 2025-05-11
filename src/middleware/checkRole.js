@@ -3,7 +3,8 @@ const client = require("../database/postgreSQL")
 
 const {
     TEAM_ROLE,
-    COMMUNITY_ROLE
+    COMMUNITY_ROLE,
+    BOARD_CATEGORY
 } = require("../constant/constantIndex")
 
 // 이미 소속 팀이 존재하는지 여부 체크
@@ -162,7 +163,6 @@ const checkIsYourCommunityAtDB = () => {
     return async (req, res, next) => {
         const { my_community_list_idx } = req.decoded;
         const { championship_list_idx } = req.params ?? req.body ?? req.query
-        console.log(championship_list_idx)
 
         try {
             const result = await client.query(`
@@ -179,6 +179,28 @@ const checkIsYourCommunityAtDB = () => {
     };
 };
 
+// 대회 매치인지 아닌지 체크
+const checkHasTeamOrCommunity = () => {
+  return (req, res, next) => {
+    try {
+      let category = req.query.category;
+      const {my_team_list_idx,my_community_list_idx} = req.decoded;
+        
+      if(category == BOARD_CATEGORY.COMMUNITY_BOARD) {
+        if(my_community_list_idx == null) throw customError(403, "소속 커뮤니티가 없습니다.");
+        }
+      else if (category == BOARD_CATEGORY.TEAM_BOARD) {
+        if(my_team_list_idx == null)throw customError(403, "소속팀이 없습니다.");
+        }
+      else if (category == BOARD_CATEGORY.FREE_BOARD) {throw customError(403, "현재 사용할 수 없는 게시판 입니다.");}
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
+
 module.exports = {
     checkIsTeamLeader,
     checkIsTeamSubLeader,
@@ -189,6 +211,7 @@ module.exports = {
     checkHasCommunityRole,
     checkIsCommunityStaffRole,
     checkIsYourCommunity,
-    checkIsYourCommunityAtDB
+    checkIsYourCommunityAtDB,
+    checkHasTeamOrCommunity
 }
 
