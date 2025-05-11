@@ -471,7 +471,7 @@ const communityTeamKick = async (req,res,next) => {
 
 module.exports = {
     getCommunityBoardList,
-    postCommunityBoard,
+    // postCommunityBoard,
     getCommunity,
     getCommunityStaff,
     getCommunityTeam,

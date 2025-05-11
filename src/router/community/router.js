@@ -76,7 +76,7 @@ const {
 
 const {
     getCommunityBoardList,
-    postCommunityBoard,
+    // postCommunityBoard,
     getCommunity,
     getCommunityStaff,
     getCommunityTeam,
