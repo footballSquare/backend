@@ -802,6 +802,22 @@ const checkIfChampionshipMatchOnly = () => {
   };
 };
 
+// 팀 매치가 맞는지 체크
+const checkIsTeamMatch = () => {
+  return (req, res, next) => {
+    try {
+      const { team_list_idx } = req.matchInfo;
+      
+      if (!team_list_idx) {
+        throw customError(403, "팀 매치가 아닙니다.");
+      }
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
 module.exports = {
   checkTeamMatchCooldown,
   checkTeamMemberCount,
@@ -829,5 +845,6 @@ module.exports = {
   checkMatchNotEnded,
   checkAlreadyWaitList,
   checkIfChampionshipMatchOnly,
-  checkIsOpenMatch
+  checkIsOpenMatch,
+  checkIsTeamMatch
 };

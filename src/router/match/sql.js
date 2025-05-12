@@ -118,6 +118,16 @@ AND team_list_idx = $2
 AND player_list_idx = $3;
 `
 
+// 팀 매치 공개/비공개 매치로 변경전
+const changeMatchAttributeSQL = 
+`
+UPDATE match.match
+SET 
+    match_match_attribute = $2
+WHERE match_match_idx = $1
+AND team_list_idx = $3;
+`
+
 // 팀 매치 수정하기
 const putTeamMatchAtChampionShipSQL = 
 `
@@ -516,6 +526,7 @@ module.exports = {
     postOpenMatchSQL,
     putTeamMatchSQL,
     putTeamMatchAtChampionShipSQL,
+    changeMatchAttributeSQL,
     closedMatchSQL,
     deleteWaitlistSQL,
     postTeamMatchSQL,
