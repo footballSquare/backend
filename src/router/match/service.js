@@ -13,6 +13,7 @@ const {
     postTeamMatchSQL,
     putTeamMatchSQL,
     putTeamMatchAtChampionShipSQL,
+    changeMatchAttributeSQL,
     closedMatchSQL,
     deleteWaitlistSQL,
     deleteMatchSQL,
@@ -171,6 +172,29 @@ const putTeamMatch = async (req,res,next) => {
         res.status(200).send({})
     } catch(e){
         await client.query("ROLLBACK");
+        next(e)
+    }
+}
+
+// 매치 공개/비공개 매치로 변경
+const changeMatchAttribute = async (req,res,next) => {
+    const {match_match_idx} = req.params
+    const {
+        my_team_list_idx
+    } = req.decoded
+
+    const { match_match_attribute } = req.matchInfo;
+    const changedMatchAttribute = Number(!match_match_attribute)
+
+    try{
+        await client.query(changeMatchAttributeSQL, [
+            match_match_idx,
+            changedMatchAttribute,
+            my_team_list_idx
+        ])
+
+        res.status(200).send({})
+    } catch(e){
         next(e)
     }
 }
@@ -680,6 +704,7 @@ module.exports = {
     getOpenMatchList,
     postOpenMatch,
     putTeamMatch,
+    changeMatchAttribute,
     closedMatch,
     postTeamMatch,
     deleteMatch,

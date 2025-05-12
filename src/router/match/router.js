@@ -70,7 +70,8 @@ const {
     checkMatchNotEnded,
     checkAlreadyWaitList,
     checkIfChampionshipMatchOnly,
-    checkIsOpenMatch
+    checkIsOpenMatch,
+    checkIsTeamMatch
 } = require("../../middleware/checkCondition")
 
 const {
@@ -82,6 +83,7 @@ const {
     getMatchDetailData,
     postTeamMatch,
     putTeamMatch,
+    changeMatchAttribute,
     closedMatch,
     getMatchParticipantList,
     getMatchWaitList,
@@ -138,20 +140,31 @@ router.post("/open",
 )
 
 // 팀 매치 수정하기
+// router.put("/:match_match_idx/team/:team_list_idx",
+//     checkIdx("team_list_idx"),
+//     checkIdx("match_match_idx"),
+//     checkMatchFormation(),
+//     checkMatchParticipationType(),
+//     checkMatchAttribute(),
+//     checkRegInput(regMatchDatetime,"match_match_start_time"),
+//     checkRegInput(regMatchDuration,"match_match_duration"),
+//     checkLogin,
+//     checkIsTeamSubLeader(),
+//     getMatchAndTeamInfo,
+//     checkIsTeamMemberAtMatch(),
+//     checkMatchNotStarted(),
+//     putTeamMatch
+// )
+
+// 팀 매치 공개 / 비공개 매치로 변경
 router.put("/:match_match_idx/team/:team_list_idx",
-    checkIdx("team_list_idx"),
     checkIdx("match_match_idx"),
-    checkMatchFormation(),
-    checkMatchParticipationType(),
-    checkMatchAttribute(),
-    checkRegInput(regMatchDatetime,"match_match_start_time"),
-    checkRegInput(regMatchDuration,"match_match_duration"),
     checkLogin,
-    checkIsTeamSubLeader(),
     getMatchAndTeamInfo,
-    checkIsTeamMemberAtMatch(),
-    checkMatchNotStarted(),
-    putTeamMatch
+    checkIsMatchOwner(),
+    checkMatchNotEnded(),
+    checkIsTeamMatch(),
+    changeMatchAttribute
 )
 
 // 매치 마감하기
