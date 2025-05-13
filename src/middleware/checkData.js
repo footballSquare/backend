@@ -11,6 +11,7 @@ const checkExistsInDB = (table, column) => {
             if (!result.rows.length) {
                 throw customError(404, `${column} 가(이) 존재하지 않습니다.`);
             }
+            
             next();
         } catch (e) {
             next(e);
