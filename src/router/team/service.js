@@ -157,6 +157,8 @@ const changeTeamData = async (req,res,next) => {
         team_list_announcement,
         common_status_idx
     } = req.body
+    const now = new Date();
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
 
     try{
         await client.query("BEGIN"); 
@@ -168,9 +170,11 @@ const changeTeamData = async (req,res,next) => {
         const old_team_name = oldResult.rows[0].team_list_name;
 
         if (old_team_name !== team_list_name) {
-            await client.query(
-                postTeamHistorySQL,
-                [team_list_idx, team_list_name]
+            await client.query(postTeamHistorySQL,[
+                team_list_idx,
+                team_list_name,
+                kstNow.toISOString()
+            ]
             );
         }
 
@@ -342,7 +346,7 @@ const getTeamAward = async (req, res, next) => {
 // 팀 연혁 보기
 const getTeamHistory = async (req,res,next) => {
     const {team_list_idx} = req.params
-
+    
     try{
         const result = await client.query(getTeamHistorySQL, [
             team_list_idx

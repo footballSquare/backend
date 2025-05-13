@@ -166,7 +166,7 @@ INSERT INTO team.history (
 VALUES (
     $1,  -- team_list_idx
     $2,  -- team_list_name
-    now()
+    $3
 );
 `
 

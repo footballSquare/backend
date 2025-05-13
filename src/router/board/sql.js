@@ -216,7 +216,7 @@ INSERT INTO board.comment (
     board_comment_created_at, 
     board_comment_updated_at
 ) VALUES (
-    $1, $2, $3, now(), now()
+    $1, $2, $3, $4, $5
 )RETURNING 
     board_comment_idx;
 `
@@ -226,7 +226,7 @@ const putCommentSQL =
 `
 UPDATE board.comment 
 SET board_comment_content = $2, 
-    board_comment_updated_at = NOW()
+    board_comment_updated_at = $3
 WHERE board_comment_idx = $1;
 `
 

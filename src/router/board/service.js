@@ -227,12 +227,16 @@ const postComment = async (req,res,next) => {
     const {
         my_player_list_idx
     } = req.decoded
+    const now = new Date();
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
 
     try{
         const result = await client.query(postCommentSQL, [
             board_list_idx,
             my_player_list_idx,
-            board_comment_content
+            board_comment_content,
+            kstNow.toISOString(),
+            kstNow.toISOString()
         ]);
 
         res.status(200).send(result.rows[0])
@@ -247,11 +251,14 @@ const putComment = async (req,res,next) => {
     const {
         board_comment_content
     } = req.body
+    const now = new Date();
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
 
     try{
         await client.query(putCommentSQL, [
             board_comment_idx,
-            board_comment_content
+            board_comment_content,
+            kstNow.toISOString()
         ]);
 
         res.status(200).send({})

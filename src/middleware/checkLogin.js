@@ -2,7 +2,7 @@ const customError = require("./../util/customError");
 const jwt = require("jsonwebtoken");
 
 const checkLogin = (req, res, next) => {
-
+  console.log("들어옴")
   if (req.method === "OPTIONS") {
     return next();
   }
