@@ -217,7 +217,8 @@ INSERT INTO board.comment (
     board_comment_updated_at
 ) VALUES (
     $1, $2, $3, now(), now()
-);
+)RETURNING 
+    board_comment_idx;
 `
 
 // 댓글 수정하기

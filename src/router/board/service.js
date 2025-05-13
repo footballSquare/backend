@@ -229,13 +229,13 @@ const postComment = async (req,res,next) => {
     } = req.decoded
 
     try{
-        await client.query(postCommentSQL, [
+        const result = await client.query(postCommentSQL, [
             board_list_idx,
             my_player_list_idx,
             board_comment_content
         ]);
 
-        res.status(200).send({})
+        res.status(200).send(result.rows[0])
     } catch(e){
         next(e)
     }
