@@ -164,6 +164,7 @@ router.put("/comment/:board_comment_idx",
 // 댓글 삭제
 router.delete("/comment/:board_comment_idx",
     checkIdx("board_comment_idx"),
+    checkLogin,
     checkIsComment,
     checkIsCommentOwner(),
     deleteComment
