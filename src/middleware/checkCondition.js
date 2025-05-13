@@ -523,7 +523,6 @@ const checkLikeExists = () => {
 // 댓글 작성자인지 확인
 const checkIsCommentOwner = () => {
   return async (req, res, next) => {
-    console.log("req.decoded는",req.decoded)
     const my_player_list_idx = req.decoded.my_player_list_idx;
     const board_comment_idx =
       req.body.board_comment_idx ??
