@@ -157,7 +157,7 @@ router.put("/comment/:board_comment_idx",
     checkRegInput(regCommentContent,"board_comment_content"),
     checkLogin,
     checkIsComment,
-    checkIsCommentOwner,
+    checkIsCommentOwner(),
     putComment
 )
 
@@ -165,7 +165,7 @@ router.put("/comment/:board_comment_idx",
 router.delete("/comment/:board_comment_idx",
     checkIdx("board_comment_idx"),
     checkIsComment,
-    checkIsCommentOwner,
+    checkIsCommentOwner(),
     deleteComment
 )
 
