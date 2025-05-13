@@ -7,6 +7,7 @@ const getTeamMatchListSQL =
 `
 SELECT 
     m.match_match_idx,
+    m.match_match_name,
     m.match_type_idx,
     t.team_list_idx,
     t.team_list_name,
@@ -34,6 +35,7 @@ const getOpenMatchDataSQL =
 `
 SELECT
     m.match_match_idx,
+    m.match_match_name,
     m.match_type_idx,
     m.team_list_idx,
     t.team_list_name,
@@ -82,6 +84,7 @@ WITH inserted_match AS (
 )
 SELECT 
   im.match_match_idx,
+  im.match_match_name,
   im.team_list_idx,
   im.player_list_idx,
   im.match_formation_idx,
@@ -178,6 +181,7 @@ WITH inserted_match AS (
 )
 SELECT 
   im.match_match_idx,
+  im.match_match_name,
   im.team_list_idx,
   im.player_list_idx,
   im.match_formation_idx,
@@ -240,6 +244,7 @@ const getMatchDetailDataSQL =
 `
 SELECT 
     match.match.match_match_idx,
+    match.match.match_match_name,
     match.match.player_list_idx,
     player.list.player_list_nickname,
     player.list.player_list_profile_image,
