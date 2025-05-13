@@ -148,7 +148,8 @@ INSERT INTO board.list (
         WHEN $1 = ${BOARD_CATEGORY.TEAM_BOARD} THEN (SELECT team_list_idx FROM team_info)
         ELSE NULL
     END
-)
+) RETURNING 
+    board_list_idx;
 `
 
 // 게시글 수정

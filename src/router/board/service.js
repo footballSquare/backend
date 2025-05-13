@@ -89,7 +89,7 @@ const postBoard = async (req,res,next) => {
     const new_img_url = req.fileUrl
 
     try{
-        await client.query(postBoardSQL, [
+        const result = await client.query(postBoardSQL, [
             category,
             board_list_title,
             board_list_content,
@@ -97,7 +97,7 @@ const postBoard = async (req,res,next) => {
             new_img_url
         ]);
 
-        res.status(200).send({})
+        res.status(200).send(result.rows[0])
     } catch(e){
         next(e)
     }
