@@ -251,7 +251,7 @@ const signinLogic = async (req, res, next) => {
     httpOnly: true,
     secure: true,
     sameSite: "None",
-    domain: "footballsquare.co.kr",
+    domain: ".footballsquare.co.kr",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
 

@@ -447,8 +447,8 @@ const joinTeamMatch = async (req,res,next) => {
 const leaveMatch = async (req, res,next) => {
     const { target_player_idx } = req.query;
     const { match_match_idx } = req.params;
-    const { my_player_list_idx } = req.decoded
-    const { match_creator_idx, team_captain_idx } = req.matchInfo;
+    const { my_player_list_idx,my_team_list_idx } = req.decoded
+    const { match_creator_idx, team_captain_idx, team_list_idx } = req.matchInfo;
 
     try {
         // 자기 자신을 삭제하는 경우 → 단순히 참가자 목록에서 삭제
@@ -458,7 +458,7 @@ const leaveMatch = async (req, res,next) => {
         }
 
         // 2️⃣ 매치 생성자 또는 팀 주장인 경우 → 참가자 목록에서 삭제 후, 대기자 목록으로 이동
-        else if (my_player_list_idx == match_creator_idx || my_player_list_idx == team_captain_idx) {
+        else if (my_player_list_idx == match_creator_idx || (my_player_list_idx == team_captain_idx && team_list_idx == my_team_list_idx)) {
             
             await client.query("BEGIN"); // 트랜잭션 시작
 
