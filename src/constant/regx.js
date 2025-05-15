@@ -16,16 +16,16 @@ const regChampionshipAwardName = /^.{1,10}$/; // 최대 50글자까지 가능
 const regChampionshipPeriod = /^\d{4}-\d{2}-\d{2}$/;
 
 // 커뮤니티 공지 길이 제한
-const regCommunityNotice = /^.{1,1000}$/;
+const regCommunityNotice = /^.{1,1000}$/s;
 
 // 게시판 제목: 최대 50글자 (1~50자 허용)
 const regBoardTitle = /^.{1,50}$/;
 
 // 게시판 내용: TEXT 데이터 타입 (길이 제한 없음, 최소 1자 이상)
-const regBoardContent = /^.{1,1000}$/;
+const regBoardContent = /^.{1,1000}$/s;
 
 // 댓글 내용: 최대 100글자 (1~100자 허용)
-const regCommentContent = /^.{1,100}$/;
+const regCommentContent = /^.{1,100}$/s;
 
 // 계정 관련 regex
 const regId = /^[A-Za-z0-9]{5,20}$/;
