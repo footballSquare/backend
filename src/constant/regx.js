@@ -32,7 +32,7 @@ const regCommentContent = /^.{1,100}$/s;
 // const regPw = /^.{5,20}$/;
 const regIdx = /^[0-9]+$/;
 const regId = /^[A-Za-z0-9]{8,20}$/;
-const regPw = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{12,20}$/;
+const regPw = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,20}$/;
 const regPhone = /^01[016789]\d{7,8}$/;
 const regNickname = /^[A-Za-z0-9가-힣]{2,10}$/;
 const regPlatform = /^(pc|xbox|playstation)$/;
