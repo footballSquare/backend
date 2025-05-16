@@ -89,7 +89,7 @@ CREATE TABLE team.member (
 
 CREATE TABLE team.history (
   team_history_idx SERIAL PRIMARY KEY,
-  team_list_idx INT,
+  team_list_idx INT REFERENCES team.list(team_list_idx) ON DELETE CASCADE,
   team_list_name VARCHAR(20) NOT NULL,
   team_history_created_at TIMESTAMP DEFAULT now()
 );
@@ -150,7 +150,7 @@ CREATE TABLE match.team_stats (
 CREATE TABLE match.player_stats (
   match_player_stats_idx SERIAL PRIMARY KEY,
   match_match_idx INT NOT NULL REFERENCES match.match(match_match_idx) ON DELETE CASCADE,
-  player_list_idx INT REFERENCES player.list(player_list_idx),
+  player_list_idx INT REFERENCES player.list(player_list_idx) DELETE SET NULL,
   player_list_nickname VARCHAR(10) NOT NULL,
   match_player_stats_goal INT NOT NULL CHECK (match_player_stats_goal >= 0),
   match_player_stats_assist INT NOT NULL CHECK (match_player_stats_assist >= 0),
@@ -267,7 +267,7 @@ CREATE TABLE championship.list (
 CREATE TABLE championship.participation_team (
   participation_team_idx SERIAL PRIMARY KEY,
   championship_list_idx INT NOT NULL REFERENCES championship.list(championship_list_idx) ON DELETE CASCADE,
-  team_list_idx INT REFERENCES team.list(team_list_idx),
+  team_list_idx INT REFERENCES team.list(team_list_idx) DELETE SET NULL,
   team_list_name VARCHAR(20) NOT NULL
 );
 
@@ -282,14 +282,14 @@ CREATE TABLE championship.award_winner (
   championship_award_winner_idx SERIAL PRIMARY KEY,
   championship_list_idx INT NOT NULL REFERENCES championship.list(championship_list_idx) ON DELETE CASCADE,
   championship_award_idx INT NOT NULL REFERENCES championship.award(championship_award_idx) ON DELETE CASCADE,
-  player_list_idx INT REFERENCES player.list(player_list_idx),
+  player_list_idx INT REFERENCES player.list(player_list_idx) DELETE SET NULL,
   championship_award_winner_player_nickname VARCHAR(10) NOT NULL
 );
 
 CREATE TABLE championship.winner (
   championship_winner_idx SERIAL PRIMARY KEY,
   championship_list_idx INT NOT NULL REFERENCES championship.list(championship_list_idx) ON DELETE CASCADE,
-  team_list_idx INT REFERENCES team.list(team_list_idx),
+  team_list_idx INT REFERENCES team.list(team_list_idx) DELETE SET NULL,
   championship_winner_team_name VARCHAR(20) NOT NULL
 );
 
