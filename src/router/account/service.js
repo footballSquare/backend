@@ -817,22 +817,90 @@ const searchId = async (req, res, next) => {
     data: result.rows[0],
   });
 };
+const searchPwSend = async (req, res, next) => {
+  const { phone } = req.body;
+
+  const sendCountKey = `count:${phone}`;
+  let sendCount = await redisClient.get(sendCountKey);
+  sendCount = parseInt(sendCount) || 0;
+
+  if (sendCount >= process.env.MAX_SEND_COUNT)
+    throw customError(429, "하루 전송 가능 횟수를 초과했습니다.");
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const data = { code, attempts: 0 };
+  await redisClient.setEx(phone, process.env.CODE_EXPIRY, JSON.stringify(data));
+
+  // Redis 발송 횟수 증가 및 만료시간 설정
+  if (sendCount === 0) {
+    // 처음 요청 시 expire 설정
+    await redisClient.set(sendCountKey, 1, {
+      EX: process.env.SEND_COUNT_EXPIRY,
+    });
+  } else {
+    await redisClient.incr(sendCountKey);
+  }
+
+  const result = await aligo.sendSMS({
+    sender: process.env.SMS_SENDER,
+    receiver: phone,
+    msg: `[footballsquare] 비밀번호찾기 인증번호는 [${code}] 입니다.`,
+  });
+
+  res.status(200).send({ message: "인증번호 전송 성공" });
+};
+const searchPwVerify = async (req, res, next) => {
+  const { phone, code } = req.body;
+
+  const record = await redisClient.get(phone);
+
+  if (!record)
+    throw customError(400, "인증번호가 만료되었거나 요청되지 않았습니다.");
+
+  const parsedRecord = JSON.parse(record);
+
+  if (parsedRecord.attempts >= process.env.MAX_ATTEMPTS) {
+    await redisClient.del(phone);
+    throw customError(429, "인증 시도 횟수를 초과했습니다.");
+  }
+
+  if (parsedRecord.code !== code) {
+    parsedRecord.attempts += 1;
+    await redisClient.setEx(
+      phone,
+      process.env.CODE_EXPIRY,
+      JSON.stringify(parsedRecord)
+    );
+    throw customError(400, "인증번호가 일치하지 않습니다.");
+  }
+  next();
+};
 const checkUser = async (req, res, next) => {
-  const { id } = req.body;
-  const result = await client.query(checkUserIdxSQL, [id]);
+  const { phone } = req.body;
+  const result = await client.query(checkUserIdxSQL, [phone]);
 
   if (result.rows.length === 0)
     throw customError(404, "등록되지 않은 유저입니다.");
+  if (!result.rows[0].id) throw customError(404, "등록되지 않은 유저입니다.");
+
+  const userIdx = result.rows[0].user_idx;
+  const accessTokenTemporary = setTemporaryAccessToken(userIdx);
+
+  const data = { access_token_temporary: accessTokenTemporary };
 
   res.status(200).send({
-    data: result.rows[0],
+    data: data,
   });
 };
 const updatePassword = async (req, res, next) => {
-  const { id, password } = req.body;
+  const { my_player_list_idx } = req.decoded;
+  const { password } = req.body;
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
-  const result = await client.query(updatePasswordSQL, [hashedPassword, id]);
+  const result = await client.query(updatePasswordSQL, [
+    hashedPassword,
+    my_player_list_idx,
+  ]);
   res.status(200).send({
     message: "비밀번호 변경 성공",
   });
@@ -873,6 +941,8 @@ module.exports = {
   searchIdSend: trycatchWrapper(searchIdSend),
   searchIdVerify: trycatchWrapper(searchIdVerify),
   searchId: trycatchWrapper(searchId),
+  searchPwSend: trycatchWrapper(searchPwSend),
+  searchPwVerify: trycatchWrapper(searchPwVerify),
   checkUser: trycatchWrapper(checkUser),
   updatePassword: trycatchWrapper(updatePassword),
 };
