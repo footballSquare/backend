@@ -23,6 +23,10 @@ const {
 const { s3UploaderOptional } = require("../../middleware/s3UpLoader");
 
 const {
+  checkNicknameDuplicate
+} = require("../../middleware/checkDuplicate")
+
+const {
   getDiscordSigninPage,
   checkCode,
   discordOauthSigninLogic,
@@ -109,6 +113,7 @@ router.post(
   checkPassword
 );
 
+// 나의 정보 수정하기
 router.put(
   "/user/update",
   checkLogin,
@@ -122,6 +127,7 @@ router.put(
       "match_position_idx",
     ]
   ),
+  checkNicknameDuplicate(),
   updateUserInfo
 );
 
