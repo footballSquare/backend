@@ -47,6 +47,8 @@ const {
   updatePassword,
   searchIdSend,
   searchIdVerify,
+  searchPwSend,
+  searchPwVerify,
 } = require("./service");
 
 router.get("/oauth/url/discord", getDiscordSigninPage);
@@ -146,11 +148,23 @@ router.post(
   searchId
 );
 
-router.post("/check/user", checkRegInputs([regId], ["id"]), checkUser);
+router.post(
+  "/sms/search_pw/send",
+  checkRegInputs([regPhone], ["phone"]),
+  searchPwSend
+);
+
+router.post(
+  "/sms/search_pw/verify",
+  checkRegInputs([regPhone], ["phone"]),
+  searchPwVerify,
+  checkUser
+);
 
 router.put(
   "/user/password",
-  checkRegInputs([regId, regPw], ["id", "password"]),
+  checkTemporaryAccessToken,
+  checkRegInputs([regPw], ["password"]),
   updatePassword
 );
 

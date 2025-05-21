@@ -298,7 +298,7 @@ FROM
 WHERE 
     player_list_discord_id = $1
 `;
-
+// id 비밀번호 찾기
 const searchIdSQL = `
 SELECT
     player_list_id AS id
@@ -310,11 +310,12 @@ WHERE
 
 const checkUserIdxSQL = `
 SELECT
-    player_list_idx AS user_idx
+    player_list_idx AS user_idx,
+    player_list_id AS id
 FROM
     player.list
 WHERE
-    player_list_id = $1
+    player_list_phone = $1
 `;
 
 const updatePasswordSQL = `
@@ -322,7 +323,7 @@ UPDATE player.list
 SET
     player_list_password = $1
 WHERE
-    player_list_id = $2
+    player_list_idx = $2
 `;
 const getUserStatusSQL = `
 SELECT
