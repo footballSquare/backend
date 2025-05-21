@@ -68,9 +68,40 @@ const checkChampionshipNameDuplicate = () => {
     };
 };
 
+const checkNicknameDuplicate = () => {
+  return async (req, res, next) => {
+    const { nickname } = req.body;
+    const my_player_list_idx = req.decoded.my_player_list_idx;
+
+    const sql = `SELECT player_list_idx FROM player.list WHERE player_list_nickname = $1`;
+
+    try {
+      const result = await client.query(sql, [nickname]);
+
+      // 닉네임이 아예 존재하지 않으면 통과
+      if (result.rows.length === 0) {
+        return next();
+      }
+
+      // 존재하는 닉네임이 내 닉네임이면 통과
+      const existingPlayerIdx = result.rows[0].player_list_idx;
+      if (existingPlayerIdx === my_player_list_idx) {
+        return next();
+      }
+
+      // 다른 사람 닉네임이면 중복 에러
+      throw customError(409, "이미 존재하는 닉네임입니다.");
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
+
 
 module.exports = {
     checkTeamNameDuplicate,
     checkTeamShortNameDuplicate,
-    checkChampionshipNameDuplicate
+    checkChampionshipNameDuplicate,
+    checkNicknameDuplicate
 };
