@@ -322,6 +322,7 @@ const getMatchWaitListSQL =
 `
 SELECT 
     match.waitlist.match_position_idx,
+    match.waitlist.match_waitlist_created_at,
     player.list.player_list_idx,
     player.list.player_list_nickname,
     player.list.player_list_profile_image AS player_list_url
