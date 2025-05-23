@@ -80,6 +80,7 @@ router.post(
   signupLoginInfo
 );
 
+// 휴대폰 인증번호 요청하기
 router.post(
   "/sms/signup/send",
   checkRegInputs([regPhone], ["phone"]),
@@ -160,6 +161,7 @@ router.post(
   searchPwSend
 );
 
+// 비밀번호 인증번호 검증
 router.post(
   "/sms/search_pw/verify",
   checkRegInputs([regPhone], ["phone"]),

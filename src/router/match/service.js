@@ -341,7 +341,8 @@ const getMatchWaitList = async (req,res,next) => {
             matchWaitlist[row.match_position_idx].push({
                 player_list_idx: row.player_list_idx,
                 player_list_nickname: row.player_list_nickname,
-                player_list_url: row.player_list_url
+                player_list_url: row.player_list_url,
+                match_waitlist_created_at: row.match_waitlist_created_at
             });
         });
 

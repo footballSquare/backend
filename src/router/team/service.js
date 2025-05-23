@@ -131,10 +131,14 @@ const postTeam = async (req,res,next) => {
             TEAM_ROLE.LEADER
         ]);
 
+        const now = new Date();
+        const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+
         // 연혁 추가
         await client.query(postTeamHistorySQL,[
             teamListIdx, 
-            team_list_name
+            team_list_name,
+            kstNow.toISOString()
         ]);
 
         await client.query("COMMIT"); 
