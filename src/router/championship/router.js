@@ -23,7 +23,8 @@ const {
     checkIsTeamLeader,
     checkIsCommunityStaffRole,
     checkIsYourCommunity,
-    checkIsYourCommunityAtDB
+    checkIsYourCommunityAtDB,
+    checkIsYourCommunityByMatchIdx
 } = require("../../middleware/checkRole")
 
 const {
@@ -111,7 +112,7 @@ router.put("/championship_match/:championship_match_idx/done",
     checkLogin,
     checkIsCommunityStaffRole(),
     checkIsChampionshipMatch,
-    checkIsYourCommunityAtDB(),
+    checkIsYourCommunityByMatchIdx(),
     checkChampionshipMatchStatus(),
     championShipMatchDone
 )

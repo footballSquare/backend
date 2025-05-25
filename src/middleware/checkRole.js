@@ -168,7 +168,7 @@ const checkIsYourCommunityAtDB = () => {
             const result = await client.query(`
                 SELECT * FROM championship.list WHERE championship_list_idx = $1
                 `, [championship_list_idx]);
-                console.log(result.rows)
+                
             if (my_community_list_idx != result.rows[0].community_list_idx) {
                 throw customError(403, "해당 커뮤니티의 운영진이 아닙니다.");
             }
@@ -178,6 +178,35 @@ const checkIsYourCommunityAtDB = () => {
         }
     };
 };
+
+const checkIsYourCommunityByMatchIdx = () => {
+  return async (req, res, next) => {
+    const { my_community_list_idx } = req.decoded;
+    const { championship_match_idx } = req.params ?? req.body ?? req.query;
+
+    const sql = `
+      SELECT cl.community_list_idx
+      FROM championship.championship_match cm
+      JOIN championship.list cl ON cm.championship_list_idx = cl.championship_list_idx
+      WHERE cm.championship_match_idx = $1
+    `;
+
+    try {
+      const result = await client.query(sql, [championship_match_idx]);
+
+      const matchCommunityIdx = result.rows[0].community_list_idx;
+
+      if (matchCommunityIdx !== my_community_list_idx) {
+        throw customError(403, "해당 커뮤니티의 운영진이 아닙니다.");
+      }
+
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
 
 // 대회 매치인지 아닌지 체크
 const checkHasTeamOrCommunity = () => {
@@ -212,6 +241,7 @@ module.exports = {
     checkIsCommunityStaffRole,
     checkIsYourCommunity,
     checkIsYourCommunityAtDB,
+    checkIsYourCommunityByMatchIdx,
     checkHasTeamOrCommunity
 }
 
