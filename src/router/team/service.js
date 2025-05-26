@@ -355,7 +355,16 @@ const getTeamHistory = async (req,res,next) => {
         const result = await client.query(getTeamHistorySQL, [
             team_list_idx
         ])
-        res.status(200).send({ team_history : result.rows })
+
+        const team_history = result.rows.map((row) => {
+            const createdAtUTC = new Date(row.team_history_created_at);
+            const createdAtKST = new Date(createdAtUTC.getTime() + 9 * 60 * 60 * 1000); // +9시간
+            return {
+                ...row,
+                team_history_created_at: createdAtKST
+            };
+    });
+        res.status(200).send({ team_history })
     } catch(e){
         next(e)
     }

@@ -102,7 +102,7 @@ router.delete("/championship_match/:championship_match_idx",
     checkLogin,
     checkIsCommunityStaffRole(),
     checkIsChampionshipMatch,
-    checkIsYourCommunityAtDB(),
+    checkIsYourCommunityByMatchIdx(),
     deleteChampionShipMatch
 )
 

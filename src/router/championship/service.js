@@ -244,16 +244,22 @@ const postChampionShipMatch = async (req,res,next) => {
         const second_match_idx = secondMatchResult.rows[0].match_match_idx;
 
         // 대회 매치 추가
-        await client.query(postChampionShipMatchSQL, [
+        const championshipMatchResult = await client.query(postChampionShipMatchSQL, [
             championship_list_idx,
             first_match_idx,
             second_match_idx,
             match_match_start_time,
             MATCH_DURATION.HALF_HOUR
         ])
+
+        const championship_match_idx = championshipMatchResult.rows[0].championship_match_idx;
         
         await client.query("COMMIT");
-        res.status(200).send({})
+        res.status(200).send({
+            "first_match_idx":first_match_idx,
+            "second_match_idx":second_match_idx,
+            "championship_match_idx":championship_match_idx
+        })
     } catch(e){
         await client.query("ROLLBACK");
         await client.query(sequenceAutoIncrease)
