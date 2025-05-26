@@ -73,6 +73,7 @@ INSERT INTO championship.championship_match (
     match_match_start_time, 
     match_match_duration
 ) VALUES ($1, $2, $3, $4, $5)
+RETURNING championship_match_idx; 
 `
 
 // 대회 매치 증빙 자료 조회
