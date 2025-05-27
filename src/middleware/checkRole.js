@@ -40,6 +40,22 @@ const checkIsTeamLeader = () => {
     };
 };
 
+// 팀장이 아닌지 권한 체크
+const checkIsNotTeamLeader = () => {
+    return (req, res, next) => {
+        const { my_team_role_idx } = req.decoded;
+
+        try {
+            if (my_team_role_idx == TEAM_ROLE.LEADER) {
+                throw customError(403, "팀장은 탈퇴할 수 없습니다.");
+            }
+            next();
+        } catch (e) {
+            next(e);
+        }
+    };
+};
+
 // 팀장 또는 부팀장 인지 권한 체크
 const checkIsTeamSubLeader = () => {
     return (req, res, next) => {
@@ -232,6 +248,7 @@ const checkHasTeamOrCommunity = () => {
 
 module.exports = {
     checkIsTeamLeader,
+    checkIsNotTeamLeader,
     checkIsTeamSubLeader,
     checkHasTeam,
     checkIsTeamMember,

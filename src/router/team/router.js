@@ -38,7 +38,8 @@ const {
 const {
     checkHasTeam,
     checkIsTeamMember,
-    checkIsTeamLeader
+    checkIsTeamLeader,
+    checkIsNotTeamLeader
 } = require("../../middleware/checkRole")
 
 const {
@@ -278,6 +279,7 @@ router.delete("/:team_list_idx/leave",
     checkIdx("team_list_idx"),
     checkLogin,
     checkIsTeamMember(),
+    checkIsNotTeamLeader(),
     checkIsTeam,
     checkIsReallyPlayer(),
     teamLeave
