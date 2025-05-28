@@ -506,7 +506,7 @@ const postTeamStats = async (req,res,next) => {
     const {
         match_team_stats_our_score,
         match_team_stats_other_score,
-        match_team_stats_possesion,
+        match_team_stats_possession,
         match_team_stats_total_shot,
         match_team_stats_expected_goal,
         match_team_stats_total_pass,
@@ -516,7 +516,7 @@ const postTeamStats = async (req,res,next) => {
         match_team_stats_cornerkick,
         match_team_stats_freekick,
         match_team_stats_penaltykick,
-        mom
+        mom_player_idx
     } = req.body
 
     const {my_team_list_idx} = req.decoded
@@ -529,7 +529,7 @@ const postTeamStats = async (req,res,next) => {
             my_team_list_idx,
             match_team_stats_our_score,
             match_team_stats_other_score,
-            match_team_stats_possesion,
+            match_team_stats_possession,
             match_team_stats_total_shot,
             match_team_stats_expected_goal,
             match_team_stats_total_pass,
@@ -546,7 +546,7 @@ const postTeamStats = async (req,res,next) => {
         await client.query(postMomSQL,[
             match_match_idx,
             match_team_stats_idx,
-            mom
+            mom_player_idx
         ])
 
         await client.query("COMMIT");
@@ -565,7 +565,7 @@ const putTeamStats = async (req,res,next) => {
         team_list_idx,
         match_team_stats_our_score,
         match_team_stats_other_score,
-        match_team_stats_possesion,
+        match_team_stats_possession,
         match_team_stats_total_shot,
         match_team_stats_expected_goal,
         match_team_stats_total_pass,
@@ -585,7 +585,7 @@ const putTeamStats = async (req,res,next) => {
             team_list_idx,
             match_team_stats_our_score,
             match_team_stats_other_score,
-            match_team_stats_possesion,
+            match_team_stats_possession,
             match_team_stats_total_shot,
             match_team_stats_expected_goal,
             match_team_stats_total_pass,
