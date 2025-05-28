@@ -115,8 +115,8 @@ CREATE TABLE match.formation (
 CREATE TABLE match.match (
   match_match_idx SERIAL PRIMARY KEY,
   match_match_name VARCHAR(30) DEFAULT '당신의 매치에 참여하세요!',
-  team_list_idx INT REFERENCES team.list(team_list_idx),
-  player_list_idx INT REFERENCES player.list(player_list_idx) ON DELETE CASCADE,
+  team_list_idx INT REFERENCES team.list(team_list_idx) ON DELETE SET NULL,
+  player_list_idx INT REFERENCES player.list(player_list_idx) ON DELETE SET NULL,
   match_formation_idx INT NOT NULL REFERENCES match.formation(match_formation_idx),
   match_match_participation_type INT NOT NULL,
   match_type_idx INT NOT NULL REFERENCES match.type(match_type_idx),
