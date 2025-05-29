@@ -384,32 +384,47 @@ INSERT INTO match.waitlist (
 // 팀 스탯 입력
 const postTeamStatsSQL =
 `
-WITH team_data AS (
-    SELECT team_list_name FROM team.list WHERE team_list_idx = $2
+WITH team_name_cte AS (
+  SELECT team_list_name FROM team.list WHERE team_list_idx = $2
 )
 INSERT INTO match.team_stats (
-    match_match_idx,
-    team_list_idx,
-    team_list_name,
-    match_team_stats_our_score,
-    match_team_stats_other_score,
-    match_team_stats_possession,
-    match_team_stats_total_shot,
-    match_team_stats_expected_goal,
-    match_team_stats_total_pass,
-    match_team_stats_total_tackle,
-    match_team_stats_success_tackle,
-    match_team_stats_saved,
-    match_team_stats_cornerkick,
-    match_team_stats_freekick,
-    match_team_stats_penaltykick,
-    match_team_stats_evidence_img
-) VALUES (
-    $1, 
-    $2, 
-    (SELECT team_list_name FROM team_data), 
-    $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+  match_match_idx,
+  team_list_idx,
+  team_list_name,
+  match_team_stats_our_score,
+  match_team_stats_other_score,
+  match_team_stats_possession,
+  match_team_stats_total_shot,
+  match_team_stats_expected_goal,
+  match_team_stats_total_pass,
+  match_team_stats_total_tackle,
+  match_team_stats_success_tackle,
+  match_team_stats_saved,
+  match_team_stats_cornerkick,
+  match_team_stats_freekick,
+  match_team_stats_penaltykick
 )
+SELECT
+  $1,  -- match_match_idx
+  $2,  -- team_list_idx
+  t.team_list_name,
+  $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+FROM team_name_cte t
+ON CONFLICT (match_match_idx, team_list_idx)
+DO UPDATE SET
+  match_team_stats_our_score = EXCLUDED.match_team_stats_our_score,
+  match_team_stats_other_score = EXCLUDED.match_team_stats_other_score,
+  match_team_stats_possession = EXCLUDED.match_team_stats_possession,
+  match_team_stats_total_shot = EXCLUDED.match_team_stats_total_shot,
+  match_team_stats_expected_goal = EXCLUDED.match_team_stats_expected_goal,
+  match_team_stats_total_pass = EXCLUDED.match_team_stats_total_pass,
+  match_team_stats_total_tackle = EXCLUDED.match_team_stats_total_tackle,
+  match_team_stats_success_tackle = EXCLUDED.match_team_stats_success_tackle,
+  match_team_stats_saved = EXCLUDED.match_team_stats_saved,
+  match_team_stats_cornerkick = EXCLUDED.match_team_stats_cornerkick,
+  match_team_stats_freekick = EXCLUDED.match_team_stats_freekick,
+  match_team_stats_penaltykick = EXCLUDED.match_team_stats_penaltykick,
+  team_list_name = EXCLUDED.team_list_name
 RETURNING match_team_stats_idx;
 `;
 
@@ -429,39 +444,6 @@ SELECT
 (SELECT player_list_nickname FROM player.list WHERE player_list_idx = $3);
 `
 
-// 팀 스탯 수정 SQL
-const putTeamStatsSQL = 
-`
-UPDATE match.team_stats
-SET 
-    match_team_stats_our_score = $3,
-    match_team_stats_other_score = $4,
-    match_team_stats_possession = $5,
-    match_team_stats_total_shot = $6,
-    match_team_stats_expected_goal = $7,
-    match_team_stats_total_pass = $8,
-    match_team_stats_total_tackle = $9,
-    match_team_stats_success_tackle = $10,
-    match_team_stats_saved = $11,
-    match_team_stats_cornerkick = $12,
-    match_team_stats_freekick = $13,
-    match_team_stats_penaltykick = $14
-WHERE match_match_idx = $1
-AND team_list_idx = $2
-RETURNING match_team_stats_idx; 
-`
-
-// MOM 수정 
-const putMomSQL =
-`
-UPDATE match.mom
-SET 
-    match_team_stats_idx = $2,
-    player_list_idx = (SELECT player_list_idx FROM player.list WHERE player_list_idx = $3),
-    player_list_nickname = (SELECT player_list_nickname FROM player.list WHERE player_list_idx = $3)
-WHERE match_match_idx = $1;
-`
-
 // 매치 참여자 삭제
 const deletedMatchParticipantSQL = 
 `
@@ -479,51 +461,44 @@ WHERE match_match_idx = $1;
 // 개인 스탯 입력하기
 const postPlayerStatsSQL =
 `
-WITH player_data AS (
-    SELECT player_list_nickname 
-    FROM player.list 
-    WHERE player_list_idx = $2
+WITH nickname_cte AS (
+  SELECT player_list_nickname FROM player.list WHERE player_list_idx = $2
 )
 INSERT INTO match.player_stats (
-    match_match_idx,
-    player_list_idx,
-    player_list_nickname,
-    match_player_stats_goal,
-    match_player_stats_assist,
-    match_player_stats_successrate_pass,
-    match_player_stats_successrate_dribble,
-    match_player_stats_successrate_tackle,
-    match_player_stats_possession,
-    match_player_stats_standing_tackle,
-    match_player_stats_sliding_tackle,
-    match_player_stats_cutting,
-    match_player_stats_saved,
-    match_player_stats_successrate_saved,
-    match_player_stats_evidence_img
-) VALUES (
-    $1, $2, (SELECT player_list_nickname FROM player_data), 
-    $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+  match_match_idx,
+  player_list_idx,
+  player_list_nickname,
+  match_player_stats_goal,
+  match_player_stats_assist,
+  match_player_stats_successrate_pass,
+  match_player_stats_successrate_dribble,
+  match_player_stats_successrate_tackle,
+  match_player_stats_possession,
+  match_player_stats_standing_tackle,
+  match_player_stats_sliding_tackle,
+  match_player_stats_cutting,
+  match_player_stats_saved,
+  match_player_stats_successrate_saved
 )
-`
-
-// 개인 스탯 수정하기
-const putPlayerStatsSQL = 
-`
-UPDATE match.player_stats
-SET 
-    match_player_stats_goal = $3,
-    match_player_stats_assist = $4,
-    match_player_stats_successrate_pass = $5,
-    match_player_stats_successrate_dribble = $6,
-    match_player_stats_successrate_tackle = $7,
-    match_player_stats_possession = $8,
-    match_player_stats_standing_tackle = $9,
-    match_player_stats_sliding_tackle = $10,
-    match_player_stats_cutting = $11,
-    match_player_stats_saved = $12,
-    match_player_stats_successrate_saved = $13
-WHERE match_match_idx = $1 
-AND player_list_idx = $2;
+SELECT
+  $1, $2, n.player_list_nickname,
+  $3, $4, $5, $6, $7, $8,
+  $9, $10, $11, $12, $13
+FROM nickname_cte n
+ON CONFLICT (match_match_idx, player_list_idx)
+DO UPDATE SET
+  match_player_stats_goal = EXCLUDED.match_player_stats_goal,
+  match_player_stats_assist = EXCLUDED.match_player_stats_assist,
+  match_player_stats_successrate_pass = EXCLUDED.match_player_stats_successrate_pass,
+  match_player_stats_successrate_dribble = EXCLUDED.match_player_stats_successrate_dribble,
+  match_player_stats_successrate_tackle = EXCLUDED.match_player_stats_successrate_tackle,
+  match_player_stats_possession = EXCLUDED.match_player_stats_possession,
+  match_player_stats_standing_tackle = EXCLUDED.match_player_stats_standing_tackle,
+  match_player_stats_sliding_tackle = EXCLUDED.match_player_stats_sliding_tackle,
+  match_player_stats_cutting = EXCLUDED.match_player_stats_cutting,
+  match_player_stats_saved = EXCLUDED.match_player_stats_saved,
+  match_player_stats_successrate_saved = EXCLUDED.match_player_stats_successrate_saved,
+  player_list_nickname = EXCLUDED.player_list_nickname;
 `
 
 module.exports = {
@@ -548,11 +523,8 @@ module.exports = {
     postMatchWaitListSQL,
     postTeamStatsSQL,
     postMomSQL,
-    putTeamStatsSQL,
-    putMomSQL,
     deleteParticipantSQL,
     deletedMatchParticipantSQL,
     deletedMatchWaitListSQL,
-    postPlayerStatsSQL,
-    putPlayerStatsSQL
+    postPlayerStatsSQL
 }

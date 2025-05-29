@@ -1,6 +1,10 @@
 const customError = require("../util/customError")
 const client = require("../database/postgreSQL")
 
+const { 
+    MATCH_ATTRIBUTE
+} = require("../constant/constantIndex")
+
 // 해당
 const getMatchAndTeamInfo = async (req, res, next) => {
     const { match_match_idx } = req.params;
@@ -31,7 +35,25 @@ const getMatchAndTeamInfo = async (req, res, next) => {
             throw customError(404, `존재하지 않는 매치.`);
         }
 
-        req.matchInfo = matchResult.rows[0];
+        const matchInfo = matchResult.rows[0];
+
+        if (matchInfo.match_match_attribute == MATCH_ATTRIBUTE.CHAMPIONSHIP) {
+            const championshipResult = await client.query(`
+            SELECT championship_list_idx
+            FROM championship.championship_match
+            WHERE championship_match_first_idx = $1
+            OR championship_match_second_idx = $1
+            LIMIT 1
+        `, [match_match_idx]);
+
+            if (championshipResult.rowCount === 0) {
+                throw customError(404, `대회 매치로 지정되었지만, 대회 정보가 존재하지 않습니다.`);
+            }
+
+            matchInfo.championship_list_idx = championshipResult.rows[0].championship_list_idx;
+        }
+
+        req.matchInfo = matchInfo;
         next();
     } catch (e) {
         next(e);
