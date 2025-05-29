@@ -102,7 +102,7 @@ const s3UploaderOptional = (folder) => {
 const s3UploaderMultiple = (folder) => {
   return async (req, res, next) => {
     try {
-      const files = req.files;
+      const files = req.file;
 
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "업로드된 파일이 없습니다." });
@@ -149,8 +149,64 @@ const s3UploaderMultiple = (folder) => {
   };
 }
 
+const s3UploaderForChampionshipEvidence = async (req, res, next) => {
+  try {
+    const files = req.files;
+    const championshipIdx = req.matchInfo?.championship_list_idx;
+
+    // 1. 파일이 없으면 바로 통과
+    if (!files || files.length === 0) {
+      return next();
+    }
+
+    // 2. matchInfo와 championship_list_idx 필수 확인
+    if (!championshipIdx) {
+      return res.status(400).json({ message: "챔피언십 인덱스를 찾을 수 없습니다." });
+    }
+
+    const uploadedUrls = [];
+
+    for (const file of files) {
+      // ✅ 크기 제한 확인
+      if (file.size > MAX_FILE_SIZE) {
+        return res.status(400).json({ message: `파일 크기가 너무 큽니다: ${file.originalname}` });
+      }
+
+      // ✅ 확장자 확인
+      const ext = file.originalname.split(".").pop().toLowerCase();
+      if (!allowedExtensions.includes(ext)) {
+        return res.status(400).json({ message: `허용되지 않은 확장자입니다: .${ext}` });
+      }
+
+      // ✅ 파일 이름 정리
+      const sanitizedFileName = sanitizeFileName(file.originalname);
+      const fileName = `championship/${championshipIdx}/evidence/${Date.now()}-${sanitizedFileName}`;
+
+      // ✅ S3 업로드
+      const uploadParams = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: fileName,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      };
+
+      await s3.send(new PutObjectCommand(uploadParams));
+
+      const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+      uploadedUrls.push(fileUrl);
+    }
+
+    req.fileUrls = uploadedUrls;
+    next();
+  } catch (err) {
+    console.error("❌ 챔피언십 증빙자료 업로드 실패:", err.message);
+    return res.status(500).json({ message: "파일 업로드 실패", error: err.message });
+  }
+};
+
 module.exports = { 
   s3Uploader,
-  s3UploaderOptional ,
-  s3UploaderMultiple
+  s3UploaderOptional,
+  s3UploaderMultiple,
+  s3UploaderForChampionshipEvidence
 };

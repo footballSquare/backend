@@ -7,6 +7,10 @@ const {
 } = require("../../constant/constantIndex")
 
 const {
+    deleteFilesFromS3
+} = require("../../database/s3Config/s3Deleter")
+
+const {
     getTeamMatchListSQL,
     getOpenMatchDataSQL,
     postOpenMatchSQL,
@@ -28,13 +32,10 @@ const {
     postMatchWaitListSQL,
     postTeamStatsSQL,
     postMomSQL,
-    putTeamStatsSQL,
-    putMomSQL,
     deleteParticipantSQL,
     deletedMatchParticipantSQL,
     deletedMatchWaitListSQL,
-    postPlayerStatsSQL,
-    putPlayerStatsSQL
+    postPlayerStatsSQL
 } = require("./sql")
 
 
@@ -424,11 +425,11 @@ const joinTeamMatch = async (req,res,next) => {
     const {match_match_idx} = req.params
     const {match_position_idx} = req.query
     const { my_player_list_idx } = req.decoded
-
+    const {match_match_attribute} = req.matchInfo
     try{
         const result = await client.query(checkMatchParticipationSQL, [match_match_idx])
-        let sql
         
+        let sql
         // 매치 생성자 이거나, 공개 매치일 경우 대기자 목록이 아닌 즉시 참여
         if (result.rows[0].player_list_idx == my_player_list_idx || result.rows[0].match_match_participation_type == 1) sql = postMatchParticipantSQL
         else if(result.rows[0].match_match_participation_type == 0) sql = postMatchWaitListSQL
@@ -438,6 +439,7 @@ const joinTeamMatch = async (req,res,next) => {
             my_player_list_idx,
             match_position_idx
         ])
+
         res.status(200).send({})
     } catch(e){
         next(e)
@@ -500,118 +502,189 @@ const leaveMatch = async (req, res,next) => {
     }
 };
 
-// 팀 스탯 입력하기 
-const postTeamStats = async (req,res,next) => {
-    const {match_match_idx} = req.params
-    const {
-        match_team_stats_our_score,
-        match_team_stats_other_score,
-        match_team_stats_possession,
-        match_team_stats_total_shot,
-        match_team_stats_expected_goal,
-        match_team_stats_total_pass,
-        match_team_stats_total_tackle,
-        match_team_stats_success_tackle,
-        match_team_stats_saved,
-        match_team_stats_cornerkick,
-        match_team_stats_freekick,
-        match_team_stats_penaltykick,
+// 팀 스탯 입력 / 수정 하기 
+const postTeamStats = async (req, res, next) => {
+  const { match_match_idx } = req.params;
+  const {
+    match_team_stats_our_score,
+    match_team_stats_other_score,
+    match_team_stats_possession,
+    match_team_stats_total_shot,
+    match_team_stats_expected_goal,
+    match_team_stats_total_pass,
+    match_team_stats_total_tackle,
+    match_team_stats_success_tackle,
+    match_team_stats_saved,
+    match_team_stats_cornerkick,
+    match_team_stats_freekick,
+    match_team_stats_penaltykick,
+    mom_player_idx
+  } = req.body;
+
+  const { my_team_list_idx } = req.decoded;
+
+  try {
+    await client.query("BEGIN");
+
+    // UPSERT
+    const result = await client.query(postTeamStatsSQL, 
+    [
+      match_match_idx,
+      my_team_list_idx,
+      match_team_stats_our_score,
+      match_team_stats_other_score,
+      match_team_stats_possession,
+      match_team_stats_total_shot,
+      match_team_stats_expected_goal,
+      match_team_stats_total_pass,
+      match_team_stats_total_tackle,
+      match_team_stats_success_tackle,
+      match_team_stats_saved,
+      match_team_stats_cornerkick,
+      match_team_stats_freekick,
+      match_team_stats_penaltykick
+    ]);
+
+    const match_team_stats_idx = result.rows[0].match_team_stats_idx;
+
+    // MOM 업데이트: 먼저 삭제 후 삽입
+    await client.query(`
+      DELETE FROM match.mom
+      WHERE match_match_idx = $1 AND match_team_stats_idx = $2
+    `, [match_match_idx, match_team_stats_idx]);
+
+    await client.query(postMomSQL, [
+        match_match_idx, 
+        match_team_stats_idx, 
         mom_player_idx
-    } = req.body
+    ]);
 
-    const {my_team_list_idx} = req.decoded
+    await client.query("COMMIT");
+    res.status(200).json({ message: "팀 스탯 기록 등록/수정 완료" });
 
-    const match_team_stats_evidence_img = req.fileUrl
-    try{
-        await client.query("BEGIN");
-        const result = await client.query(postTeamStatsSQL, [
-            match_match_idx,
-            my_team_list_idx,
-            match_team_stats_our_score,
-            match_team_stats_other_score,
-            match_team_stats_possession,
-            match_team_stats_total_shot,
-            match_team_stats_expected_goal,
-            match_team_stats_total_pass,
-            match_team_stats_total_tackle,
-            match_team_stats_success_tackle,
-            match_team_stats_saved,
-            match_team_stats_cornerkick,
-            match_team_stats_freekick,
-            match_team_stats_penaltykick,
-            match_team_stats_evidence_img
-        ])
-        const match_team_stats_idx = result.rows[0].match_team_stats_idx
+  } catch (e) {
+    await client.query("ROLLBACK");
+    console.error("❌ 팀 스탯 입력/수정 실패:", e.message);
+    next(e);
+  }
+};
 
-        await client.query(postMomSQL,[
-            match_match_idx,
-            match_team_stats_idx,
-            mom_player_idx
-        ])
 
-        await client.query("COMMIT");
+// 팀 스탯 증빙자료 입력 / 수정하기 
+const postTeamStatsEvidence = async (req, res, next) => {
+  const { match_match_idx } = req.params;
+  const { my_team_list_idx } = req.decoded;
+  const urls = req.body.url || []; // 클라이언트가 유지하고자 한 URL
+  const fileUrls = req.fileUrls || []; // 새로 업로드된 URL
+  const teamStatsRow = req.teamStatsRow; // 기존 팀 스탯 row (null일 수도 있음)
+  const verifiedUrls = req.verifiedUrls || []; // 검증된 기존 URL
 
-        res.status(200).send({})
-    } catch(e){
-        await client.query("ROLLBACK");
-        next(e)
+  try {
+    const finalUrls = [...verifiedUrls, ...fileUrls];
+
+    // 삭제 대상 URL 추출
+    const existingUrls = teamStatsRow?.match_team_stats_evidence_img || [];
+    const urlsToDelete = existingUrls.filter((url) => !verifiedUrls.includes(url));
+
+    // 1. 기존 기록이 있으면 → update
+    if (teamStatsRow) {
+      await client.query(`
+        UPDATE match.team_stats
+        SET match_team_stats_evidence_img = $1
+        WHERE match_team_stats_idx = $2
+      `, [JSON.stringify(finalUrls), teamStatsRow.match_team_stats_idx]);
+    } else {
+      // 2. 기존 기록이 없으면 → insert
+      const { rows } = await client.query(`
+        SELECT team_list_name
+        FROM team.list
+        WHERE team_list_idx = $1
+      `, [my_team_list_idx]);
+
+      const team_list_name = rows[0]?.team_list_name || null;
+
+      await client.query(`
+        INSERT INTO match.team_stats (
+          match_match_idx,
+          team_list_idx,
+          team_list_name,
+          match_team_stats_evidence_img
+        ) VALUES ($1, $2, $3, $4)
+      `, [match_match_idx, my_team_list_idx, team_list_name, JSON.stringify(finalUrls)]);
     }
-}
 
-// 팀 스탯 수정하기
-const putTeamStats = async (req,res,next) => {
-    const {match_match_idx} = req.params
-    const {
-        team_list_idx,
-        match_team_stats_our_score,
-        match_team_stats_other_score,
-        match_team_stats_possession,
-        match_team_stats_total_shot,
-        match_team_stats_expected_goal,
-        match_team_stats_total_pass,
-        match_team_stats_total_tackle,
-        match_team_stats_success_tackle,
-        match_team_stats_saved,
-        match_team_stats_cornerkick,
-        match_team_stats_freekick,
-        match_team_stats_penaltykick,
-        mom
-    } = req.body
-
-    try{
-        await client.query("BEGIN");
-        const result = await client.query(putTeamStatsSQL, [
-            match_match_idx,
-            team_list_idx,
-            match_team_stats_our_score,
-            match_team_stats_other_score,
-            match_team_stats_possession,
-            match_team_stats_total_shot,
-            match_team_stats_expected_goal,
-            match_team_stats_total_pass,
-            match_team_stats_total_tackle,
-            match_team_stats_success_tackle,
-            match_team_stats_saved,
-            match_team_stats_cornerkick,
-            match_team_stats_freekick,
-            match_team_stats_penaltykick
-        ])
-        const match_team_stats_idx = result.rows[0].match_team_stats_idx
-
-        await client.query(putMomSQL,[
-            match_match_idx,
-            match_team_stats_idx,
-            mom
-        ])
-
-        await client.query("COMMIT");
-
-        res.status(200).send({})
-    } catch(e){
-        await client.query("ROLLBACK");
-        next(e)
+    // 3. 삭제 대상이 있으면 → S3에서 삭제
+    if (urlsToDelete.length > 0) {
+      await deleteFilesFromS3(urlsToDelete);
     }
-}
+
+    res.status(200).send({
+        message: "팀 스탯 증빙자료 등록/수정 완료",
+        fileUrls: finalUrls
+    })
+  } catch (e) {
+    console.error("❌ 팀 스탯 증빙자료 처리 실패:", e.message);
+    next(e)
+  }
+};
+
+// 개인 스탯 증빙자료 입력 / 수정
+const postPlayerStatsEvidence = async (req, res, next) => {
+  const { match_match_idx } = req.params;
+  const { my_player_list_idx } = req.decoded;
+  const urls = req.body.url || []; // 유지하려는 기존 URL
+  const fileUrls = req.fileUrls || []; // 새로 업로드된 URL
+  const playerStatsRow = req.playerStatsRow; // 기존 개인 스탯 row (null 가능)
+  const verifiedUrls = req.verifiedUrls || []; // 검증된 기존 URL
+
+  try {
+    const finalUrls = [...verifiedUrls, ...fileUrls];
+
+    // 삭제 대상 URL 추출
+    const existingUrls = playerStatsRow?.match_player_stats_evidence_img || [];
+    const urlsToDelete = existingUrls.filter((url) => !verifiedUrls.includes(url));
+
+    // 1. 기존 스탯 존재 → update
+    if (playerStatsRow) {
+      await client.query(`
+        UPDATE match.player_stats
+        SET match_player_stats_evidence_img = $1
+        WHERE match_player_stats_idx = $2
+      `, [JSON.stringify(finalUrls), playerStatsRow.match_player_stats_idx]);
+    } else {
+      // 2. 기존 없음 → insert
+      const { rows } = await client.query(`
+        SELECT player_list_nickname
+        FROM player.list
+        WHERE player_list_idx = $1
+      `, [my_player_list_idx]);
+
+      const player_list_nickname = rows[0]?.player_list_nickname || null;
+
+      await client.query(`
+        INSERT INTO match.player_stats (
+          match_match_idx,
+          player_list_idx,
+          player_list_nickname,
+          match_player_stats_evidence_img
+        ) VALUES ($1, $2, $3, $4)
+      `, [match_match_idx, my_player_list_idx, player_list_nickname, JSON.stringify(finalUrls)]);
+    }
+
+    // 3. S3 삭제
+    if (urlsToDelete.length > 0) {
+      await deleteFilesFromS3(urlsToDelete);
+    }
+
+    res.status(200).json({
+      message: "개인 스탯 증빙자료 등록/수정 완료",
+      fileUrls: finalUrls
+    });
+  } catch (e) {
+    console.error("❌ 개인 스탯 증빙자료 처리 실패:", e.message);
+    next(e);
+  }
+};
 
 // 개인 스탯 입력하기
 const postPlayerStats = async (req,res,next) => {
@@ -632,53 +705,8 @@ const postPlayerStats = async (req,res,next) => {
 
     const { my_player_list_idx } = req.decoded
 
-    const match_player_stats_evidence_img = req.fileUrl
-
     try{
         await client.query(postPlayerStatsSQL, [
-            match_match_idx,
-            my_player_list_idx,
-            match_player_stats_goal,
-            match_player_stats_assist,
-            match_player_stats_successrate_pass,
-            match_player_stats_successrate_dribble,
-            match_player_stats_successrate_tackle,
-            match_player_stats_possession,
-            match_player_stats_standing_tackle,
-            match_player_stats_sliding_tackle,
-            match_player_stats_cutting,
-            match_player_stats_saved,
-            match_player_stats_successrate_saved,
-            match_player_stats_evidence_img
-        ])
-
-        res.status(200).send({})
-    } catch(e){
-        next(e)
-    }
-}
-
-// 개인 스탯 수정하기
-const putPlayerStats = async (req,res,next) => {
-    const {match_match_idx} = req.params
-    const {
-        match_player_stats_goal,
-        match_player_stats_assist,
-        match_player_stats_successrate_pass,
-        match_player_stats_successrate_dribble,
-        match_player_stats_successrate_tackle,
-        match_player_stats_possession,
-        match_player_stats_standing_tackle,
-        match_player_stats_sliding_tackle,
-        match_player_stats_cutting,
-        match_player_stats_saved,
-        match_player_stats_successrate_saved
-    } = req.body
-
-    const { my_player_list_idx } = req.decoded
-
-    try{
-        await client.query(putPlayerStatsSQL, [
             match_match_idx,
             my_player_list_idx,
             match_player_stats_goal,
@@ -718,7 +746,7 @@ module.exports = {
     joinTeamMatch,
     leaveMatch,
     postTeamStats,
-    putTeamStats,
-    postPlayerStats,
-    putPlayerStats
+    postTeamStatsEvidence,
+    postPlayerStatsEvidence,
+    postPlayerStats
 }

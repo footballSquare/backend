@@ -1,9 +1,13 @@
 const router = require("express").Router()
 
-const { multerMiddleware } = require("../../database/s3Config/multerMiddleware")
+const { 
+    multerMiddleware,
+    multerArrayMiddleware
+ } = require("../../database/s3Config/multerMiddleware")
 
 const {
-    s3Uploader
+    s3Uploader,
+    s3UploaderForChampionshipEvidence
 } = require("../../middleware/s3UpLoader")
 
 const {
@@ -25,6 +29,11 @@ const {
     regChampionshipDescription,
     regChampionshipPeriod
 } = require("../../constant/regx")
+
+const {
+    checkTeamStatsFileLimitMiddleware,
+    checkPlayerStatsFileLimitMiddleware
+} = require("../../middleware/checkFileLimit")
 
 const { 
     checkLogin, 
@@ -92,9 +101,9 @@ const {
     joinTeamMatch,
     leaveMatch,
     postTeamStats,
-    putTeamStats,
-    postPlayerStats,
-    putPlayerStats
+    postTeamStatsEvidence,
+    postPlayerStatsEvidence,
+    postPlayerStats
 } = require("./service")
 
 // 팀 매치 목록 가져오기
@@ -266,36 +275,8 @@ router.delete("/:match_match_idx/leave",
     leaveMatch
 )
 
-// 매치 팀 스탯 작성하기
+// 매치 팀 스탯 작성 / 수정하기
 router.post("/:match_match_idx/team_stats",
-    multerMiddleware,
-    checkIdx("match_team_stats_our_score"),
-    checkIdx("match_team_stats_other_score"),
-    checkIdx("match_team_stats_possession"),
-    checkIdx("match_team_stats_possession"),
-    checkIdx("match_team_stats_total_shot"),
-    checkIdx("match_team_stats_expected_goal"),
-    checkIdx("match_team_stats_total_pass"),
-    checkIdx("match_team_stats_total_tackle"),
-    checkIdx("match_team_stats_saved"),
-    checkIdx("match_team_stats_cornerkick"),
-    checkIdx("match_team_stats_freekick"),
-    checkIdx("match_team_stats_penaltykick"),
-    checkIdx("mom"),
-    checkLogin,
-    getMatchAndTeamInfo,
-    checkIfChampionshipMatchOnly(),
-    checkIsTeamMemberAtMatch(),
-    checkIsTeamLeader(),
-    checkMatchStatsPostClosed(),
-    checkIsMatch,
-    s3Uploader("evidance"),
-    postTeamStats
-)
-
-// 매치 팀 스탯 수정하기
-router.put("/:match_match_idx/team_stats",
-    checkIdx("match_match_idx"),
     checkIdx("match_team_stats_our_score"),
     checkIdx("match_team_stats_other_score"),
     checkIdx("match_team_stats_possession"),
@@ -315,13 +296,25 @@ router.put("/:match_match_idx/team_stats",
     checkIsTeamMemberAtMatch(),
     checkIsTeamLeader(),
     checkMatchStatsPostClosed(),
-    checkIsMatch,
-    putTeamStats
+    postTeamStats
 )
 
-// 개인 스탯 작성하기
+// 팀 스탯 증빙 자료 입력 / 수정
+router.post("/:match_match_idx/team_stats/evidence_img",
+    multerArrayMiddleware,
+    checkLogin,
+    getMatchAndTeamInfo,
+    checkIfChampionshipMatchOnly(),
+    checkIsTeamMemberAtMatch(),
+    checkIsTeamLeader(),
+    checkMatchStatsPostClosed(),
+    checkTeamStatsFileLimitMiddleware,
+    s3UploaderForChampionshipEvidence,
+    postTeamStatsEvidence
+)
+
+// 개인 스탯 작성 / 수정하기
 router.post("/:match_match_idx/player_stats",
-    multerMiddleware,
     checkIdx("match_match_idx"),
     checkIdx("match_player_stats_goal"),
     checkIdx("match_player_stats_assist"),
@@ -338,35 +331,21 @@ router.post("/:match_match_idx/player_stats",
     getMatchAndTeamInfo,
     checkIfChampionshipMatchOnly(),
     checkIsTeamMemberAtMatch(),
-    checkIsMatch,
     checkMatchStatsPostClosed(),
-    s3Uploader("evidance"),
     postPlayerStats
 )
 
-// 개인 스탯 수정하기
-router.put("/:match_match_idx/player_stats",
-    checkIdx("match_match_idx"),
-    checkIdx("match_player_stats_goal"),
-    checkIdx("match_player_stats_assist"),
-    checkIdx("match_player_stats_successrate_pass"),
-    checkIdx("match_player_stats_successrate_dribble"),
-    checkIdx("match_player_stats_possession"),
-    checkIdx("match_player_stats_successrate_tackle"),
-    checkIdx("match_player_stats_standing_tackle"),
-    checkIdx("match_player_stats_sliding_tackle"),
-    checkIdx("match_player_stats_cutting"),
-    checkIdx("match_player_stats_saved"),
-    checkIdx("match_player_stats_successrate_saved"),
+// 개인 스탯 증빙자료 입력/수정하기
+router.post("/:match_match_idx/player_stats/evidence_img",
+    multerArrayMiddleware,
     checkLogin,
     getMatchAndTeamInfo,
     checkIfChampionshipMatchOnly(),
     checkIsTeamMemberAtMatch(),
-    checkIsMatch,
     checkMatchStatsPostClosed(),
-    putPlayerStats
+    checkPlayerStatsFileLimitMiddleware,
+    s3UploaderForChampionshipEvidence,
+    postPlayerStatsEvidence
 )
-
-
 
 module.exports = router
