@@ -34,20 +34,20 @@ services:
     env_file:
       - ./src/.env
 
-  # chat-server:
-  #   build:
-  #     context: ./chat
-  #     dockerfile: Dockerfile.prod  
-  #   container_name: footballsquare-chat
-  #   ports:
-  #     - "3001:3001"
-  #   depends_on:
-  #     - redis
-  #   environment:
-  #     - REDIS_HOST=redis
-  #     - REDIS_PORT=6379
-  #   env_file:
-  #     - ./chat/.env
+  chat-server:
+    build:
+      context: ./chat
+      dockerfile: Dockerfile.prod  
+    container_name: footballsquare-chat
+    ports:
+      - "3001:3001"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - ./chat/.env
 
 volumes:
   db_data:
