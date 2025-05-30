@@ -6,6 +6,8 @@ const regMatchDatetime =
 
 const regTeamName = /^[가-힣a-zA-Z0-9\s()\[\]\-_]{1,20}$/; // 영어 한글만 가능, 최대 20글자
 
+const regMatchName = /^.{1,30}$/;
+
 const regTeamShortName = /^[A-Za-z]{3}$/; // 영문 3글자만 가능 (1글자, 2글자 불가)
 const regTeamAnnouncement = /^.{1,500}$/s; // 최대 500글자까지 가능
 
@@ -62,4 +64,5 @@ module.exports = {
   regDiscordTag,
   regCommunityNotice,
   regPhone,
+  regMatchName,
 };

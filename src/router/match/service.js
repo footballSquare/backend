@@ -80,6 +80,7 @@ const getOpenMatchList = async (req,res,next) => {
 // 공방 매치 생성
 const postOpenMatch = async (req,res,next) => {
     const {
+        match_match_name,
         match_formation_idx,
         match_match_participation_type,
         match_type_idx,
@@ -97,6 +98,7 @@ const postOpenMatch = async (req,res,next) => {
 
     try{
         const result = await client.query(postOpenMatchSQL, [
+            match_match_name,
             my_player_list_idx,
             match_formation_idx,
             match_match_participation_type,
@@ -231,6 +233,7 @@ const closedMatch = async (req,res,next) => {
 const postTeamMatch = async (req,res,next) => {
     const {team_list_idx} = req.params
     const {
+        match_match_name,
         match_formation_idx,
         match_match_participation_type,
         match_type_idx,
@@ -244,6 +247,7 @@ const postTeamMatch = async (req,res,next) => {
 
     try{
         const result = await client.query(postTeamMatchSQL, [
+            match_match_name,
             team_list_idx,
             my_player_list_idx,
             match_formation_idx,

@@ -70,6 +70,7 @@ const postOpenMatchSQL =
 `
 WITH inserted_match AS (
   INSERT INTO match.match (
+    match_match_name,
     player_list_idx,
     team_list_idx,
     match_formation_idx,
@@ -79,7 +80,7 @@ WITH inserted_match AS (
     match_match_start_time,
     match_match_duration
   )
-  VALUES ($1, NULL, $2, $3, $4, 0, $5, $6)
+  VALUES ($1, $2, NULL, $3, $4, $5, 0, $6, $7)
   RETURNING *
 )
 SELECT 
@@ -167,6 +168,7 @@ const postTeamMatchSQL =
 `
 WITH inserted_match AS (
   INSERT INTO match.match (
+    match_match_name,
     team_list_idx,
     player_list_idx,
     match_formation_idx,
@@ -176,7 +178,7 @@ WITH inserted_match AS (
     match_match_start_time,
     match_match_duration
   )
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8 ,$9)
   RETURNING *
 )
 SELECT 
