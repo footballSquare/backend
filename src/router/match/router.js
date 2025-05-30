@@ -27,7 +27,8 @@ const {
     regTeamAnnouncement,
     regChampionshipName,
     regChampionshipDescription,
-    regChampionshipPeriod
+    regChampionshipPeriod,
+    regMatchName
 } = require("../../constant/regx")
 
 const {
@@ -123,6 +124,7 @@ router.get("/open",
 // 팀 매치 생성하기
 router.post("/team/:team_list_idx",
     checkIdx("team_list_idx"),
+    checkRegInput(regMatchName,"match_match_name"),
     checkMatchFormation(),
     checkMatchParticipationType(),
     checkMatchType(),
@@ -139,6 +141,7 @@ router.post("/team/:team_list_idx",
 // 공방 매치 생성하기
 router.post("/open",
     checkMatchFormation(),
+    checkRegInput(regMatchName,"match_match_name"),
     checkMatchParticipationType(),
     checkMatchType(),
     checkRegInput(regMatchDatetime,"match_match_start_time"),

@@ -184,7 +184,7 @@ const signinCheck = async (req, res, next) => {
   const result = await client.query(checkUserPasswordSQL, [id]);
 
   if (result.rows.length === 0) {
-    throw customError(404, "등록되지 않은 유저입니다.");
+    throw customError(404, "계정 정보를 확인해주십시오.");
   }
 
   const hashedPassword = result.rows[0].player_list_password;
@@ -192,7 +192,7 @@ const signinCheck = async (req, res, next) => {
   const isMatch = await bcrypt.compare(password, hashedPassword);
 
   if (!isMatch) {
-    throw customError(401, "비밀번호가 틀렸습니다.");
+    throw customError(404, "계정 정보를 확인해주십시오.");
   }
 
   next();
