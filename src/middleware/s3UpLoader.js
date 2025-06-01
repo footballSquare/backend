@@ -47,7 +47,7 @@ const s3Uploader = (folder) => {
 
       const data = await s3.send(new PutObjectCommand(uploadParams));
 
-      req.fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+      req.fileUrl = `${process.env.CDN_DOMAIN}/${fileName}`;
       next();
     } catch (err) {
       return res.status(500).json({ message: "파일 업로드 실패", error: err.message });
@@ -89,7 +89,7 @@ const s3UploaderOptional = (folder) => {
 
       const data = await s3.send(new PutObjectCommand(uploadParams));
 
-      req.fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+      req.fileUrl = `${process.env.CDN_DOMAIN}/${fileName}`;
       next();
     } catch (err) {
       return res.status(500).json({ message: "파일 업로드 실패", error: err.message });
@@ -136,7 +136,7 @@ const s3UploaderMultiple = (folder) => {
 
         await s3.send(new PutObjectCommand(uploadParams));
 
-        const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+        const fileUrl = `${process.env.CDN_DOMAIN}/${fileName}`;
         uploadedUrls.push(fileUrl);
       }
 
@@ -192,7 +192,7 @@ const s3UploaderForChampionshipEvidence = async (req, res, next) => {
 
       await s3.send(new PutObjectCommand(uploadParams));
 
-      const fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+      const fileUrl = `${process.env.CDN_DOMAIN}/${fileName}`;
       uploadedUrls.push(fileUrl);
     }
 
