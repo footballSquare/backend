@@ -270,6 +270,7 @@ const signinLogic = async (req, res, next) => {
       team_idx: teamIdx,
       team_role_idx: teamRoleIdx,
       community_role_idx: community_role_idx,
+      community_list_idx: community_list_idx,
     },
   });
 };

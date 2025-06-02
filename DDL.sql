@@ -9,6 +9,7 @@ CREATE SCHEMA IF NOT EXISTS board;
 CREATE SCHEMA IF NOT EXISTS community;
 CREATE SCHEMA IF NOT EXISTS championship;
 CREATE SCHEMA IF NOT EXISTS common;
+CREATE SCHEMA IF NOT EXISTS chat;
 
 -- ENUM 타입
 CREATE TYPE player_status AS ENUM ('pending', 'active', 'deleted');
@@ -164,7 +165,8 @@ CREATE TABLE match.player_stats (
   match_player_stats_cutting INT NOT NULL DEFAULT 0 CHECK (match_player_stats_cutting >= 0),
   match_player_stats_saved INT NOT NULL DEFAULT 0 CHECK (match_player_stats_saved >= 0),
   match_player_stats_successrate_saved FLOAT NOT NULL DEFAULT 0 CHECK (match_player_stats_successrate_saved BETWEEN 0 AND 100),
-  match_player_stats_evidence_img JSONB  -- NULL 허용, 여러 이미지 URL 배열 저장 가능
+  match_player_stats_evidence_img JSONB,
+  CONSTRAINT unique_match_player UNIQUE (match_match_idx, player_list_idx)
 );
 
 CREATE TABLE match.mom (
@@ -334,3 +336,11 @@ CREATE TABLE board.comment (
 );
 
 
+CREATE TABLE chat.team_chat_message (
+  team_chat_message_idx SERIAL PRIMARY KEY,
+  team_list_idx INT NOT NULL REFERENCES team.list(team_list_idx) ON DELETE CASCADE,
+  player_list_idx INT NOT NULL REFERENCES player.list(player_list_idx) ON DELETE SET NULL,
+  team_chat_message_content TEXT NOT NULL CHECK (char_length(team_chat_message_content) <= 1000),
+  team_chat_message_created_at TIMESTAMP DEFAULT now(),
+  team_chat_message_deleted_at TIMESTAMP
+);
