@@ -696,13 +696,12 @@ const checkIsTherePositionParticipant = () => {
       req.query.match_position_idx;
   
     try {
-      
       const result = await client.query(
         `SELECT 1 FROM match.participant
                  WHERE match_match_idx = $1 AND match_position_idx = $2`,
         [matchIdx, positionIdx]
       );
-      console.log(result)
+
       if (result.rowCount > 0) {
         throw customError(409, "해당 포지션은 이미 다른 참가자가 있습니다.");
       }
