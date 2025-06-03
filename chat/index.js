@@ -14,7 +14,7 @@ const customError = require("./customError")
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  path: "/chat/socket.io",
+  path: "/socket.io",
   cors: {
     origin: 'https://footballsquare.co.kr',
     credentials: true,
