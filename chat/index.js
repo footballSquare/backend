@@ -15,6 +15,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
+    path: "/chat/socket.io",
     origin: 'https://footballsquare.co.kr',
     credentials: true,
     // origin: '*', // 개발 중 전체 허용
