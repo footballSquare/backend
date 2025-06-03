@@ -14,8 +14,8 @@ const customError = require("./customError")
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
+  path: "/chat/socket.io",
   cors: {
-    path: "/chat/socket.io",
     origin: 'https://footballsquare.co.kr',
     credentials: true,
     // origin: '*', // 개발 중 전체 허용
