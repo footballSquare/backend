@@ -46,6 +46,9 @@ app.use("/match", matchRouter);
 const teamRouter = require("./router/team/router");
 app.use("/team", teamRouter);
 
+const chatRouter = require("./router/chat/router")
+app.use("/chat", chatRouter)
+
 // ============== 공통 에러 핸들러 ===========
 
 app.use((err, req, res, next) => {
