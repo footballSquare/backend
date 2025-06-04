@@ -577,12 +577,23 @@ const getUserInfo = async (req, res, next) => {
   let isMine = false;
 
   if (authorization) {
-    const { my_player_list_idx } = jwt.verify(
-      authorization,
-      process.env.ACCESS_TOKEN_SECRET
-    );
-    if (userIdx == my_player_list_idx) isMine = true;
-  }
+    try{
+        const { my_player_list_idx } = jwt.verify(
+          authorization,
+          process.env.ACCESS_TOKEN_SECRET
+        );
+        if (userIdx == my_player_list_idx) isMine = true;
+      } catch (e) {
+        if (e.name === "TokenExpiredError") {
+          e.status = 401;
+          e.message = "만료된 access token 입니다.";
+        } else if (e.name === "JsonWebTokenError") {
+          e.status = 403;
+          e.message = "잘못된 access token 입니다.";
+        }
+        next(e);
+      }
+    }
 
   const result = await client.query(getUserInfoSQL, [userIdx]);
 
