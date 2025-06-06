@@ -155,6 +155,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    domain: ".footballsquare.co.kr",
     maxAge: 3 * 24 * 60 * 60 * 1000,
   });
 
@@ -177,6 +178,7 @@ const discordOauthSigninLogic = async (req, res, next) => {
     },
   });
 };
+
 // 로그인 및 토큰 =================================================================
 const signinCheck = async (req, res, next) => {
   const { id, password } = req.body;
@@ -610,6 +612,7 @@ const getUserInfo = async (req, res, next) => {
     data: result.rows[0],
   });
 };
+
 // 비밀번호 체크 ======================================================================
 const checkPassword = async (req, res, next) => {
   const { password } = req.body;
