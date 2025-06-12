@@ -55,10 +55,16 @@ const {
   searchPwVerify,
 } = require("./service");
 
-router.get("/oauth/url/discord", getDiscordSigninPage);
+router.get("/oauth/url/discord", 
+  getDiscordSigninPage
+);
 
-router.get("/oauth/token/discord", checkCode, discordOauthSigninLogic);
+router.get("/oauth/token/discord", 
+  checkCode, 
+  discordOauthSigninLogic
+);
 
+// 로그인
 router.post(
   "/signin",
   checkRegInputs([regId, regPw], ["id", "password"]),
@@ -66,7 +72,10 @@ router.post(
   signinLogic
 );
 
-router.post("/check/id", checkRegInputs([regId], ["id"]), checkDuplicateId);
+router.post("/check/id", 
+  checkRegInputs([regId], ["id"]), 
+  checkDuplicateId
+);
 
 router.post(
   "/check/nickname",
@@ -88,6 +97,7 @@ router.post(
   signupSend
 );
 
+// 인증번호 검증
 router.post(
   "/sms/signup/verify",
   checkTemporaryAccessToken,
@@ -97,11 +107,19 @@ router.post(
   signupPlayerInfo
 );
 
-router.get("/accesstoken", checkRefreshToken);
+router.get("/accesstoken", 
+  checkRefreshToken
+);
 
-router.delete("/user/delete", checkLogin, accountSoftDelete);
+router.delete("/user/delete", 
+  checkLogin, 
+  accountSoftDelete
+);
 
-router.get("/myinfo", checkLogin, getMyInfo);
+router.get("/myinfo", 
+  checkLogin, 
+  getMyInfo
+);
 
 router.get(
   "/info/:userIdx",
