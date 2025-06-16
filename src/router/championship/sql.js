@@ -227,7 +227,9 @@ WITH match_info AS (
         cm.championship_match_first_idx,
         cm.championship_match_second_idx,
         m1.match_formation_idx AS first_match_formation_idx,
-        m2.match_formation_idx AS second_match_formation_idx
+        m2.match_formation_idx AS second_match_formation_idx,
+        m1.team_list_idx AS first_team_idx, 
+        m2.team_list_idx AS second_team_idx 
     FROM championship.championship_match cm
     JOIN match.match m1 ON cm.championship_match_first_idx = m1.match_match_idx
     JOIN match.match m2 ON cm.championship_match_second_idx = m2.match_match_idx
@@ -296,7 +298,7 @@ SELECT
     mi.second_match_formation_idx,
 
     -- 첫 번째 팀 정보
-    mi.championship_match_first_idx AS first_team_idx,
+    mi.first_team_idx,
     ts1.match_team_stats_idx AS first_team_stats_idx,
     ts1.match_team_stats_our_score AS first_team_our_score,
     ts1.match_team_stats_other_score AS first_team_other_score,
@@ -314,7 +316,7 @@ SELECT
     COALESCE(mom1.player_list_nickname, NULL) AS first_team_mom_nickname,
 
     -- 두 번째 팀 정보
-    mi.championship_match_second_idx AS second_team_idx,
+    mi.second_team_idx,
     ts2.match_team_stats_idx AS second_team_stats_idx,
     ts2.match_team_stats_our_score AS second_team_our_score,
     ts2.match_team_stats_other_score AS second_team_other_score,
@@ -350,6 +352,8 @@ GROUP BY
     mi.championship_match_second_idx,
     mi.first_match_formation_idx,
     mi.second_match_formation_idx,
+    mi.first_team_idx, 
+    mi.second_team_idx, 
     ts1.match_team_stats_idx, ts2.match_team_stats_idx,
     ts1.team_list_idx, ts2.team_list_idx, 
     ts1.match_team_stats_our_score, ts1.match_team_stats_other_score,
