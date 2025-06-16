@@ -45,12 +45,18 @@ WHERE
 
 const putRefreshtokenSQL = `
 INSERT INTO player.refreshtoken (
-    refreshtoken,
-    expires_at,
-    player_list_idx,
-    device_uuid
-) VALUES ($1, $2, $3, $4)
-`;
+  refreshtoken,
+  expires_at,
+  player_list_idx,
+  device_uuid
+)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT (player_list_idx, device_uuid)
+DO UPDATE SET
+  refreshtoken = EXCLUDED.refreshtoken,
+  expires_at = EXCLUDED.expires_at,
+  created_at = now()
+`;;
 
 // 리프레시 토큰 찾아오는 sql
 const checkRefreshtokenSQL = `

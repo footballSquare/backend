@@ -222,126 +222,6 @@ const discordOauthSigninLogic = async (req, res, next) => {
   });
 };
 
-// 디스코드 지속 로그인
-const persistentDiscordOauthSigninLogic = async (req, res, next) => {
-  const { code, state } = req.query;
-
-  const tokenResult = await axios.post(
-    "https://discord.com/api/oauth2/token",
-    new URLSearchParams({
-      client_id: process.env.DISCORD_CLIENT_ID,
-      client_secret: process.env.DISCORD_CLIENT_SECRET,
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: process.env.DISCORD_REDIRECT_URI,
-    }),
-    {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    }
-  );
-
-  const { access_token, token_type } = tokenResult.data;
-
-  const userResult = await axios.get("https://discord.com/api/users/@me", {
-    headers: {
-      Authorization: `${token_type} ${access_token}`,
-    },
-  });
-
-  const user = userResult.data;
-  const discordTag = `${user.username}#${user.discriminator}`;
-
-  const result = await client.query(signinDiscordOauth, [user.id]);
-
-  if (result.rows.length === 0) {
-    const signupResult = await client.query(signupDiscordOauth, [
-      user.id,
-      discordTag,
-    ]);
-
-    const result = await client.query(getUserIdxDiscordOauthSQL, [user.id]);
-
-    res.status(200).send({
-      data: result.rows[0],
-    });
-    return;
-  }
-
-  const userIdx = result.rows[0].user_idx;
-
-  const playerStatus = result.rows[0].player_status;
-
-  if (playerStatus === "pending") {
-    const accessTokenTemporary = setTemporaryAccessToken(userIdx);
-
-    res.status(200).send({
-      data: {
-        player_status: playerStatus,
-        user_idx: userIdx,
-        access_token_temporary: accessTokenTemporary,
-      },
-    });
-    return;
-  } else if (playerStatus === "deleted") {
-    throw customError(403, "이용 불가능한 계정입니다.");
-  }
-
-  const nickname = result.rows[0].nickname;
-  const profileImage = result.rows[0].profile_image || null;
-  const platform = result.rows[0].platform || null;
-  const commonStatusIdx = result.rows[0].common_status_idx || null;
-  const message = result.rows[0].message || null;
-  const teamIdx = result.rows[0].team_idx || null;
-
-  const teamRoleIdx = await getTeamRoleIdx(userIdx);
-  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(
-    userIdx
-  );
-
-  const accessToken = setAccessToken(
-    userIdx,
-    teamIdx,
-    teamRoleIdx,
-    community_role_idx,
-    community_list_idx
-  );
-
-  // 마찬가지로 일단 RT 발급 로직 삭제
-
-  // const refreshToken = setRefreshToken();
-
-  // await putRefreshToken(refreshToken, userIdx);
-
-  // res.cookie("refresh_token", refreshToken, {
-  //   httpOnly: true,
-  //   secure: true,
-  //   sameSite: "None",
-  //   domain: "footballsquare.co.kr",
-  //   maxAge: 3 * 24 * 60 * 60 * 1000,
-  // });
-
-  // 응답 구성
-  res.status(200).send({
-    data: {
-      player_status: playerStatus,
-      access_token: accessToken,
-      user_idx: userIdx,
-      nickname: nickname,
-      platform: platform,
-      common_status_idx: commonStatusIdx,
-      message: message,
-      discord_tag: discordTag,
-      profile_image: profileImage,
-      team_idx: teamIdx,
-      team_role_idx: teamRoleIdx,
-      community_role_idx: community_role_idx || null,
-      community_list_idx: community_list_idx || null,
-    },
-  });
-};
-
 // 로그인 및 토큰 =================================================================
 const signinCheck = async (req, res, next) => {
   const { id, password } = req.body;
@@ -413,11 +293,6 @@ const signinLogic = async (req, res, next) => {
 
   // 일단 기존의 서비스는 RT를 발급하지 않도록 수정
   if(persistent && device_uuid){
-    console.log(`
-      리프레시 토큰이 발급되었습니다.
-      persistent는 ${persistent}
-      device_uuidx는 ${device_uuid}
-      `)
     const refreshToken = setRefreshToken();
 
     await putRefreshToken(refreshToken, userIdx, device_uuid);
