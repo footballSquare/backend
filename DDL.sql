@@ -53,8 +53,6 @@ CREATE TABLE player.list (
     player_list_discord_id VARCHAR(255) UNIQUE,
     player_list_name VARCHAR(10) UNIQUE,
     player_list_nickname VARCHAR(10) UNIQUE,
-    player_list_refreshtoken VARCHAR(255),
-    player_list_refreshtoken_expires_at TIMESTAMP,
     player_list_profile_image TEXT,
     player_list_platform platform,
     player_list_state INT,
@@ -70,6 +68,16 @@ CREATE TABLE player.list (
     CONSTRAINT id_or_discord_id_not_null CHECK (
         player_list_id IS NOT NULL OR player_list_discord_id IS NOT NULL
     )
+);
+
+CREATE TABLE player.refreshtoken (
+    refreshtoken_idx SERIAL PRIMARY KEY,                         -- 고유 식별자
+    refreshtoken TEXT NOT NULL,                                  -- 리프레시 토큰 값
+    expires_at TIMESTAMP NOT NULL,                               -- 만료 시각
+    created_at TIMESTAMP DEFAULT now(),                          -- 발급 시각
+    player_list_idx INT NOT NULL REFERENCES player.list(player_list_idx) ON DELETE CASCADE,
+    device_uuid TEXT NOT NULL,                                    -- 클라이언트 고유 기기 식별자
+    CONSTRAINT unique_player_device UNIQUE (player_list_idx, device_uuid)
 );
 
 -- team continued
