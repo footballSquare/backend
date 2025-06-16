@@ -93,7 +93,7 @@ team_stats AS (
     SELECT 
         ts.match_match_idx,
         ts.team_list_idx,
-        ts.match_team_stats_evidence_img
+        COALESCE(ts.match_team_stats_evidence_img, '[]'::jsonb) AS match_team_stats_evidence_img
     FROM match.team_stats ts
     WHERE ts.match_match_idx IN (SELECT first_match_idx FROM match_info UNION SELECT second_match_idx FROM match_info)
 ),
@@ -103,7 +103,7 @@ player_stats AS (
         ps.match_match_idx,
         ps.player_list_idx,
         ps.player_list_nickname,
-        ps.match_player_stats_evidence_img
+        COALESCE(ps.match_player_stats_evidence_img, '[]'::jsonb) AS match_player_stats_evidence_img
     FROM match.player_stats ps
     WHERE ps.match_match_idx IN (SELECT first_match_idx FROM match_info UNION SELECT second_match_idx FROM match_info)
 )
@@ -296,7 +296,7 @@ SELECT
     mi.second_match_formation_idx,
 
     -- 첫 번째 팀 정보
-    ts1.team_list_idx AS first_team_idx,
+    mi.championship_match_first_idx AS first_team_idx,
     ts1.match_team_stats_idx AS first_team_stats_idx,
     ts1.match_team_stats_our_score AS first_team_our_score,
     ts1.match_team_stats_other_score AS first_team_other_score,
@@ -314,7 +314,7 @@ SELECT
     COALESCE(mom1.player_list_nickname, NULL) AS first_team_mom_nickname,
 
     -- 두 번째 팀 정보
-    ts2.team_list_idx AS second_team_idx,
+    mi.championship_match_second_idx AS second_team_idx,
     ts2.match_team_stats_idx AS second_team_stats_idx,
     ts2.match_team_stats_our_score AS second_team_our_score,
     ts2.match_team_stats_other_score AS second_team_other_score,

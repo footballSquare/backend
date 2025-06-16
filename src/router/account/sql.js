@@ -44,24 +44,29 @@ WHERE
 `;
 
 const putRefreshtokenSQL = `
-UPDATE player.list
-SET
-    player_list_refreshtoken = $1,
-    player_list_refreshtoken_expires_at = $2
-WHERE
-    player_list_idx = $3
+INSERT INTO player.refreshtoken (
+    refreshtoken,
+    expires_at,
+    player_list_idx,
+    device_uuid
+) VALUES ($1, $2, $3, $4)
 `;
+
+// 리프레시 토큰 찾아오는 sql
 const checkRefreshtokenSQL = `
 SELECT 
     p.player_list_idx AS user_idx,
     tm.team_list_idx AS team_idx
 FROM 
-    player.list p
+    player.refreshtoken rt
+JOIN 
+    player.list p ON rt.player_list_idx = p.player_list_idx
 LEFT JOIN 
     team.member tm ON p.player_list_idx = tm.player_list_idx
 WHERE 
-    player_list_refreshtoken = $1
+    rt.refreshtoken = $1
 `;
+
 // 중복 값 체크
 const checkDuplicateIdSQL = `
 SELECT EXISTS (
