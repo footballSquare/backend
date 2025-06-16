@@ -42,7 +42,23 @@ const { regMessage } = require("./../../constant/regx");
 
 // Discord OAuth2===========================================================
 const getDiscordSigninPage = (req, res, next) => {
-  const state = crypto.randomBytes(16).toString("hex"); // CSRF 방지용 상태값
+  const { persistent, device_uuid } = req.body;
+
+  let state
+
+  // 지속 로그인 요청시, device_uuid 포함한 state 난수 생성
+  if(persistent && device_uuid){
+    const payload = {
+      device_uuid,
+      nonce: crypto.randomBytes(8).toString("hex") // CSRF 방지용 난수
+    };
+
+    state = Buffer.from(JSON.stringify(payload)).toString("base64");
+  } else {
+    // 기존 로그인 방식 유지
+    state = crypto.randomBytes(16).toString("hex");
+  }
+
   const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${
     process.env.DISCORD_CLIENT_ID
   }&permissions=0&response_type=code&redirect_uri=${encodeURIComponent(
@@ -54,6 +70,7 @@ const getDiscordSigninPage = (req, res, next) => {
     },
   });
 };
+
 const checkCode = async (req, res, next) => {
   const { code, state } = req.query;
 
@@ -61,9 +78,152 @@ const checkCode = async (req, res, next) => {
     throw customError(400, "code가 존재하지 않음.");
   }
 
+  try {
+    const decodedState = JSON.parse(Buffer.from(state,"base64").toString())
+    const { device_uuid, nonce } = decodedState;
+
+    // redis 검증 필요할 수 도??
+
+    req.oauth = {
+      persistent: true,
+      device_uuid,
+    };
+  } catch(e){
+    req.oauth = {
+      persistent: false,
+      device_uuid: null,
+    };
+  }
+
   next();
 };
+
+// 디스코드 일반 로그인
 const discordOauthSigninLogic = async (req, res, next) => {
+  const { code } = req.query;
+  const { persistent, device_uuid } = req.oauth;
+
+  console.log("persistent는",persistent,"device_uuid는",device_uuid)
+
+  const tokenResult = await axios.post(
+    "https://discord.com/api/oauth2/token",
+    new URLSearchParams({
+      client_id: process.env.DISCORD_CLIENT_ID,
+      client_secret: process.env.DISCORD_CLIENT_SECRET,
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: process.env.DISCORD_REDIRECT_URI,
+    }),
+    {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    }
+  );
+
+  const { access_token, token_type } = tokenResult.data;
+
+  const userResult = await axios.get("https://discord.com/api/users/@me", {
+    headers: {
+      Authorization: `${token_type} ${access_token}`,
+    },
+  });
+
+  const user = userResult.data;
+  const discordTag = `${user.username}#${user.discriminator}`;
+
+  const result = await client.query(signinDiscordOauth, [user.id]);
+
+  if (result.rows.length === 0) {
+    const signupResult = await client.query(signupDiscordOauth, [
+      user.id,
+      discordTag,
+    ]);
+
+    const result = await client.query(getUserIdxDiscordOauthSQL, [user.id]);
+
+    res.status(200).send({
+      data: result.rows[0],
+    });
+    return;
+  }
+
+  const userIdx = result.rows[0].user_idx;
+
+  const playerStatus = result.rows[0].player_status;
+
+  if (playerStatus === "pending") {
+    const accessTokenTemporary = setTemporaryAccessToken(userIdx);
+
+    res.status(200).send({
+      data: {
+        player_status: playerStatus,
+        user_idx: userIdx,
+        access_token_temporary: accessTokenTemporary,
+      },
+    });
+    return;
+  } else if (playerStatus === "deleted") {
+    throw customError(403, "이용 불가능한 계정입니다.");
+  }
+
+  const nickname = result.rows[0].nickname;
+  const profileImage = result.rows[0].profile_image || null;
+  const platform = result.rows[0].platform || null;
+  const commonStatusIdx = result.rows[0].common_status_idx || null;
+  const message = result.rows[0].message || null;
+  const teamIdx = result.rows[0].team_idx || null;
+
+  const teamRoleIdx = await getTeamRoleIdx(userIdx);
+  const { community_role_idx, community_list_idx } = await getCommunityRoleIdx(
+    userIdx
+  );
+
+  const accessToken = setAccessToken(
+    userIdx,
+    teamIdx,
+    teamRoleIdx,
+    community_role_idx,
+    community_list_idx
+  );
+
+
+  if(persistent){
+    const refreshToken = setRefreshToken();
+
+    await putRefreshToken(refreshToken, userIdx, device_uuid);
+
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      domain: "footballsquare.co.kr",
+      maxAge: 3 * 24 * 60 * 60 * 1000,
+    });
+  }
+
+  // 응답 구성
+  res.status(200).send({
+    data: {
+      player_status: playerStatus,
+      access_token: accessToken,
+      user_idx: userIdx,
+      nickname: nickname,
+      platform: platform,
+      common_status_idx: commonStatusIdx,
+      message: message,
+      discord_tag: discordTag,
+      profile_image: profileImage,
+      team_idx: teamIdx,
+      team_role_idx: teamRoleIdx,
+      community_role_idx: community_role_idx || null,
+      community_list_idx: community_list_idx || null,
+    },
+  });
+};
+
+// 디스코드 지속 로그인
+const persistentDiscordOauthSigninLogic = async (req, res, next) => {
   const { code, state } = req.query;
 
   const tokenResult = await axios.post(
@@ -147,17 +307,20 @@ const discordOauthSigninLogic = async (req, res, next) => {
     community_role_idx,
     community_list_idx
   );
-  const refreshToken = setRefreshToken();
 
-  await putRefreshToken(refreshToken, userIdx);
+  // 마찬가지로 일단 RT 발급 로직 삭제
 
-  res.cookie("refresh_token", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    domain: "footballsquare.co.kr",
-    maxAge: 3 * 24 * 60 * 60 * 1000,
-  });
+  // const refreshToken = setRefreshToken();
+
+  // await putRefreshToken(refreshToken, userIdx);
+
+  // res.cookie("refresh_token", refreshToken, {
+  //   httpOnly: true,
+  //   secure: true,
+  //   sameSite: "None",
+  //   domain: "footballsquare.co.kr",
+  //   maxAge: 3 * 24 * 60 * 60 * 1000,
+  // });
 
   // 응답 구성
   res.status(200).send({
@@ -199,9 +362,11 @@ const signinCheck = async (req, res, next) => {
 
   next();
 };
-// 로그인 서비스
+
+
+// 일반 로그인 서비스
 const signinLogic = async (req, res, next) => {
-  const { id } = req.body;
+  const { id, persistent, device_uuid } = req.body;
 
   const result = await client.query(signinSQL, [id]);
 
@@ -245,17 +410,27 @@ const signinLogic = async (req, res, next) => {
     community_role_idx,
     community_list_idx
   );
-  const refreshToken = setRefreshToken();
 
-  await putRefreshToken(refreshToken, userIdx);
+  // 일단 기존의 서비스는 RT를 발급하지 않도록 수정
+  if(persistent && device_uuid){
+    console.log(`
+      리프레시 토큰이 발급되었습니다.
+      persistent는 ${persistent}
+      device_uuidx는 ${device_uuid}
+      `)
+    const refreshToken = setRefreshToken();
 
-  res.cookie("refresh_token", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    domain: ".footballsquare.co.kr",
-    maxAge: 3 * 24 * 60 * 60 * 1000,
-  });
+    await putRefreshToken(refreshToken, userIdx, device_uuid);
+
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      domain: ".footballsquare.co.kr",
+      maxAge: 3 * 24 * 60 * 60 * 1000,
+    });
+  }
+  
 
   // 응답 구성
   res.status(200).send({
@@ -294,6 +469,11 @@ const checkRefreshToken = async (req, res, next) => {
   const now = new Date();
 
   if (now >= expiresAt) {
+    // 만료된 토큰은 삭제
+    await client.query(
+    `DELETE FROM player.refreshtoken WHERE refreshtoken = $1`,
+    [refreshToken]
+  );
     throw customError(401, "만료된 refresh token 입니다.");
   }
 
@@ -318,10 +498,12 @@ const checkRefreshToken = async (req, res, next) => {
     },
   });
 };
+
 async function getTeamRoleIdx(userIdx) {
   const result = await client.query(checkTeamRoleSQL, [userIdx]);
   return result.rows.length > 0 ? result.rows[0].team_role_idx : null;
 }
+
 async function getCommunityRoleIdx(userIdx) {
   const result = await client.query(checkCommunityRoleSQL, [userIdx]);
 
@@ -336,15 +518,20 @@ async function getCommunityRoleIdx(userIdx) {
 
   return { community_role_idx, community_list_idx };
 }
-async function putRefreshToken(refreshToken, userIdx) {
+
+// 리프레시 토큰 DB에 집어넣는 함수
+async function putRefreshToken(refreshToken, userIdx, device_uuid) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 3);
   const putRefreshtoken = await client.query(putRefreshtokenSQL, [
     refreshToken,
     expiresAt,
     userIdx,
+    device_uuid
   ]);
 }
+
+// 엑세스 토큰 발급 함수
 function setAccessToken(
   userIdx,
   teamIdx,
@@ -367,9 +554,12 @@ function setAccessToken(
   );
   return accessToken;
 }
+
+// 리프레시 토큰 생성 함수
 function setRefreshToken() {
   return crypto.randomBytes(64).toString("hex");
 }
+
 // 중복 값 체크(아이디, 닉네임임) ========================================
 const checkDuplicateId = async (req, res, next) => {
   const { id } = req.body;

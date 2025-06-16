@@ -59,6 +59,7 @@ router.get("/oauth/url/discord",
   getDiscordSigninPage
 );
 
+// 디스코드 일반 로그인
 router.get("/oauth/token/discord", 
   checkCode, 
   discordOauthSigninLogic
