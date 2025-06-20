@@ -83,19 +83,21 @@ const checkCode = async (req, res, next) => {
     const { device_uuid, nonce } = decodedState;
 
     // redis 검증 필요할 수 도??
-
-    req.oauth = {
-      persistent: true,
-      device_uuid,
-    };
+    if(device_uuid) {
+      req.oauth = {
+        persistent: true,
+        device_uuid,
+      };
+    } else {
+      req.oauth = {
+        persistent: false,
+        device_uuid: null,
+      };
+    }
+    next();
   } catch(e){
-    req.oauth = {
-      persistent: false,
-      device_uuid: null,
-    };
+    next(e)
   }
-
-  next();
 };
 
 // 디스코드 일반 로그인
@@ -202,12 +204,6 @@ const discordOauthSigninLogic = async (req, res, next) => {
       domain: "footballsquare.co.kr",
       maxAge: 3 * 24 * 60 * 60 * 1000,
     });
-
-    // res.cookie("refresh_token", refreshToken, {
-    //   httpOnly: true,
-    //   secure: false,
-    //   sameSite: "Lax",
-    // });
   }
 
   // 응답 구성
@@ -316,12 +312,6 @@ const signinLogic = async (req, res, next) => {
       domain: ".footballsquare.co.kr",
       maxAge: 3 * 24 * 60 * 60 * 1000,
     });
-
-    // res.cookie("refresh_token", refreshToken, {
-    //   httpOnly: true,
-    //   secure: false,
-    //   sameSite: "Lax",
-    // });
   }
   
 

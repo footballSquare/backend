@@ -237,7 +237,7 @@ const checkHasTeamOrCommunity = () => {
       else if (category == BOARD_CATEGORY.TEAM_BOARD) {
         if(my_team_list_idx == null)throw customError(403, "소속팀이 없습니다.");
         }
-      else if (category == BOARD_CATEGORY.FREE_BOARD) {throw customError(403, "현재 사용할 수 없는 게시판 입니다.");}
+    //   else if (category == BOARD_CATEGORY.FREE_BOARD) {throw customError(403, "현재 사용할 수 없는 게시판 입니다.");}
       next();
     } catch (e) {
       next(e);
