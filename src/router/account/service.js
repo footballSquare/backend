@@ -291,9 +291,14 @@ const signinLogic = async (req, res, next) => {
     community_list_idx
   );
 
-  // 일단 기존의 서비스는 RT를 발급하지 않도록 수정
   if(persistent && device_uuid){
+    // 사용자 기존 리프레시 토큰 전부 삭제
+    await client.query(
+    `DELETE FROM player.refreshtoken WHERE player_list_idx = $1`,
+      [userIdx]
+    )
     const refreshToken = setRefreshToken();
+    console.log(refreshToken)
 
     await putRefreshToken(refreshToken, userIdx, device_uuid);
 
