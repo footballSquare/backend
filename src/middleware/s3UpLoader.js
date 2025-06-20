@@ -102,7 +102,8 @@ const s3UploaderOptional = (folder) => {
 const s3UploaderMultiple = (folder) => {
   return async (req, res, next) => {
     try {
-      const files = req.file;
+      // req.files로 받아야함.
+      const files = req.files;
 
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "업로드된 파일이 없습니다." });
