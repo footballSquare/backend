@@ -103,8 +103,6 @@ const discordOauthSigninLogic = async (req, res, next) => {
   const { code } = req.query;
   const { persistent, device_uuid } = req.oauth;
 
-  console.log("persistent는",persistent,"device_uuid는",device_uuid)
-
   const tokenResult = await axios.post(
     "https://discord.com/api/oauth2/token",
     new URLSearchParams({
@@ -189,16 +187,26 @@ const discordOauthSigninLogic = async (req, res, next) => {
 
 
   if(persistent){
+    await client.query(
+    `DELETE FROM player.refreshtoken WHERE player_list_idx = $1`,
+      [userIdx]
+    )
     const refreshToken = setRefreshToken();
 
     await putRefreshToken(refreshToken, userIdx, device_uuid);
 
+    // res.cookie("refresh_token", refreshToken, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "None",
+    //   domain: "footballsquare.co.kr",
+    //   maxAge: 3 * 24 * 60 * 60 * 1000,
+    // });
+
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      domain: "footballsquare.co.kr",
-      maxAge: 3 * 24 * 60 * 60 * 1000,
+      secure: false,
+      sameSite: "Lax",
     });
   }
 
@@ -298,16 +306,21 @@ const signinLogic = async (req, res, next) => {
       [userIdx]
     )
     const refreshToken = setRefreshToken();
-    console.log(refreshToken)
 
     await putRefreshToken(refreshToken, userIdx, device_uuid);
 
+    // res.cookie("refresh_token", refreshToken, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "None",
+    //   domain: ".footballsquare.co.kr",
+    //   maxAge: 3 * 24 * 60 * 60 * 1000,
+    // });
+
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      domain: ".footballsquare.co.kr",
-      maxAge: 3 * 24 * 60 * 60 * 1000,
+      secure: false,
+      sameSite: "Lax",
     });
   }
   
