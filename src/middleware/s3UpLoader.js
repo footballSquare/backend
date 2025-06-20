@@ -102,6 +102,7 @@ const s3UploaderOptional = (folder) => {
 const s3UploaderMultiple = (folder) => {
   return async (req, res, next) => {
     try {
+      // req.files로 받아야함.
       const files = req.files;
 
       if (!files || files.length === 0) {
