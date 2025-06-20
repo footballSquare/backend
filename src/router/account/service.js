@@ -42,7 +42,7 @@ const { regMessage } = require("./../../constant/regx");
 
 // Discord OAuth2===========================================================
 const getDiscordSigninPage = (req, res, next) => {
-  const { persistent, device_uuid } = req.body;
+  const { persistent, device_uuid } = req.query;
 
   let state
 
@@ -195,19 +195,19 @@ const discordOauthSigninLogic = async (req, res, next) => {
 
     await putRefreshToken(refreshToken, userIdx, device_uuid);
 
-    // res.cookie("refresh_token", refreshToken, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "None",
-    //   domain: "footballsquare.co.kr",
-    //   maxAge: 3 * 24 * 60 * 60 * 1000,
-    // });
-
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
+      secure: true,
+      sameSite: "None",
+      domain: "footballsquare.co.kr",
+      maxAge: 3 * 24 * 60 * 60 * 1000,
     });
+
+    // res.cookie("refresh_token", refreshToken, {
+    //   httpOnly: true,
+    //   secure: false,
+    //   sameSite: "Lax",
+    // });
   }
 
   // 응답 구성
@@ -309,19 +309,19 @@ const signinLogic = async (req, res, next) => {
 
     await putRefreshToken(refreshToken, userIdx, device_uuid);
 
-    // res.cookie("refresh_token", refreshToken, {
-    //   httpOnly: true,
-    //   secure: true,
-    //   sameSite: "None",
-    //   domain: ".footballsquare.co.kr",
-    //   maxAge: 3 * 24 * 60 * 60 * 1000,
-    // });
-
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
+      secure: true,
+      sameSite: "None",
+      domain: ".footballsquare.co.kr",
+      maxAge: 3 * 24 * 60 * 60 * 1000,
     });
+
+    // res.cookie("refresh_token", refreshToken, {
+    //   httpOnly: true,
+    //   secure: false,
+    //   sameSite: "Lax",
+    // });
   }
   
 
