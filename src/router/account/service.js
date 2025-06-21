@@ -85,13 +85,14 @@ const checkCode = async (req, res, next) => {
     // redis 검증 필요할 수 도??
     req.oauth = {
       persistent: true,
-      device_uuid,
+      device_uuid: device_uuid,
     };
   } catch(e){
     req.oauth = {
       persistent: false,
       device_uuid: null,
     };
+    next();
   }
 };
 
