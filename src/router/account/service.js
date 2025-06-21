@@ -83,20 +83,15 @@ const checkCode = async (req, res, next) => {
     const { device_uuid, nonce } = decodedState;
 
     // redis 검증 필요할 수 도??
-    if(device_uuid) {
-      req.oauth = {
-        persistent: true,
-        device_uuid,
-      };
-    } else {
-      req.oauth = {
-        persistent: false,
-        device_uuid: null,
-      };
-    }
-    next();
+    req.oauth = {
+      persistent: true,
+      device_uuid,
+    };
   } catch(e){
-    next(e)
+    req.oauth = {
+      persistent: false,
+      device_uuid: null,
+    };
   }
 };
 
