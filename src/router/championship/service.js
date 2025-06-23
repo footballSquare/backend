@@ -442,6 +442,7 @@ const getChampionShipMatchList = async (req,res,next) => {
         
             return {
                 championship_match_idx: match.championship_match_idx, 
+                match_match_start_time: match.match_match_start_time,
                 championship_match_first: firstTeam ? {
                     match_match_idx: firstMatchIdx,
                     team_list_idx: match.first_team_idx,
