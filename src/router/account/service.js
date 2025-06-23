@@ -87,6 +87,8 @@ const checkCode = async (req, res, next) => {
       persistent: true,
       device_uuid: device_uuid,
     };
+
+    next();
   } catch(e){
     req.oauth = {
       persistent: false,
@@ -200,6 +202,8 @@ const discordOauthSigninLogic = async (req, res, next) => {
       domain: "footballsquare.co.kr",
       maxAge: 3 * 24 * 60 * 60 * 1000,
     });
+  } else if (persistent && !device_uuid) {
+    throw customError(400, "device_uuid가 누락되었습니다.");
   }
 
   // 응답 구성

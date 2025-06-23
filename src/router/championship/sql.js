@@ -178,6 +178,7 @@ SELECT
     cm.championship_match_idx,
     cm.championship_match_first_idx,
     cm.championship_match_second_idx,
+    cm.match_match_start_time,
     
     mf.team_list_idx AS first_team_idx,
     mf.common_status_idx AS first_common_status_idx,
