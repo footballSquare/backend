@@ -53,6 +53,7 @@ const {
   searchIdVerify,
   searchPwSend,
   searchPwVerify,
+  logOutService
 } = require("./service");
 
 router.get("/oauth/url/discord", 
@@ -72,6 +73,13 @@ router.post(
   signinCheck,
   signinLogic
 );
+
+// 로그아웃
+router.delete(
+  "/logout",
+  checkLogin,
+  logOutService
+)
 
 router.post("/check/id", 
   checkRegInputs([regId], ["id"]), 

@@ -383,6 +383,32 @@ const checkRefreshToken = async (req, res, next) => {
   });
 };
 
+// 로그아웃 서비스
+const logOutService = async (req, res, next) => {
+  try {
+    const { my_player_list_idx } = req.decoded;
+
+    // DB에서도 제거
+    await client.query(
+      `DELETE FROM player.refreshtoken WHERE player_list_idx = $1`,
+      [my_player_list_idx]
+    );
+
+    // 쿠키 제거
+    res.clearCookie("refresh_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      domain: "footballsquare.co.kr",
+    });
+
+    return res.status(200).json({ message: "로그아웃 되었습니다." });
+  } catch (e) {
+    next(e);
+  }
+};
+
+
 async function getTeamRoleIdx(userIdx) {
   const result = await client.query(checkTeamRoleSQL, [userIdx]);
   return result.rows.length > 0 ? result.rows[0].team_role_idx : null;
@@ -1035,4 +1061,5 @@ module.exports = {
   searchPwVerify: trycatchWrapper(searchPwVerify),
   checkUser: trycatchWrapper(checkUser),
   updatePassword: trycatchWrapper(updatePassword),
+  logOutService
 };
