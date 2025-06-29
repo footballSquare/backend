@@ -161,7 +161,7 @@ const deleteBoard = async (req,res,next) => {
 
         // 3️⃣ 게시글 삭제
         await client.query(deleteBoardSQL, [board_list_idx]);
-
+        await client.query("COMMIT");
         res.status(200).send({})
     } catch(e){
         next(e)
