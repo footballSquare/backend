@@ -80,6 +80,7 @@ const {
     checkMatchNotEnded,
     checkAlreadyWaitList,
     checkIfChampionshipMatchOnly,
+    checkCantChampionshipMatch,
     checkIsOpenMatch,
     checkIsTeamMatch
 } = require("../../middleware/checkCondition")
@@ -196,6 +197,7 @@ router.delete("/:match_match_idx",
     getMatchAndTeamInfo,
     checkIsMatchOwner(),
     checkMatchNotStarted(),
+    checkCantChampionshipMatch(),
     deleteMatch
 )
 

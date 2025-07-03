@@ -802,6 +802,21 @@ const checkIfChampionshipMatchOnly = () => {
   };
 };
 
+// 대회 매치인지 아닌지 체크
+const checkCantChampionshipMatch = () => {
+  return (req, res, next) => {
+    try {
+      const { match_match_attribute } = req.matchInfo;
+      if (match_match_attribute == MATCH_ATTRIBUTE.CHAMPIONSHIP) {
+        throw customError(403, "이 기능은 대회 매치에서는 사용할 수 없습니다.");
+      }
+      next();
+    } catch (e) {
+      next(e);
+    }
+  };
+};
+
 // 팀 매치가 맞는지 체크
 const checkIsTeamMatch = () => {
   return (req, res, next) => {
@@ -845,6 +860,7 @@ module.exports = {
   checkMatchNotEnded,
   checkAlreadyWaitList,
   checkIfChampionshipMatchOnly,
+  checkCantChampionshipMatch,
   checkIsOpenMatch,
   checkIsTeamMatch
 };
