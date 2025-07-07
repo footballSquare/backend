@@ -90,7 +90,7 @@ const getBoard = async (req,res,next) => {
 
 
         res.status(200).send({
-            board: boardWrapper.board
+            board: boardWrapper
         })
     } catch(e){
         next(e)
