@@ -139,7 +139,7 @@ INSERT INTO board.list (
     community_list_idx,
     team_list_idx
 ) VALUES (
-    $1, $2, $3, $4, to_jsonb(array[$5]), now(), now(),
+    $1, $2, $3, $4, to_jsonb(array[$5]), $6, $7,
     CASE 
         WHEN $1 = ${BOARD_CATEGORY.COMMUNITY_BOARD} THEN (SELECT community_list_idx FROM community_info) 
         ELSE NULL 

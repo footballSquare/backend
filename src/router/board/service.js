@@ -88,13 +88,18 @@ const postBoard = async (req,res,next) => {
 
     const new_img_url = req.fileUrl
 
+    const utcNow = new Date();
+    const kstNowDate = new Date(utcNow.getTime() + 9 * 60 * 60 * 1000); // KST 보정
+
     try{
         const result = await client.query(postBoardSQL, [
             category,
             board_list_title,
             board_list_content,
             my_player_list_idx,  
-            new_img_url
+            new_img_url,
+            kstNowDate,
+            kstNowDate
         ]);
 
         res.status(200).send(result.rows[0])
