@@ -77,14 +77,14 @@ const getBoard = async (req,res,next) => {
             my_player_list_idx
         ]);
 
-        const wrapper = result.rows[0];     // ✅ 여기에 board가 들어있음
+        const wrapper = result.rows[0];  
         const board = wrapper.board;
 
-        const createdAt = new Date(board.board_list_created_at);
-        const updatedAt = new Date(board.board_list_updated_at);
+        // const createdAt = new Date(board.board_list_created_at);
+        // const updatedAt = new Date(board.board_list_updated_at);
 
-        board.board_list_created_at = new Date(createdAt.getTime() + 9 * 60 * 60 * 1000);
-        board.board_list_updated_at = new Date(updatedAt.getTime() + 9 * 60 * 60 * 1000);
+        // board.board_list_created_at = new Date(createdAt.getTime() + 9 * 60 * 60 * 1000);
+        // board.board_list_updated_at = new Date(updatedAt.getTime() + 9 * 60 * 60 * 1000);
 
         res.status(200).send({
             board: wrapper
