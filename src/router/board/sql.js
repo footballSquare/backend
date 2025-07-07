@@ -160,7 +160,7 @@ SET
     board_list_title = $2,
     board_list_content = $3,
     board_list_img = to_jsonb(array[$4]),
-    board_list_updated_at = now()
+    board_list_updated_at = $5
 WHERE board_list_idx = $1;
 `
 

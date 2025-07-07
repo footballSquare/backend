@@ -150,13 +150,17 @@ const putBoard = async (req,res,next) => {
             await deleteFileFromS3(board_list_img);
         }
 
+        const utcNow = new Date();
+        const kstNowDate = new Date(utcNow.getTime() + 9 * 60 * 60 * 1000); // KST 보정
+
         await client.query(
             putBoardSQL,
             [
                 board_list_idx,
                 board_list_title,
                 board_list_content,
-                new_img_url
+                new_img_url,
+                kstNowDate
             ]
         );
 
