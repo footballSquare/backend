@@ -80,12 +80,11 @@ const getBoard = async (req,res,next) => {
         const wrapper = result.rows[0];     // ✅ 여기에 board가 들어있음
         const board = wrapper.board;
 
-        const created = new Date(board.board_list_created_at);
-        board.board_list_created_at = new Date(created.getTime() + 9 * 60 * 60 * 1000).toISOString();
-    
+        const createdAt = new Date(board.board_list_created_at);
+        const updatedAt = new Date(board.board_list_updated_at);
 
-        const updated = new Date(board.board_list_updated_at);
-        board.board_list_updated_at = new Date(updated.getTime() + 9 * 60 * 60 * 1000).toISOString();
+        board.board_list_created_at = new Date(createdAt.getTime() + 9 * 60 * 60 * 1000);
+        board.board_list_updated_at = new Date(updatedAt.getTime() + 9 * 60 * 60 * 1000);
 
         res.status(200).send({
             board: wrapper
