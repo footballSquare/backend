@@ -77,20 +77,19 @@ const getBoard = async (req,res,next) => {
             my_player_list_idx
         ]);
 
-        const boardWrapper = result.rows[0];
+        const board = result.rows[0];
 
-        // if (boardWrapper && boardWrapper.board) {
-        //     const createdAt = new Date(boardWrapper.board.board_list_created_at);
-        //     const updatedAt = new Date(boardWrapper.board.board_list_updated_at);
+      // 기존 값을 Date 객체로 파싱 후 +9시간 덮어쓰기
+        board.board_list_created_at = new Date(
+        new Date(board.board_list_created_at).getTime() + 9 * 60 * 60 * 1000
+        );
 
-        //     // 9시간 더해서 Date 객체 그대로 다시 넣기
-        //     boardWrapper.board.board_list_created_at = new Date(createdAt.getTime() + 9 * 60 * 60 * 1000);
-        //     boardWrapper.board.board_list_updated_at = new Date(updatedAt.getTime() + 9 * 60 * 60 * 1000);
-        // }
-
+        board.board_list_updated_at = new Date(
+        new Date(board.board_list_updated_at).getTime() + 9 * 60 * 60 * 1000
+        );
 
         res.status(200).send({
-            board: boardWrapper
+            board: board
         })
     } catch(e){
         next(e)
