@@ -44,9 +44,18 @@ const getBoardList = async (req,res,next) => {
             page
         ]);
 
-        res.status(200).send({
-            board_list : result.rows
-        })
+        const board_list = result.rows.map(row => {
+            const createdAtUTC = new Date(row.board_list_created_at);
+            const updatedAtUTC = new Date(row.board_list_updated_at);
+
+            return {
+                ...row,
+                board_list_created_at: new Date(createdAtUTC.getTime() + 9 * 60 * 60 * 1000),
+                board_list_updated_at: new Date(updatedAtUTC.getTime() + 9 * 60 * 60 * 1000)
+            };
+        });
+
+        res.status(200).send({ board_list });
     } catch(e){
         next(e)
     }
@@ -68,8 +77,20 @@ const getBoard = async (req,res,next) => {
             my_player_list_idx
         ]);
 
+        const boardWrapper = result.rows[0];
+
+        if (boardWrapper && boardWrapper.board) {
+            const createdAt = new Date(boardWrapper.board.board_list_created_at);
+            const updatedAt = new Date(boardWrapper.board.board_list_updated_at);
+
+            // 9시간 더해서 Date 객체 그대로 다시 넣기
+            boardWrapper.board.board_list_created_at = new Date(createdAt.getTime() + 9 * 60 * 60 * 1000);
+            boardWrapper.board.board_list_updated_at = new Date(updatedAt.getTime() + 9 * 60 * 60 * 1000);
+        }
+
+
         res.status(200).send({
-            board : result.rows[0]
+            board: boardWrapper.board
         })
     } catch(e){
         next(e)
@@ -129,13 +150,17 @@ const putBoard = async (req,res,next) => {
             await deleteFileFromS3(board_list_img);
         }
 
+        const utcNow = new Date();
+        const kstNowDate = new Date(utcNow.getTime() + 9 * 60 * 60 * 1000); // KST 보정
+
         await client.query(
             putBoardSQL,
             [
                 board_list_idx,
                 board_list_title,
                 board_list_content,
-                new_img_url
+                new_img_url,
+                kstNowDate
             ]
         );
 
